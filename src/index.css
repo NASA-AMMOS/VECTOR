@@ -1,0 +1,30 @@
+@import url('https://rsms.me/inter/inter.css');
+
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+    font-weight: 400;
+}
+
+html {
+    font-family: Inter, Helvetica, sans-serif;
+    font-size: 62.5%;
+    scroll-behavior: smooth;
+}
+
+body {
+    box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+}
+
+a, button {
+    font-size: inherit;
+    font-weight: inherit;
+    background-color: inherit;
+    color: inherit;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+}
