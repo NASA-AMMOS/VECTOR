@@ -1,14 +1,17 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Vector2 } from 'three';
 import { useData } from '@/DataContext';
-import * as styles from '@/components/Image.css';
+import TiepointImage from '@/components/TiepointImage';
+import * as styles from '@/components/Tracks.css';
 
-function Image() {
+function Tracks() {
     const { activeImage, tiepoints } = useData();
 
     const [tracks, setTracks] = useState({});
 
-    const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
+    const trackIds = useMemo(() => tiepoints[activeImage].map((tiepoint) => tiepoint.trackId), [activeImage, tiepoints]);
+
+    const activeTiepoints = useMemo(() => Object.values(tiepoints).flat().filter((tiepoint) => trackIds.includes(tiepoint.trackId)), [trackIds]);
 
     const trackMap = useMemo(() => activeTiepoints.reduce((obj, tiepoint) => {
         obj[tiepoint.trackId] = obj[tiepoint.trackId] ? [...obj[tiepoint.trackId], tiepoint] : [tiepoint];
@@ -46,32 +49,27 @@ function Image() {
     }, [trackMap]);
 
     return (
-        <section className={styles.container}>
-            <div className={styles.tracks}>
-                <h2 className={styles.header}>
-                    Tracks
-                </h2>
-                {Object.keys(tracks).map((trackId) => (
-                    <div key={trackId} className={styles.track}>
-                        {tracks[trackId].tiepoints.map((tiepoint, index) => (
-                            <div key={index} className={styles.tiepoint}>
-                                <span
-                                    key={tiepoint.initialResidual}
-                                    className={styles.residual}
-                                    style={{ opacity: tiepoint.initialResidual / tracks[trackId].maxResidual }}
-                                ></span>
-                                <span
-                                    key={tiepoint.finalResidual}
-                                    className={styles.residual}
-                                    style={{ opacity: tiepoint.finalResidual / tracks[trackId].maxResidual }}
-                                ></span>
-                            </div>
-                        ))}
-                    </div>
-                ))}
-            </div>
-        </section>
+        <div className={styles.container}>
+            {Object.keys(tracks).map((trackId) => (
+                <div key={trackId} className={styles.track}>
+                    {tracks[trackId].tiepoints.map((tiepoint, index) => (
+                        <div key={index} className={styles.tiepoint}>
+                            <span
+                                key={tiepoint.initialResidual}
+                                className={styles.residual}
+                                style={{ opacity: tiepoint.initialResidual / tracks[trackId].maxResidual }}
+                            ></span>
+                            <span
+                                key={tiepoint.finalResidual}
+                                className={styles.residual}
+                                style={{ opacity: tiepoint.finalResidual / tracks[trackId].maxResidual }}
+                            ></span>
+                        </div>
+                    ))}
+                </div>
+            ))}
+        </div>
     );
 }
 
-export default Image;
+export default Tracks;

@@ -4,28 +4,19 @@ import { vars } from '../utils/theme.css';
 const boxHeight = '6rem';
 
 export const container = style({
-    display: 'grid',
-    gridTemplateColumns: 'repeat(6, 1fr)',
-    gridGap: '1rem',
-    padding: '2rem',
-});
-
-export const tracks = style({
     gridColumn: '1 / 4',
-});
-
-export const header = style({
-    fontSize: '2rem',
-    paddingBottom: '1rem',
+    overflowY: 'auto',
+    overflowX: 'auto',
 });
 
 export const track = style({
+    display: 'flex',
     marginBottom: '1rem',
 });
 
 export const tiepoint = style({
     position: 'relative',
-    display: 'inline-block',
+    display: 'flex',
     border: `0.2rem solid ${vars.color.black}`,
     height: boxHeight,
 

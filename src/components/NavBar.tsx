@@ -23,6 +23,9 @@ function NavBar() {
             const leftId = xml.querySelector(`image[key="${leftKey}"]`).getAttribute('unique_id');
             const rightId = xml.querySelector(`image[key="${rightKey}"]`).getAttribute('unique_id');
 
+            const leftPixel = tiepoint.querySelector('left');
+            const rightPixel = tiepoint.querySelector('right');
+
             const trackId = Number(tiepoint.querySelector('track').getAttribute('id'));
 
             const initialXYZ = tiepoint.querySelector('init_xyz');
@@ -49,6 +52,14 @@ function NavBar() {
                 rightKey,
                 initialXYZ: [initialX, initialY, initialZ],
                 finalXYZ: [finalX, finalY, finalZ],
+                leftPixel: [
+                    Number(leftPixel.getAttribute('samp')),
+                    Number(leftPixel.getAttribute('line')),
+                ],
+                rightPixel: [
+                    Number(rightPixel.getAttribute('samp')),
+                    Number(rightPixel.getAttribute('line')),
+                ],
                 initialResidual: [
                     Number(leftInitialResidual.getAttribute('samp')) + Number(rightInitialResidual.getAttribute('samp')),
                     Number(leftInitialResidual.getAttribute('line')) + Number(rightInitialResidual.getAttribute('line')),
@@ -69,7 +80,7 @@ function NavBar() {
     return (
         <nav className={styles.container}>
             <h1>
-                TODO
+                SLAM
             </h1>
             <div>
                 <button className={styles.button} onClick={handleTiepoints}>

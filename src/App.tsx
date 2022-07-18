@@ -1,6 +1,7 @@
 import NavBar from '@/components/NavBar';
 import Images from '@/components/Images';
-import Image from '@/components/Image';
+import Tracks from '@/components/Tracks';
+import TiepointImage from '@/components/TiepointImage';
 import { useData } from '@/DataContext';
 import * as styles from '@/App.css';
 
@@ -12,7 +13,12 @@ function App() {
             <NavBar />
             <main className={styles.container}>
                 {!activeImage  && <Images />}
-                {activeImage && <Image />}
+                {activeImage && (
+                    <section className={styles.subcontainer}>
+                        <Tracks />
+                        <TiepointImage />
+                    </section>
+                )}
             </main>
         </>
     );
