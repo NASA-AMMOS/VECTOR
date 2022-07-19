@@ -8,23 +8,22 @@ export const container = style({
     height: '8vh',
     padding: '2rem',
     fontSize: '1.2rem',
-    backgroundColor: vars.color.lightBlue,
+    backgroundColor: vars.color.backgroundBlue,
 });
 
 export const button = style({
     padding: '1rem',
-    backgroundColor: vars.color.lightWhite,
-    color: vars.color.offBlack,
+    backgroundColor: vars.color.offBlack,
+    color: vars.color.white,
     borderRadius: '0.4rem',
-    transition: 'all 0.3s',
+    transition: 'opacity 0.1s',
 
     selectors: {
         '&:not(:last-of-type)': {
             marginRight: '1rem',
         },
         '&:hover': {
-            backgroundColor: vars.color.offBlack,
-            color: vars.color.lightWhite,
+            opacity: 0.9,
         },
     },
 });

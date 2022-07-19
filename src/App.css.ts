@@ -11,3 +11,9 @@ export const subcontainer = style({
     padding: '2rem',
     height: '92vh',
 });
+
+export const list = style({
+    gridColumn: '1 / 4',
+    display: 'flex',
+    flexDirection: 'column',
+});

@@ -29,6 +29,9 @@ function ResidualLength({ activeImage }) {
         }
 
         const svg = Plot.plot({
+            style: {
+                background: vars.color.backgroundBlue,
+            },
             marks: [
                 Plot.rectY(residuals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: (d) => d.initial ? vars.color.darkBlue : vars.color.lightBlue })),
             ],

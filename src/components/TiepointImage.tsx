@@ -5,7 +5,7 @@ import { Points, Line, useTexture } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/TiepointImage.css';
 
-function TiepointImage({ activeImage, tiepoints }) {
+function TiepointImage({ activeImage, tiepoints, setImage }) {
     const { camera, size } = useThree();
 
     const map = useLoader(TextureLoader, `src/assets/example/${activeImage}.png`);
@@ -68,17 +68,10 @@ function TiepointImage({ activeImage, tiepoints }) {
         setFinalResiduals(newFinalResiduals);
     }
 
-    function fitCamera() {
-        const aabb = new Box3().setFromObject(mesh.current);
-        camera.zoom = Math.min(
-            size.width / (aabb.max.x - aabb.min.x),
-            size.height / (aabb.max.y - aabb.min.y)
-        );
-        camera.updateProjectionMatrix();
-    }
-
     useEffect(() => {
-        fitCamera();
+        if (map.image) {
+            setImage(map.image);
+        }
     }, [map]);
 
     useEffect(() => {
@@ -112,10 +105,30 @@ function TiepointImage({ activeImage, tiepoints }) {
 function Container() {
     const { activeImage, tiepoints } = useData();
 
+    const container = useRef(null);
+
+    const [image, setImage] = useState(null);
+    const [offsetHeight, setOffsetHeight] = useState(null);
+
+    useEffect(() => {
+        if (image && image.width && image.height) {
+            setOffsetHeight(image.height * (container.current.offsetWidth / image.width));
+        }
+    }, [image]);
+
     return (
-        <Canvas className={styles.container} orthographic={true}>
-            <TiepointImage activeImage={activeImage} tiepoints={tiepoints[activeImage]} />
-        </Canvas>
+        <section ref={container} className={styles.container}>
+            <h2 className={styles.header}>
+                Image ID: {activeImage}
+            </h2>
+            <Canvas orthographic={true} style={{ height: offsetHeight ? offsetHeight : '100%' }}>
+                <TiepointImage
+                    activeImage={activeImage}
+                    tiepoints={tiepoints[activeImage]}
+                    setImage={setImage}
+                />
+            </Canvas>
+        </section>
     );
 }
 

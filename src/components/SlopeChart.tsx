@@ -41,6 +41,9 @@ function SlopeChart({ activeImage }) {
         const residuals = [...initialResiduals, ...finalResiduals];
 
         const svg = Plot.plot({
+            style: {
+                background: vars.color.backgroundBlue,
+            },
             x: {
                 type: 'point',
                 axis: 'top',
