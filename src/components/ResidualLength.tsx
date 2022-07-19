@@ -3,6 +3,7 @@ import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
+import * as styles from '@/components/ResidualLength.css';
 
 function ResidualLength({ activeImage }) {
     const { tiepoints } = useData();
@@ -37,7 +38,7 @@ function ResidualLength({ activeImage }) {
     }, [activeTiepoints]);
 
     return (
-        <div ref={plot}></div>
+        <div ref={plot} className={styles.container}></div>
     );
 }
 
