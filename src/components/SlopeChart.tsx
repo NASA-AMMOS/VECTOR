@@ -18,7 +18,7 @@ function SlopeChart({ activeImage }) {
             const initialResidual = new Vector2(...tiepoint.initialResidual);
             return {
                 group: 'Initial',
-                residual: baseVector.clone().distanceTo(initialResidual),
+                residual: Math.trunc(baseVector.clone().distanceTo(initialResidual)),
                 tiepoint: tiepoint.index,
             };
         });
@@ -27,7 +27,7 @@ function SlopeChart({ activeImage }) {
             const finalResidual = new Vector2(...tiepoint.finalResidual);
             return {
                 group: 'Final',
-                residual: baseVector.clone().distanceTo(finalResidual),
+                residual: Math.trunc(baseVector.clone().distanceTo(finalResidual)),
                 tiepoint: tiepoint.index,
             };
         });
@@ -54,6 +54,7 @@ function SlopeChart({ activeImage }) {
                         y: 'residual',
                         z: 'tiepoint',
                         strokeWidth: 1,
+                        opacity: 0.5,
                     }),
                     Plot.text(residuals, Plot.selectFirst({
                         x: 'group',

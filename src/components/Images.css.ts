@@ -2,9 +2,15 @@ import { style } from '@vanilla-extract/css';
 import { vars } from '../utils/theme.css';
 
 export const container = style({
-    display: 'grid',
-    gridTemplateColumns: 'repeat(6, 1fr)',
-    gridGap: '1rem',
+    display: 'flex',
+    height: '92vh',
+    width: '100vw',
+    overflowX: 'auto',
+});
+
+export const item = style({
+    display: 'flex',
+    flexDirection: 'column',
     margin: '1rem',
     padding: '1rem',
     border: `0.1rem solid ${vars.color.black}`,
@@ -13,19 +19,6 @@ export const container = style({
 });
 
 export const image = style({
-    maxWidth: '100%',
-    gridColumn: '1 / 3',
-});
-
-export const content = style({
-    gridColumn: '3 / 5',
-    fontSize: '1.4rem',
-});
-
-export const text = style({
-    selectors: {
-        '&:not(:last-of-type)': {
-            marginBottom: '1rem',
-        },
-    },
+    width: 'calc(30vw - 2rem)',
+    paddingBottom: '1rem',
 });
