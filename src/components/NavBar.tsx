@@ -81,7 +81,7 @@ function NavBar() {
     return (
         <nav className={styles.container}>
             <h1>
-                SLAM
+                Cool Name
             </h1>
             <div>
                 <button className={styles.button} onClick={handleTiepoints}>

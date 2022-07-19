@@ -11,6 +11,7 @@ export const container = style({
 export const item = style({
     display: 'flex',
     flexDirection: 'column',
+    justifyContent: 'space-between',
     margin: '1rem',
     padding: '1rem',
     border: `0.1rem solid ${vars.color.black}`,
@@ -20,5 +21,4 @@ export const item = style({
 
 export const image = style({
     width: 'calc(30vw - 2rem)',
-    paddingBottom: '1rem',
 });

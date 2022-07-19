@@ -2,12 +2,11 @@ import { useRef, useMemo, useEffect } from 'react';
 import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
-import * as styles from '@/components/SlopeChart.css';
 
 function SlopeChart({ activeImage }) {
     const { tiepoints } = useData();
 
-    const container = useRef();
+    const plot = useRef();
 
     const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
 
@@ -35,9 +34,7 @@ function SlopeChart({ activeImage }) {
         const residuals = [...initialResiduals, ...finalResiduals];
 
         setTimeout(() => {
-            const plot = Plot.plot({
-                height: container.current.offsetHeight,
-                width: container.current.offsetWidth,
+            const svg = Plot.plot({
                 x: {
                     type: 'point',
                     axis: 'top',
@@ -74,13 +71,12 @@ function SlopeChart({ activeImage }) {
                     })),
                 ],
             });
-
-            container.current.replaceChildren(plot);
-        }, 1000);
+            plot.current.replaceChildren(svg);
+        }, 500);
     }, [activeTiepoints]);
 
     return (
-        <div ref={container} className={styles.container}></div>
+        <div ref={plot}></div>
     );
 }
 

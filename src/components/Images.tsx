@@ -1,3 +1,4 @@
+import ResidualLength from '@/components/ResidualLength';
 import SlopeChart from '@/components/SlopeChart';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/Images.css';
@@ -15,6 +16,7 @@ function Images() {
                             src={`src/assets/example/${id}.png`}
                             alt={`Image with ID: ${id}`}
                         />
+                        <ResidualLength activeImage={id} />
                         <SlopeChart activeImage={id} />
                     </div>
                 ))}
