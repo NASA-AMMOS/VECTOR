@@ -16,4 +16,5 @@ export const list = style({
     gridColumn: '1 / 4',
     display: 'flex',
     flexDirection: 'column',
+    height: 'calc(92vh - 4rem)',
 });

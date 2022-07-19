@@ -121,7 +121,7 @@ function Container() {
             <h2 className={styles.header}>
                 Image ID: {activeImage}
             </h2>
-            <Canvas orthographic={true} style={{ height: offsetHeight ? offsetHeight : '100%' }}>
+            <Canvas orthographic={true}>
                 <TiepointImage
                     activeImage={activeImage}
                     tiepoints={tiepoints[activeImage]}

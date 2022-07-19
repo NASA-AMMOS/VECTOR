@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { Vector2 } from 'three';
+import cn from 'classnames';
 import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/ResidualLength.css';
 
-function ResidualLength({ activeImage }) {
+function ResidualLength({ activeImage, isolated }) {
     const { tiepoints } = useData();
 
     const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
@@ -41,7 +42,7 @@ function ResidualLength({ activeImage }) {
     }, [activeTiepoints]);
 
     return (
-        <div ref={plot} className={styles.container}></div>
+        <div ref={plot} className={cn({ [styles.container]: !isolated, [styles.card]: isolated })}></div>
     );
 }
 
