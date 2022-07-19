@@ -4,7 +4,7 @@ import { vars } from '../utils/theme.css';
 const boxHeight = '6rem';
 
 export const container = style({
-    gridColumn: '1 / 4',
+    gridColumn: '4 / -1',
     overflowY: 'auto',
     overflowX: 'auto',
 });

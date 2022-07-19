@@ -15,8 +15,8 @@ function App() {
                 {!activeImage  && <Images />}
                 {activeImage && (
                     <section className={styles.subcontainer}>
-                        <Tracks />
                         <TiepointImage />
+                        <Tracks />
                     </section>
                 )}
             </main>
