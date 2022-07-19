@@ -16,7 +16,7 @@ function NavBar() {
         const tiepoints = xml.querySelectorAll('tie');
         const newTiepoints = {};
 
-        for (const tiepoint of tiepoints) {
+        for (const [index, tiepoint] of tiepoints.entries()) {
             const leftKey = Number(tiepoint.getAttribute('left_key'));
             const rightKey = Number(tiepoint.getAttribute('right_key'));
 
@@ -45,6 +45,7 @@ function NavBar() {
             const rightFinalResidual = tiepoint.querySelector('right_final_residual');
 
             const item = {
+                index,
                 trackId,
                 leftId,
                 rightId,

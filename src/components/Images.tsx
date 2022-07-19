@@ -1,3 +1,4 @@
+import SlopeChart from '@/components/SlopeChart';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/Images.css';
 
@@ -22,6 +23,7 @@ function Images() {
                                 Total Tiepoints: {tiepoints[id].length}
                             </p>
                         </div>
+                        <SlopeChart activeImage={id} />
                     </section>
                 ))}
             </>
