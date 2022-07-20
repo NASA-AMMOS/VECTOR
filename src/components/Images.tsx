@@ -11,11 +11,16 @@ function Images() {
             <section className={styles.container}>
                 {Object.keys(tiepoints).map((id) => (
                     <div key={id} className={styles.item} onClick={() => setActiveImage(id)}>
-                        <img
-                            className={styles.image}
-                            src={`src/assets/example/${id}.png`}
-                            alt={`Image with ID: ${id}`}
-                        />
+                        <div>
+                            <h2 className={styles.header}>
+                                Image ID: {id}
+                            </h2>
+                            <img
+                                className={styles.image}
+                                src={`src/assets/example/${id}.png`}
+                                alt={`Image with ID: ${id}`}
+                            />
+                        </div>
                         <ResidualLength activeImage={id} />
                         <SlopeChart activeImage={id} />
                     </div>

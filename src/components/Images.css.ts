@@ -19,6 +19,14 @@ export const item = style({
     cursor: 'pointer',
 });
 
+export const header = style({
+    paddingBottom: '1rem',
+    fontSize: '1.2rem',
+    fontWeight: 500,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+});
+
 export const image = style({
     width: 'calc(32vw - 2rem)',
 });
