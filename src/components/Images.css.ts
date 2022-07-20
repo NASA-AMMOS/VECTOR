@@ -21,5 +21,4 @@ export const item = style({
 
 export const image = style({
     width: 'calc(32vw - 2rem)',
-    paddingBottom: '2rem',
 });

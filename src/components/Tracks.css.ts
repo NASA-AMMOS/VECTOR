@@ -5,13 +5,38 @@ const boxHeight = '6rem';
 
 export const container = style({
     gridColumn: '4 / -1',
-    overflowY: 'auto',
-    overflowX: 'auto',
+    overflow: 'auto',
+    padding: '1rem',
+    backgroundColor: vars.color.backgroundBlue,
+    borderRadius: '0.4rem',
+});
+
+export const header = style({
+    paddingBottom: '1rem',
+    fontSize: '1.2rem',
+    fontWeight: 500,
+    textTransform: 'uppercase',
 });
 
 export const track = style({
     display: 'flex',
+    alignItems: 'center',
     marginBottom: '1rem',
+    paddingBottom: '1rem',
+    borderBottom: `0.1rem solid ${vars.color.black}`,
+});
+
+export const subheader = style({
+    flexShrink: 0,
+    width: '5rem',
+    fontSize: '1rem',
+    fontWeight: 500,
+    textTransform: 'uppercase',
+});
+
+export const tiepoints = style({
+    display: 'flex',
+    alignItems: 'center',
 });
 
 export const tiepoint = style({

@@ -11,6 +11,10 @@ export const container = style({
     backgroundColor: vars.color.backgroundBlue,
 });
 
+export const header = style({
+    fontWeight: 500,
+});
+
 export const button = style({
     padding: '1rem',
     backgroundColor: vars.color.offBlack,

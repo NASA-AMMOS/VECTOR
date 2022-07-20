@@ -3,9 +3,13 @@ import { useData } from '@/DataContext';
 import * as styles from '@/components/NavBar.css';
 
 function NavBar() {
-    const { tiepoints, setTiepoints } = useData();
+    const { tiepoints, activeImage, setTiepoints, setActiveImage } = useData();
 
     const parser = new DOMParser();
+
+    function handleActiveImage() {
+        setActiveImage(null);
+    }
 
     async function handleTiepoints() {
         const blob = await fileOpen({ description: 'Tiepoints File' });
@@ -80,9 +84,16 @@ function NavBar() {
 
     return (
         <nav className={styles.container}>
-            <h1>
-                Cool Name
-            </h1>
+            {activeImage && (
+                <button className={styles.button} onClick={handleActiveImage}>
+                    Back
+                </button>
+            )}
+            {!activeImage && (
+                <h1 className={styles.header}>
+                    Cool Name
+                </h1>
+            )}
             <div>
                 <button className={styles.button} onClick={handleTiepoints}>
                     Tiepoint File

@@ -16,9 +16,11 @@ function App() {
                 {!activeImage  && <Images />}
                 {activeImage && (
                     <section className={styles.subcontainer}>
-                        <div className={styles.list}>
+                        <div className={styles.block}>
                             <TiepointImage />
-                            <ResidualLength activeImage={activeImage} isolated />
+                            <div className={styles.item}>
+                                <ResidualLength activeImage={activeImage} />
+                            </div>
                         </div>
                         <Tracks />
                     </section>

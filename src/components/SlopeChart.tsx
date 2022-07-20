@@ -4,7 +4,7 @@ import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 
-function SlopeChart({ activeImage }) {
+function SlopeChart({ activeImage, activeTrack }) {
     const { tiepoints } = useData();
 
     const plot = useRef();

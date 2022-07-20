@@ -5,7 +5,7 @@ import { Points, Line, useTexture } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/TiepointImage.css';
 
-function TiepointImage({ activeImage, tiepoints, setImage }) {
+function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage }) {
     const { camera, size } = useThree();
 
     const map = useLoader(TextureLoader, `src/assets/example/${activeImage}.png`);
@@ -68,6 +68,15 @@ function TiepointImage({ activeImage, tiepoints, setImage }) {
         setFinalResiduals(newFinalResiduals);
     }
 
+    function fitCamera() {
+        const aabb = new Box3().setFromObject(mesh.current);
+        camera.zoom = Math.min(
+            size.width / (aabb.max.x - aabb.min.x),
+            size.height / (aabb.max.y - aabb.min.y)
+        );
+        camera.updateProjectionMatrix();
+    }
+
     useEffect(() => {
         if (map.image) {
             setImage(map.image);
@@ -77,6 +86,12 @@ function TiepointImage({ activeImage, tiepoints, setImage }) {
     useEffect(() => {
         initData();
     }, [tiepoints]);
+
+    useEffect(() => {
+        if (offsetHeight) {
+            fitCamera();
+        }
+    }, [offsetHeight]);
 
     return (
         <>
@@ -125,6 +140,7 @@ function Container() {
                 <TiepointImage
                     activeImage={activeImage}
                     tiepoints={tiepoints[activeImage]}
+                    offsetHeight={offsetHeight}
                     setImage={setImage}
                 />
             </Canvas>
