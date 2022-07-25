@@ -11,6 +11,7 @@ export default function ProvideData({ children }) {
     const [cameras, setCameras] = useState(null);
 
     const [activeImage, setActiveImage] = useState(null);
+    const [activeTrack, setActiveTrack] = useState(null);
 
     return (
         <DataContext.Provider
@@ -18,10 +19,12 @@ export default function ProvideData({ children }) {
                 tiepoints,
                 cameras,
                 activeImage,
+                activeTrack,
 
                 setTiepoints,
                 setCameras,
                 setActiveImage,
+                setActiveTrack,
             }}
         >
             {children}

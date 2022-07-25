@@ -23,7 +23,7 @@ export const track = style({
     alignItems: 'center',
     marginBottom: '1rem',
     paddingBottom: '1rem',
-    borderBottom: `0.1rem solid ${vars.color.black}`,
+    cursor: 'pointer',
 });
 
 export const subheader = style({

@@ -16,4 +16,5 @@ export const header = style({
     fontSize: '1.2rem',
     fontWeight: 500,
     textTransform: 'uppercase',
+    textAlign: 'center',
 });

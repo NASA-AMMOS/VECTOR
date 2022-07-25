@@ -3,12 +3,16 @@ import { useData } from '@/DataContext';
 import * as styles from '@/components/NavBar.css';
 
 function NavBar() {
-    const { tiepoints, activeImage, setTiepoints, setActiveImage } = useData();
+    const { activeImage, activeTrack, setTiepoints, setCameras, setActiveImage, setActiveTrack } = useData();
 
     const parser = new DOMParser();
 
-    function handleActiveImage() {
-        setActiveImage(null);
+    function handleBack() {
+        if (activeTrack) {
+            setActiveTrack(null);
+        } else {
+            setActiveImage(null);
+        }
     }
 
     async function handleTiepoints() {
@@ -82,10 +86,73 @@ function NavBar() {
         setTiepoints(newTiepoints);
     }
 
+    async function handleNavigation() {
+        const blob = await fileOpen({ description: 'Navigation File' });
+
+        const xmlString = await blob.text();
+        const xml = parser.parseFromString(xmlString, 'application/xml');
+
+        const images = xml.querySelectorAll('solution');
+        const newCameras = {};
+
+        for (const image of images) {
+            const imageId = image.querySelector('image').getAttribute('unique_id');
+
+            const initialCamera = image.querySelector('original_camera_model');
+            const initialC = initialCamera.querySelector('parameter[id="C"]');
+            const initialA = initialCamera.querySelector('parameter[id="A"]');
+            const initialH = initialCamera.querySelector('parameter[id="H"]');
+
+            const finalCamera = image.querySelector('camera_model');
+            const finalC = finalCamera.querySelector('parameter[id="C"]');
+            const finalA = finalCamera.querySelector('parameter[id="A"]');
+            const finalH = finalCamera.querySelector('parameter[id="H"]');
+
+            newCameras[imageId] = {
+                initial: {
+                    C: [
+                        Number(initialC.getAttribute('value1')),
+                        Number(initialC.getAttribute('value2')),
+                        Number(initialC.getAttribute('value3')),
+                    ],
+                    A: [
+                        Number(initialA.getAttribute('value1')),
+                        Number(initialA.getAttribute('value2')),
+                        Number(initialA.getAttribute('value3')),
+                    ],
+                    H: [
+                        Number(initialH.getAttribute('value1')),
+                        Number(initialH.getAttribute('value2')),
+                        Number(initialH.getAttribute('value3')),
+                    ],
+                },
+                final: {
+                    C: [
+                        Number(finalC.getAttribute('value1')),
+                        Number(finalC.getAttribute('value2')),
+                        Number(finalC.getAttribute('value3')),
+                    ],
+                    A: [
+                        Number(finalA.getAttribute('value1')),
+                        Number(finalA.getAttribute('value2')),
+                        Number(finalA.getAttribute('value3')),
+                    ],
+                    H: [
+                        Number(finalH.getAttribute('value1')),
+                        Number(finalH.getAttribute('value2')),
+                        Number(finalH.getAttribute('value3')),
+                    ],
+                },
+            };
+        }
+
+        setCameras(newCameras);
+    }
+
     return (
         <nav className={styles.container}>
             {activeImage && (
-                <button className={styles.button} onClick={handleActiveImage}>
+                <button className={styles.button} onClick={handleBack}>
                     Back
                 </button>
             )}
@@ -98,7 +165,7 @@ function NavBar() {
                 <button className={styles.button} onClick={handleTiepoints}>
                     Tiepoint File
                 </button>
-                <button className={styles.button}>
+                <button className={styles.button} onClick={handleNavigation}>
                     Navigation File
                 </button>
             </div>

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
@@ -10,7 +10,7 @@ function ResidualLength({ activeImage }) {
 
     const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
 
-    const plot = useRef();
+    const plot = useRef(null);
 
     const baseVector = new Vector2();
 
@@ -31,6 +31,7 @@ function ResidualLength({ activeImage }) {
 
         const svg = Plot.plot({
             style: {
+                height: '100%',
                 background: vars.color.backgroundBlue,
             },
             marks: [

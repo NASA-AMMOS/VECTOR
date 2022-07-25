@@ -3,11 +3,12 @@ import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
+import * as styles from '@/components/SlopeChart.css';
 
 function SlopeChart({ activeImage, activeTrack }) {
     const { tiepoints } = useData();
 
-    const plot = useRef();
+    const plot = useRef(null);
 
     const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
 
@@ -42,6 +43,7 @@ function SlopeChart({ activeImage, activeTrack }) {
 
         const svg = Plot.plot({
             style: {
+                height: '100%',
                 background: vars.color.backgroundBlue,
             },
             x: {
@@ -86,7 +88,7 @@ function SlopeChart({ activeImage, activeTrack }) {
     }, [activeTiepoints]);
 
     return (
-        <div ref={plot}></div>
+        <div ref={plot} className={styles.container}></div>
     );
 }
 

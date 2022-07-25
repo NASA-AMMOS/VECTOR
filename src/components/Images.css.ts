@@ -3,7 +3,7 @@ import { vars } from '../utils/theme.css';
 
 export const container = style({
     display: 'flex',
-    minHeight: '92vh',
+    height: '92vh',
     width: '100vw',
     overflowX: 'auto',
 });
@@ -28,5 +28,5 @@ export const header = style({
 });
 
 export const image = style({
-    width: 'calc(32vw - 2rem)',
+    width: 'calc(20vw - 2rem)',
 });

@@ -6,7 +6,7 @@ import SlopeChart from '@/components/SlopeChart';
 import * as styles from '@/components/Tracks.css';
 
 function Tracks() {
-    const { activeImage, tiepoints } = useData();
+    const { activeImage, tiepoints, setActiveTrack } = useData();
 
     const [tracks, setTracks] = useState({});
 
@@ -51,32 +51,34 @@ function Tracks() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.header}>
-                Tracks
-            </h2>
-            {Object.keys(tracks).map((trackId) => (
-                <div key={trackId} className={styles.track}>
-                    <h3 className={styles.subheader}>
-                        ID: {trackId}
-                    </h3>
-                    <div className={styles.tiepoints}>
-                        {tracks[trackId].tiepoints.map((tiepoint, index) => (
-                            <div key={index} className={styles.tiepoint}>
-                                <span
-                                    key={tiepoint.initialResidual}
-                                    className={styles.residual}
-                                    style={{ opacity: tiepoint.initialResidual / tracks[trackId].maxResidual }}
-                                ></span>
-                                <span
-                                    key={tiepoint.finalResidual}
-                                    className={styles.residual}
-                                    style={{ opacity: tiepoint.finalResidual / tracks[trackId].maxResidual }}
-                                ></span>
-                            </div>
-                        ))}
+            <div>
+                <h2 className={styles.header}>
+                    Tracks
+                </h2>
+                {Object.keys(tracks).map((trackId) => (
+                    <div key={trackId} className={styles.track} onClick={() => setActiveTrack(Number(trackId))}>
+                        <h3 className={styles.subheader}>
+                            ID: {trackId}
+                        </h3>
+                        <div className={styles.tiepoints}>
+                            {tracks[trackId].tiepoints.map((tiepoint, index) => (
+                                <div key={index} className={styles.tiepoint}>
+                                    <span
+                                        key={tiepoint.initialResidual}
+                                        className={styles.residual}
+                                        style={{ opacity: tiepoint.initialResidual / tracks[trackId].maxResidual }}
+                                    ></span>
+                                    <span
+                                        key={tiepoint.finalResidual}
+                                        className={styles.residual}
+                                        style={{ opacity: tiepoint.finalResidual / tracks[trackId].maxResidual }}
+                                    ></span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            ))}
+                ))}
+            </div>
         </div>
     );
 }
