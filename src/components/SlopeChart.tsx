@@ -69,7 +69,7 @@ function SlopeChart({ activeImage, activeTrack }) {
                     x: 'group',
                     y: 'residual',
                     z: 'tiepoint',
-                    stroke: (d) => d.decreased ? vars.color.final : vars.color.increase,
+                    stroke: (d) => d.decreased ? vars.color.decrease : vars.color.increase,
                     strokeWidth: 3,
                 }),
                 Plot.text(residuals, Plot.selectFirst({

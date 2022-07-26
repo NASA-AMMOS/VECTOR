@@ -3,6 +3,7 @@ import { Scene, Vector3, Euler, Box3, Matrix4 } from 'three';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, Line, useCamera } from '@react-three/drei';
 import { useData } from '@/DataContext';
+import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
 function ViewCube() {
@@ -99,14 +100,14 @@ function Cameras({ tiepoints, cameras }) {
                     visible={false}
                 >
                     <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshLambertMaterial color={0x005693} opacity={0.5} transparent={true} />
+                    <meshLambertMaterial color={theme.color.initial} opacity={0.5} transparent={true} />
                 </mesh>
             );
 
             newLines.push(
                 <Line
                     key={`${cameraId}_initial`}
-                    color={0x005693}
+                    color={theme.color.initial}
                     points={[initialC, initialC.clone().add(initialA)]}
                     userData={{ cameraId, initial: true }}
                     visible={false}
@@ -129,14 +130,14 @@ function Cameras({ tiepoints, cameras }) {
                     onPointerOut={handlePointerOut}
                 >
                     <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshLambertMaterial color={0x009EE2} />
+                    <meshLambertMaterial color={theme.color.final} />
                 </mesh>
             );
 
             newLines.push(
                 <Line
                     key={`${cameraId}_final`}
-                    color={0x009EE2}
+                    color={theme.color.final}
                     points={[finalC, finalC.clone().add(finalA)]}
                     userData={{ cameraId, initial: false }}
                 />
@@ -150,7 +151,7 @@ function Cameras({ tiepoints, cameras }) {
         // setInitialPoint(
         //     <mesh position={[initialXYZ[0], -initialXYZ[2], initialXYZ[1]]}>
         //         <sphereGeometry args={[0.5]} />
-        //         <meshBasicMaterial color={0x005693} />
+        //         <meshBasicMaterial color={theme.color.initial} />
         //     </mesh>
         // );
 
@@ -158,7 +159,7 @@ function Cameras({ tiepoints, cameras }) {
         // setFinalPoint(
         //     <mesh position={[finalXYZ[0], -finalXYZ[2], finalXYZ[1]]}>
         //         <sphereGeometry args={[0.5]} />
-        //         <meshBasicMaterial color={0x009EE2} />
+        //         <meshBasicMaterial color={theme.color.final} />
         //     </mesh>
         // );
     }

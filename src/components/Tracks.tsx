@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import cn from 'classnames';
 import { useData } from '@/DataContext';
 import SlopeChart from '@/components/SlopeChart';
@@ -5,7 +6,15 @@ import TiepointImage from '@/components/TiepointImage';
 import * as styles from '@/components/Tracks.css';
 
 export function Track({ activeImage, activeTrack }) {
-    const { tracks, renderTarget, activeTrack: contextTrack, setActiveTrack } = useData();
+    const { tiepoints, renderTarget, activeTrack: contextTrack, setActiveTrack } = useData();
+
+    const activeTiepoints = useMemo(() => {
+        const newTiepoints = tiepoints[activeImage];
+        if (!activeTrack) {
+            return newTiepoints;
+        }
+        return newTiepoints.filter((t) => t.trackId === Number(activeTrack));
+    }, [activeImage, tiepoints]);
 
     function handleClick() {
         setActiveTrack(Number(activeTrack));
@@ -28,7 +37,7 @@ export function Track({ activeImage, activeTrack }) {
                 </>
             )}
             <div className={styles.tiepoints}>
-                {renderTarget && tracks[activeTrack].tiepoints.map((tiepoint, index) => (
+                {renderTarget && activeTiepoints.map((tiepoint, index) => (
                     <img
                         key={index}
                         className={styles.tiepoint}

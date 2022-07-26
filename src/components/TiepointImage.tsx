@@ -1,8 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
-import { TextureLoader, Box3, Vector2 } from 'three';
+import { TextureLoader, Box3, Vector2, Color } from 'three';
 import { Canvas, useThree, useLoader } from '@react-three/fiber';
 import { Points, Line, useTexture } from '@react-three/drei';
 import { useData } from '@/DataContext';
+import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 
 function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRenderTarget }) {
@@ -43,7 +44,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
             newInitialResiduals.push(
                 <Line
                     key={i}
-                    color={0x0000FF}
+                    color={theme.color.initial}
                     points={[
                         [...pixel.toArray(), 0],
                         [...initialResidual.add(pixel).toArray(), 0],
@@ -54,7 +55,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
             newFinalResiduals.push(
                 <Line
                     key={i}
-                    color={0x00FF00}
+                    color={theme.color.final}
                     points={[
                         [...pixel.toArray(), 0],
                         [...finalResidual.add(pixel).toArray(), 0],
@@ -112,7 +113,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
                         map={sprite}
                         alphaTest={0.5}
                         transparent={true}
-                        color={0xFF0000}
+                        color={theme.color.background}
                     />
                 </Points>
             )}
