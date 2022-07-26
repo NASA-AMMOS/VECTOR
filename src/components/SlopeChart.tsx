@@ -51,9 +51,12 @@ function SlopeChart({ activeImage, activeTrack }) {
                 axis: 'top',
                 label: null,
                 domain: ['Initial', 'Final'],
+                clamp: true,
+                inset: -300,
             },
             y: {
                 axis: null,
+                inset: 20,
             },
             marks: [
                 Plot.line(residuals, {
@@ -68,17 +71,13 @@ function SlopeChart({ activeImage, activeTrack }) {
                     x: 'group',
                     y: 'residual',
                     z: 'tiepoint',
-                    dx: -5,
-                    text: (d) => d.residual,
-                    textAnchor: 'end',
+                    text: '',
                 })),
                 Plot.text(residuals, Plot.selectLast({
                     x: 'group',
                     y: 'residual',
                     z: 'tiepoint',
-                    text: (d) => d.residual,
-                    textAnchor: 'start',
-                    dx: 5,
+                    text: '',
                 })),
                 Plot.ruleX(['Initial'], { stroke: 'black', strokeWidth: 3 }),
                 Plot.ruleX(['Final'], { stroke: 'black', strokeWidth: 3 }),

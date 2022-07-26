@@ -1,3 +1,4 @@
+import RadialChart from '@/components/RadialChart';
 import ResidualLength from '@/components/ResidualLength';
 import SlopeChart from '@/components/SlopeChart';
 import { useData } from '@/DataContext';
@@ -21,6 +22,7 @@ function Images() {
                                 alt={`Image with ID: ${id}`}
                             />
                         </div>
+                        <RadialChart activeImage={id} />
                         <ResidualLength activeImage={id} />
                         <SlopeChart activeImage={id} />
                     </div>

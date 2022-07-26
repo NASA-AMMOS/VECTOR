@@ -9,9 +9,7 @@ export const container = style({
 });
 
 export const item = style({
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
+    display: 'grid',
     margin: '1rem',
     padding: '1rem',
     backgroundColor: vars.color.backgroundBlue,
@@ -28,5 +26,5 @@ export const header = style({
 });
 
 export const image = style({
-    width: 'calc(20vw - 2rem)',
+    width: 'calc(15vw - 2rem)',
 });
