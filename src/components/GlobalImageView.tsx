@@ -1,5 +1,5 @@
 import RadialChart from '@/components/RadialChart';
-import ResidualLength from '@/components/ResidualLength';
+import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/GlobalImageView.css';
@@ -23,7 +23,7 @@ function GlobalImageView() {
                             />
                         </div>
                         <RadialChart activeImage={id} />
-                        <ResidualLength activeImage={id} />
+                        <ResidualChart activeImage={id} />
                         <SlopeChart activeImage={id} />
                     </div>
                 ))}

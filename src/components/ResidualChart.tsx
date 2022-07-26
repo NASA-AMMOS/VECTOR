@@ -4,9 +4,9 @@ import * as Plot from '@observablehq/plot';
 import { useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import { Pixel } from '@/utils/helpers';
-import * as styles from '@/components/ResidualLength.css';
+import * as styles from '@/components/ResidualChart.css';
 
-function ResidualLength({ activeImage, activeTrack }) {
+function ResidualChart({ activeImage, activeTrack }) {
     const { tiepoints } = useData();
 
     const activeTiepoints = useMemo(() => {
@@ -64,4 +64,4 @@ function ResidualLength({ activeImage, activeTrack }) {
     );
 }
 
-export default ResidualLength;
+export default ResidualChart;

@@ -1,7 +1,7 @@
 import Tracks from '@/components/Tracks';
 import TiepointImage from '@/components/TiepointImage';
 import RadialChart from '@/components/RadialChart';
-import ResidualLength from '@/components/ResidualLength';
+import ResidualChart from '@/components/ResidualChart';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/ActiveImageView.css';
 
@@ -17,7 +17,7 @@ function ActiveImageView() {
                         <RadialChart activeImage={activeImage} />
                     </div>
                     <div className={styles.item}>
-                        <ResidualLength activeImage={activeImage} />
+                        <ResidualChart activeImage={activeImage} />
                     </div>
                 </div>
             </div>

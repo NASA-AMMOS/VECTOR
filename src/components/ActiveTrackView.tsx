@@ -1,7 +1,7 @@
 import { Track } from '@/components/Tracks';
 import CameraViewport from '@/components/CameraViewport';
 import RadialChart from '@/components/RadialChart';
-import ResidualLength from '@/components/ResidualLength';
+import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/ActiveTrackView.css';
@@ -25,7 +25,7 @@ function ActiveTrackView() {
                     <RadialChart activeImage={activeImage} activeTrack={activeTrack} />
                 </div>
                 <div className={styles.item}>
-                    <ResidualLength activeImage={activeImage} activeTrack={activeTrack} />
+                    <ResidualChart activeImage={activeImage} activeTrack={activeTrack} />
                 </div>
                 <div className={styles.item}>
                     <SlopeChart activeImage={activeImage} activeTrack={activeTrack} />
