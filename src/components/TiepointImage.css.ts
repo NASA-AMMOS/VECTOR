@@ -4,9 +4,9 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     display: 'flex',
     flexDirection: 'column',
-    height: '50%',
+    height: 'calc((92vh - 4rem) / 2 - 0.5rem)',
     padding: '1rem',
-    marginBottom: '2rem',
+    marginBottom: '1rem',
     backgroundColor: vars.color.backgroundBlue,
     borderRadius: '0.4rem',
 });

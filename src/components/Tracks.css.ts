@@ -21,6 +21,7 @@ export const header = style({
 export const track = style({
     display: 'flex',
     alignItems: 'center',
+    height: '10rem',
     marginBottom: '1rem',
     paddingBottom: '1rem',
     cursor: 'pointer',
@@ -32,6 +33,13 @@ export const subheader = style({
     fontSize: '1rem',
     fontWeight: 500,
     textTransform: 'uppercase',
+});
+
+export const slope = style({
+    flexShrink: 0,
+    height: '10rem',
+    width: '10rem',
+    marginRight: '1rem',
 });
 
 export const tiepoints = style({

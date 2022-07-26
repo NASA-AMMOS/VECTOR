@@ -2,9 +2,9 @@ import RadialChart from '@/components/RadialChart';
 import ResidualLength from '@/components/ResidualLength';
 import SlopeChart from '@/components/SlopeChart';
 import { useData } from '@/DataContext';
-import * as styles from '@/components/Images.css';
+import * as styles from '@/components/GlobalImageView.css';
 
-function Images() {
+function GlobalImageView() {
     const { tiepoints, setActiveImage } = useData();
 
     if (tiepoints && Object.keys(tiepoints).length > 0) {
@@ -29,7 +29,12 @@ function Images() {
                 ))}
             </section>
         );
+    } else {
+        // Return empty div to keep layout with navbar.
+        return (
+            <div className={styles.container}></div>
+        )
     }
 }
 
-export default Images;
+export default GlobalImageView;

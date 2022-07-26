@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Vector2 } from 'three';
 import { useData } from '@/DataContext';
-import TiepointImage from '@/components/TiepointImage';
 import SlopeChart from '@/components/SlopeChart';
+import TiepointImage from '@/components/TiepointImage';
 import * as styles from '@/components/Tracks.css';
 
 function Tracks() {
@@ -60,6 +60,9 @@ function Tracks() {
                         <h3 className={styles.subheader}>
                             ID: {trackId}
                         </h3>
+                        <div className={styles.slope}>
+                            <SlopeChart activeImage={activeImage} activeTrack={trackId} />
+                        </div>
                         <div className={styles.tiepoints}>
                             {tracks[trackId].tiepoints.map((tiepoint, index) => (
                                 <div key={index} className={styles.tiepoint}>
