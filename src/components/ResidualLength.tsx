@@ -39,7 +39,7 @@ function ResidualLength({ activeImage, activeTrack }) {
         const svg = Plot.plot({
             style: {
                 height: '100%',
-                background: vars.color.backgroundBlue,
+                background: vars.color.background,
                 fontSize: Pixel(1.5),
             },
             x: {
@@ -50,8 +50,8 @@ function ResidualLength({ activeImage, activeTrack }) {
                 axis: null,
             },
             marks: [
-                Plot.rectY(initialResiduals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: vars.color.darkBlue, thresholds: 15 })),
-                Plot.rectY(finalResiduals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: vars.color.lightBlue, thresholds: 15 })),
+                Plot.rectY(initialResiduals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: vars.color.initial, thresholds: 15 })),
+                Plot.rectY(finalResiduals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: vars.color.final, thresholds: 15 })),
                 Plot.ruleY([0]),
             ],
         });

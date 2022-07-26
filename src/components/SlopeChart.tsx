@@ -50,7 +50,7 @@ function SlopeChart({ activeImage, activeTrack }) {
         const svg = Plot.plot({
             style: {
                 height: '100%',
-                background: vars.color.backgroundBlue,
+                background: vars.color.background,
             },
             x: {
                 type: 'point',
@@ -69,7 +69,7 @@ function SlopeChart({ activeImage, activeTrack }) {
                     x: 'group',
                     y: 'residual',
                     z: 'tiepoint',
-                    stroke: (d) => d.decreased ? vars.color.lightBlue : vars.color.yellow,
+                    stroke: (d) => d.decreased ? vars.color.final : vars.color.increase,
                     strokeWidth: 3,
                     opacity: 0.3,
                 }),

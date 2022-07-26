@@ -8,7 +8,7 @@ export const container = style({
     height: '8vh',
     padding: '2rem',
     fontSize: '1.2rem',
-    backgroundColor: vars.color.backgroundBlue,
+    backgroundColor: vars.color.background,
 });
 
 export const header = style({
@@ -17,7 +17,7 @@ export const header = style({
 
 export const button = style({
     padding: '1rem',
-    backgroundColor: vars.color.offBlack,
+    backgroundColor: vars.color.black,
     color: vars.color.white,
     borderRadius: '0.4rem',
     transition: 'opacity 0.1s',

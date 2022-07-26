@@ -5,7 +5,7 @@ export const container = style({
     gridColumn: '4 / -1',
     overflow: 'auto',
     padding: '1rem',
-    backgroundColor: vars.color.backgroundBlue,
+    backgroundColor: vars.color.background,
     borderRadius: '0.4rem',
 });
 

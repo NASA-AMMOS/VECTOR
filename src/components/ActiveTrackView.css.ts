@@ -14,7 +14,7 @@ export const panel = style({
     display: 'grid',
     height: 'calc(92vh - 4rem)',
     padding: '1rem',
-    backgroundColor: vars.color.backgroundBlue,
+    backgroundColor: vars.color.background,
     borderRadius: '0.4rem',
 });
 
@@ -24,7 +24,7 @@ export const column = style({
     gridGap: '1rem',
     height: 'calc(92vh - 4rem)',
     padding: '1rem',
-    backgroundColor: vars.color.backgroundBlue,
+    backgroundColor: vars.color.background,
     borderRadius: '0.4rem',
 });
 

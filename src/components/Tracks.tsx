@@ -8,7 +8,7 @@ export function Track({ activeImage, activeTrack }) {
     const { tracks, renderTarget, activeTrack: contextTrack, setActiveTrack } = useData();
 
     function handleClick() {
-        setActiveTrack(Number(Number(activeTrack)));
+        setActiveTrack(Number(activeTrack));
     }
 
     return (
@@ -32,7 +32,7 @@ export function Track({ activeImage, activeTrack }) {
                     <img
                         key={index}
                         className={styles.tiepoint}
-                        src={renderTarget}
+                        // src={renderTarget}
                         alt={`Track ID: ${activeTrack}`}
                     />
                 ))}

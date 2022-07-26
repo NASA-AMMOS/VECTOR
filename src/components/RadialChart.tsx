@@ -46,13 +46,13 @@ function RadialChart({ activeImage, activeTrack }) {
                     .attr('cx', (d) => d.radius * Math.cos(d.angle))
                     .attr('cy', (d) => d.radius * Math.sin(d.angle))
                     .attr('r', 50)
-                    .attr('fill', (d) => d.initial ? vars.color.darkBlue : vars.color.lightBlue);
+                    .attr('fill', (d) => d.initial ? vars.color.initial : vars.color.final);
 
         parent.append('circle')
             .attr('cx', 0)
             .attr('cy', 0)
             .attr('r', initialMin.radius)
-            .attr('stroke', vars.color.darkBlue)
+            .attr('stroke', vars.color.initial)
             .attr('stroke-width', 50)
             .attr('fill', 'transparent');
 
@@ -60,7 +60,7 @@ function RadialChart({ activeImage, activeTrack }) {
             .attr('cx', 0)
             .attr('cy', 0)
             .attr('r', initialMax.radius)
-            .attr('stroke', vars.color.darkBlue)
+            .attr('stroke', vars.color.initial)
             .attr('stroke-width', 50)
             .attr('fill', 'transparent');
 
@@ -68,7 +68,7 @@ function RadialChart({ activeImage, activeTrack }) {
             .attr('cx', 0)
             .attr('cy', 0)
             .attr('r', finalMin.radius)
-            .attr('stroke', vars.color.lightBlue)
+            .attr('stroke', vars.color.final)
             .attr('stroke-width', 50)
             .attr('fill', 'transparent');
 
@@ -76,7 +76,7 @@ function RadialChart({ activeImage, activeTrack }) {
             .attr('cx', 0)
             .attr('cy', 0)
             .attr('r', finalMax.radius)
-            .attr('stroke', vars.color.lightBlue)
+            .attr('stroke', vars.color.final)
             .attr('stroke-width', 50)
             .attr('fill', 'transparent');
 

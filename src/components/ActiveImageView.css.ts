@@ -20,7 +20,7 @@ export const block = style({
     gridTemplateRows: '1fr',
     height: 'calc((92vh - 4rem) / 2 - 0.5rem)',
     padding: '1rem',
-    backgroundColor: vars.color.backgroundBlue,
+    backgroundColor: vars.color.background,
     borderRadius: '0.4rem',
 });
 
