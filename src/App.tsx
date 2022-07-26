@@ -1,7 +1,7 @@
 import NavBar from '@/components/NavBar';
 import GlobalImageView from '@/components/GlobalImageView';
 import ActiveImageView from '@/components/ActiveImageView';
-import CameraViewport from '@/components/CameraViewport';
+import ActiveTrackView from '@/components/ActiveTrackView';
 import { useData } from '@/DataContext';
 import * as styles from '@/App.css';
 
@@ -13,11 +13,7 @@ function App() {
             <main className={styles.container}>
                 {!activeImage  && <GlobalImageView />}
                 {activeImage && !activeTrack && <ActiveImageView />}
-                {activeImage && activeTrack && (
-                    <section className={styles.subcontainer}>
-                        <CameraViewport />
-                    </section>
-                )}
+                {activeImage && activeTrack && <ActiveTrackView />}
                 <NavBar />
             </main>
         </>

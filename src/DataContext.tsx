@@ -45,7 +45,44 @@ export default function ProvideData({ children }) {
         return newResiduals;
     }, [tiepoints]);
 
-    const maxResidual = useMemo(() => residuals && Math.max(...Object.values(residuals).flat().map(({ initial, final }) => [initial, final]).flat()), [residuals]);
+    const tracks = useMemo(() => {
+        if (!activeImage || !tiepoints) return null;
+
+        const trackIds = tiepoints[activeImage].map((tiepoint) => tiepoint.trackId);
+
+        const activeTiepoints = Object.values(tiepoints).flat().filter((tiepoint) => trackIds.includes(tiepoint.trackId));
+
+        const trackMap = activeTiepoints.reduce((obj, tiepoint) => {
+            obj[tiepoint.trackId] = obj[tiepoint.trackId] ? [...obj[tiepoint.trackId], tiepoint] : [tiepoint];
+            return obj;
+        }, {});
+
+        const newTracks = {};
+
+        for (const trackId of Object.keys(trackMap)) {
+            const newTrack = [];
+            let maxResidual = 0;
+            
+            for (const tiepoint of trackMap[trackId]) {
+                const initialResidual = new Vector2(...tiepoint.initialResidual);
+                const finalResidual = new Vector2(...tiepoint.finalResidual);
+
+                const initialResidualDistance = baseVector.clone().distanceTo(initialResidual);
+                const finalResidualDistance = baseVector.clone().distanceTo(finalResidual);
+
+                maxResidual = Math.max(maxResidual, initialResidualDistance, finalResidualDistance);
+
+                newTrack.push({ initialResidual: initialResidualDistance, finalResidual: finalResidualDistance });
+            }
+            
+            newTracks[trackId] = {
+                maxResidual,
+                tiepoints: newTrack,
+            };
+        }
+
+        return newTracks;
+    }, [activeImage, tiepoints]);
 
     return (
         <DataContext.Provider
@@ -55,7 +92,7 @@ export default function ProvideData({ children }) {
                 activeImage,
                 activeTrack,
                 residuals,
-                maxResidual,
+                tracks,
 
                 setTiepoints,
                 setCameras,

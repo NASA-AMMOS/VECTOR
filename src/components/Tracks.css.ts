@@ -22,9 +22,12 @@ export const track = style({
     display: 'flex',
     alignItems: 'center',
     height: '10rem',
+    cursor: 'pointer',
+});
+
+export const trackSpacing = style({
     marginBottom: '1rem',
     paddingBottom: '1rem',
-    cursor: 'pointer',
 });
 
 export const subheader = style({
