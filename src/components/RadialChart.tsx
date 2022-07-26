@@ -5,10 +5,16 @@ import { vars } from '@/utils/theme.css';
 import { Polar } from '@/utils/helpers';
 import * as styles from '@/components/RadialChart.css';
 
-function RadialChart({ activeImage }) {
+function RadialChart({ activeImage, activeTrack }) {
     const { tiepoints } = useData();
 
-    const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
+    const activeTiepoints = useMemo(() => {
+        const newTiepoints = tiepoints[activeImage];
+        if (!activeTrack) {
+            return newTiepoints;
+        }
+        return newTiepoints.filter((t) => t.trackId === Number(activeTrack));
+    }, [activeImage, tiepoints]);
 
     const plot = useRef(null);
 

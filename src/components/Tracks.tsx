@@ -1,5 +1,3 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Vector2 } from 'three';
 import cn from 'classnames';
 import { useData } from '@/DataContext';
 import SlopeChart from '@/components/SlopeChart';
@@ -7,7 +5,7 @@ import TiepointImage from '@/components/TiepointImage';
 import * as styles from '@/components/Tracks.css';
 
 export function Track({ activeImage, activeTrack }) {
-    const { tracks, activeTrack: contextTrack, setActiveTrack } = useData();
+    const { tracks, renderTarget, activeTrack: contextTrack, setActiveTrack } = useData();
 
     function handleClick() {
         setActiveTrack(Number(Number(activeTrack)));
@@ -30,19 +28,13 @@ export function Track({ activeImage, activeTrack }) {
                 </>
             )}
             <div className={styles.tiepoints}>
-                {tracks[activeTrack].tiepoints.map((tiepoint, index) => (
-                    <div key={index} className={styles.tiepoint}>
-                        <span
-                            key={tiepoint.initialResidual}
-                            className={styles.residual}
-                            style={{ opacity: tiepoint.initialResidual / tracks[activeTrack].maxResidual }}
-                        ></span>
-                        <span
-                            key={tiepoint.finalResidual}
-                            className={styles.residual}
-                            style={{ opacity: tiepoint.finalResidual / tracks[activeTrack].maxResidual }}
-                        ></span>
-                    </div>
+                {renderTarget && tracks[activeTrack].tiepoints.map((tiepoint, index) => (
+                    <img
+                        key={index}
+                        className={styles.tiepoint}
+                        src={renderTarget}
+                        alt={`Track ID: ${activeTrack}`}
+                    />
                 ))}
             </div>
         </div>

@@ -22,10 +22,10 @@ function ActiveTrackView() {
             </div>
             <div className={styles.column}>
                 <div className={styles.item}>
-                    <RadialChart activeImage={activeImage} />
+                    <RadialChart activeImage={activeImage} activeTrack={activeTrack} />
                 </div>
                 <div className={styles.item}>
-                    <ResidualLength activeImage={activeImage} />
+                    <ResidualLength activeImage={activeImage} activeTrack={activeTrack} />
                 </div>
                 <div className={styles.item}>
                     <SlopeChart activeImage={activeImage} activeTrack={activeTrack} />

@@ -16,6 +16,8 @@ export default function ProvideData({ children }) {
     const [activeImage, setActiveImage] = useState(null);
     const [activeTrack, setActiveTrack] = useState(null);
 
+    const [renderTarget, setRenderTarget] = useState(null);
+
     const residuals = useMemo(() => {
         if (!tiepoints) return null;
 
@@ -93,11 +95,13 @@ export default function ProvideData({ children }) {
                 activeTrack,
                 residuals,
                 tracks,
+                renderTarget,
 
                 setTiepoints,
                 setCameras,
                 setActiveImage,
                 setActiveTrack,
+                setRenderTarget
             }}
         >
             {children}

@@ -5,8 +5,8 @@ import { Points, Line, useTexture } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/TiepointImage.css';
 
-function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage }) {
-    const { camera, size } = useThree();
+function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRenderTarget }) {
+    const { gl, camera, size } = useThree();
 
     const map = useLoader(TextureLoader, `src/assets/example/${activeImage}.png`);
     const sprite = useTexture('/src/assets/disc.png');
@@ -77,6 +77,10 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage }) {
         camera.updateProjectionMatrix();
     }
 
+    function updateRenderTarget() {
+        setRenderTarget(gl.domElement.toDataURL());
+    }
+
     useEffect(() => {
         if (map.image) {
             setImage(map.image);
@@ -90,6 +94,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage }) {
     useEffect(() => {
         if (offsetHeight) {
             fitCamera();
+            updateRenderTarget();
         }
     }, [offsetHeight]);
 
@@ -118,7 +123,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage }) {
 }
 
 function Container() {
-    const { activeImage, tiepoints } = useData();
+    const { activeImage, tiepoints, setRenderTarget } = useData();
 
     const container = useRef(null);
 
@@ -136,12 +141,13 @@ function Container() {
             <h2 className={styles.header}>
                 Image ID: {activeImage}
             </h2>
-            <Canvas orthographic={true}>
+            <Canvas orthographic={true} gl={{ preserveDrawingBuffer: true }}>
                 <TiepointImage
                     activeImage={activeImage}
                     tiepoints={tiepoints[activeImage]}
                     offsetHeight={offsetHeight}
                     setImage={setImage}
+                    setRenderTarget={setRenderTarget}
                 />
             </Canvas>
         </section>

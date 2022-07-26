@@ -6,10 +6,16 @@ import { vars } from '@/utils/theme.css';
 import { Pixel } from '@/utils/helpers';
 import * as styles from '@/components/ResidualLength.css';
 
-function ResidualLength({ activeImage }) {
+function ResidualLength({ activeImage, activeTrack }) {
     const { tiepoints } = useData();
 
-    const activeTiepoints = useMemo(() => tiepoints[activeImage], [activeImage, tiepoints]);
+    const activeTiepoints = useMemo(() => {
+        const newTiepoints = tiepoints[activeImage];
+        if (!activeTrack) {
+            return newTiepoints;
+        }
+        return newTiepoints.filter((t) => t.trackId === Number(activeTrack));
+    }, [activeImage, tiepoints]);
 
     const plot = useRef(null);
 
