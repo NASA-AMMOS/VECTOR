@@ -39,7 +39,6 @@ function ResidualChart({ activeImage, activeTrack }) {
         const svg = Plot.plot({
             style: {
                 height: '100%',
-                background: vars.color.background,
                 fontSize: Pixel(1.5),
             },
             x: {

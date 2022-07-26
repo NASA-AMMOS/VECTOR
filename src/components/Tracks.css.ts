@@ -5,7 +5,7 @@ export const container = style({
     gridColumn: '4 / -1',
     overflow: 'auto',
     padding: '1rem',
-    backgroundColor: vars.color.background,
+    backgroundColor: vars.color.white,
     borderRadius: '0.4rem',
 });
 
@@ -21,6 +21,9 @@ export const track = style({
     alignItems: 'center',
     height: '10rem',
     cursor: 'pointer',
+    padding: '1rem',
+    backgroundColor: vars.color.background,
+    borderRadius: '0.4rem',
 });
 
 export const trackSpacing = style({

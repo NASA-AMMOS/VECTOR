@@ -7,7 +7,7 @@ export const container = style({
     height: 'calc((92vh - 4rem) / 2 - 0.5rem)',
     padding: '1rem',
     marginBottom: '1rem',
-    backgroundColor: vars.color.background,
+    backgroundColor: vars.color.white,
     borderRadius: '0.4rem',
 });
 

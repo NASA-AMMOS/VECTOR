@@ -50,7 +50,7 @@ function SlopeChart({ activeImage, activeTrack }) {
         const svg = Plot.plot({
             style: {
                 height: '100%',
-                background: vars.color.background,
+                backgroundColor: 'transparent',
             },
             x: {
                 type: 'point',

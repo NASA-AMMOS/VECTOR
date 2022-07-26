@@ -12,7 +12,7 @@ function ActiveTrackView() {
     return (
         <section className={styles.grid}>
             <div className={styles.panel}>
-                <h3 className={styles.subheader}>
+                <h3 className={styles.header}>
                     Track ID: {activeTrack}
                 </h3>
                 <div className={styles.bar}>

@@ -8,7 +8,7 @@ export const container = style({
     height: '8vh',
     padding: '2rem',
     fontSize: '1.2rem',
-    backgroundColor: vars.color.background,
+    backgroundColor: vars.color.white,
 });
 
 export const header = style({

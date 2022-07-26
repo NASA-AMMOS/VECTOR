@@ -12,7 +12,7 @@ export const item = style({
     display: 'grid',
     margin: '1rem',
     padding: '1rem',
-    backgroundColor: vars.color.background,
+    backgroundColor: vars.color.white,
     borderRadius: '0.4rem',
     cursor: 'pointer',
 });
