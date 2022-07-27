@@ -1,22 +1,26 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
-import { Scene, Vector3, Euler, Box3, Matrix4 } from 'three';
+import * as THREE from 'three';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, Line, useCamera } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
+// Need to import entire module instead of named module
+// to set proper axis to match SITE frame.
+THREE.Object3D.DefaultUp.set(0, 0, -1);
+
 function ViewCube() {
-    const { gl, scene, camera, size } = useThree()
+    const { gl, scene, camera, size } = useThree();
     
-    const virtualScene = useMemo(() => new Scene(), [])
+    const virtualScene = useMemo(() => new THREE.Scene(), []);
 
-    const ref = useRef()
-    const virtualCamera = useRef()
+    const ref = useRef();
+    const virtualCamera = useRef();
 
-    const [hover, set] = useState(null)
+    const [hover, set] = useState(null);
 
-    const matrix = new Matrix4()
+    const matrix = new THREE.Matrix4();
 
     useFrame(() => {
         matrix.copy(camera.matrix).invert();
@@ -85,11 +89,11 @@ function Cameras({ tiepoints, cameras }) {
         for (const cameraId of Object.keys(cameras)) {
             const camera = cameras[cameraId];
 
-            const initialC = new Vector3(camera.initial.C[0], -camera.initial.C[2], camera.initial.C[1]);
-            const initialA = new Vector3(camera.initial.A[0], -camera.initial.A[2], camera.initial.A[1]);
-            const initialH = new Vector3(camera.initial.H[0], -camera.initial.H[2], camera.initial.H[1]);
+            const initialC = new THREE.Vector3(...camera.initial.C);
+            const initialA = new THREE.Vector3(...camera.initial.A);
+            const initialH = new THREE.Vector3(...camera.initial.H);
 
-            const initialHxA = new Euler().setFromVector3(initialH.clone().cross(initialA).normalize());
+            const initialHxA = new THREE.Euler().setFromVector3(initialH.clone().cross(initialA).normalize());
 
             newBoxes.push(
                 <mesh
@@ -114,11 +118,11 @@ function Cameras({ tiepoints, cameras }) {
                 />
             );
 
-            const finalC = new Vector3(camera.final.C[0], -camera.final.C[2], camera.final.C[1]);
-            const finalA = new Vector3(camera.final.A[0], -camera.final.A[2], camera.final.A[1]);
-            const finalH = new Vector3(camera.final.H[0], -camera.final.H[2], camera.final.H[1]);
+            const finalC = new THREE.Vector3(...camera.final.C);
+            const finalA = new THREE.Vector3(...camera.final.A);
+            const finalH = new THREE.Vector3(...camera.final.H);
 
-            const finalHxA = new Euler().setFromVector3(finalH.clone().cross(finalA).normalize());
+            const finalHxA = new THREE.Euler().setFromVector3(finalH.clone().cross(finalA).normalize());
 
             newBoxes.push(
                 <mesh
@@ -147,21 +151,19 @@ function Cameras({ tiepoints, cameras }) {
         setBoxes(newBoxes);
         setLines(newLines);
 
-        // const initialXYZ = tiepoints[0].initialXYZ;
-        // setInitialPoint(
-        //     <mesh position={[initialXYZ[0], -initialXYZ[2], initialXYZ[1]]}>
-        //         <sphereGeometry args={[0.5]} />
-        //         <meshBasicMaterial color={theme.color.initial} />
-        //     </mesh>
-        // );
+        setInitialPoint(
+            <mesh position={tiepoints[0].initialXYZ}>
+                <sphereGeometry args={[0.5]} />
+                <meshBasicMaterial color={theme.color.initial} />
+            </mesh>
+        );
 
-        // const finalXYZ = tiepoints[0].finalXYZ;
-        // setFinalPoint(
-        //     <mesh position={[finalXYZ[0], -finalXYZ[2], finalXYZ[1]]}>
-        //         <sphereGeometry args={[0.5]} />
-        //         <meshBasicMaterial color={theme.color.final} />
-        //     </mesh>
-        // );
+        setFinalPoint(
+            <mesh position={tiepoints[0].finalXYZ}>
+                <sphereGeometry args={[0.5]} />
+                <meshBasicMaterial color={theme.color.final} />
+            </mesh>
+        );
     }
 
     function fitCamera() {
@@ -170,13 +172,14 @@ function Cameras({ tiepoints, cameras }) {
         const meshes = [];
         scene.traverse((object) => object.isMesh && !object.isLine2 && meshes.push(object));
 
-        const center = new Vector3();
-        const size = new Vector3();
+        const center = new THREE.Vector3();
+        const size = new THREE.Vector3();
 
-        const aabb = new Box3();
+        const aabb = new THREE.Box3();
         aabb.makeEmpty();
 
         for (const mesh of meshes) {
+            console.log(mesh);
             aabb.expandByObject(mesh);
         }
 
