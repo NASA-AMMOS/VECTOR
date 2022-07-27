@@ -8,6 +8,7 @@
     },
     "dependencies": {
         "@observablehq/plot": "^0.5.2",
+        "@placemarkio/flat-drop-files": "^1.0.2",
         "@react-three/drei": "^9.14.3",
         "@react-three/fiber": "^8.0.27",
         "@vanilla-extract/css": "^1.7.2",

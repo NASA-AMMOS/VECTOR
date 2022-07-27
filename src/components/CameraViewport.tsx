@@ -179,7 +179,6 @@ function Cameras({ tiepoints, cameras }) {
         aabb.makeEmpty();
 
         for (const mesh of meshes) {
-            console.log(mesh);
             aabb.expandByObject(mesh);
         }
 

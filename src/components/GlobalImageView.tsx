@@ -5,7 +5,13 @@ import { useData } from '@/DataContext';
 import * as styles from '@/components/GlobalImageView.css';
 
 function GlobalImageView() {
-    const { tiepoints, setActiveImage } = useData();
+    const { images, tiepoints, setActiveImage } = useData();
+
+    function getImageURL(id) {
+        const [_, fileId] = id.split('_');
+        const image = images.find((image) => image.name.includes(fileId));
+        return image.url;
+    }
 
     if (tiepoints && Object.keys(tiepoints).length > 0) {
         return (
@@ -18,7 +24,7 @@ function GlobalImageView() {
                             </h2>
                             <img
                                 className={styles.image}
-                                src={`src/assets/example/${id}.png`}
+                                src={getImageURL(id)}
                                 alt={`Image with ID: ${id}`}
                             />
                         </div>

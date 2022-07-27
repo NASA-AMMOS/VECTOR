@@ -12,6 +12,7 @@ export function useData() {
 export default function ProvideData({ children }) {
     const [tiepoints, setTiepoints] = useState(null);
     const [cameras, setCameras] = useState(null);
+    const [images, setImages] = useState([]);
 
     const [activeImage, setActiveImage] = useState(null);
     const [activeTrack, setActiveTrack] = useState(null);
@@ -91,6 +92,7 @@ export default function ProvideData({ children }) {
             value={{
                 tiepoints,
                 cameras,
+                images,
                 activeImage,
                 activeTrack,
                 residuals,
@@ -99,6 +101,7 @@ export default function ProvideData({ children }) {
 
                 setTiepoints,
                 setCameras,
+                setImages,
                 setActiveImage,
                 setActiveTrack,
                 setRenderTarget
