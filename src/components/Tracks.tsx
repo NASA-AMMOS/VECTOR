@@ -9,11 +9,10 @@ export function Track({ activeImage, activeTrack }) {
     const { tiepoints, renderTarget, activeTrack: contextTrack, setActiveTrack } = useData();
 
     const activeTiepoints = useMemo(() => {
-        const newTiepoints = tiepoints[activeImage];
         if (!activeTrack) {
-            return newTiepoints;
+            return tiepoints[activeImage];
         }
-        return newTiepoints.filter((t) => t.trackId === Number(activeTrack));
+        return Object.values(tiepoints).flat().filter((t) => t.trackId === Number(activeTrack));
     }, [activeImage, tiepoints]);
 
     function handleClick() {

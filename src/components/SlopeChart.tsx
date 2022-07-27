@@ -11,11 +11,10 @@ function SlopeChart({ activeImage, activeTrack }) {
     const plot = useRef(null);
 
     const activeTiepoints = useMemo(() => {
-        const newTiepoints = tiepoints[activeImage];
         if (!activeTrack) {
-            return newTiepoints;
+            return tiepoints[activeImage];
         }
-        return newTiepoints.filter((t) => t.trackId === Number(activeTrack));
+        return Object.values(tiepoints).flat().filter((t) => t.trackId === Number(activeTrack));
     }, [activeImage, tiepoints]);
 
     const baseVector = new Vector2();
