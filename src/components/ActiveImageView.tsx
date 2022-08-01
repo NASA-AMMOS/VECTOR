@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { View } from '@react-three/drei';
+import View from '@/components/View';
 import Tracks from '@/components/Tracks';
 import TiepointImage, { Scene } from '@/components/TiepointImage';
 import RadialChart from '@/components/RadialChart';
@@ -16,6 +16,7 @@ function ActiveImageView() {
 
     const container = useRef(null);
     const stage = useRef(null);
+    const tracks = useRef(null);
     const views = useRef([]);
 
     return (
@@ -31,7 +32,7 @@ function ActiveImageView() {
                     </div>
                 </div>
             </div>
-            <Tracks views={views} />
+            <Tracks ref={tracks} views={views} />
             <Canvas
                 className={styles.canvas}
                 orthographic={true}
@@ -46,7 +47,7 @@ function ActiveImageView() {
                     />
                 </View>
                 {renderTarget && views?.current.map((view, i) => (
-                    <View key={i} track={view}>
+                    <View key={i} parent={tracks} track={view}>
                         <mesh>
                             <planeGeometry args={[renderTarget.width, renderTarget.height]} />
                             <meshBasicMaterial map={renderTarget.texture} />

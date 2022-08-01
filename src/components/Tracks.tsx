@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, forwardRef } from 'react';
 import cn from 'classnames';
 import { Canvas } from '@react-three/fiber';
 import { View } from '@react-three/drei';
@@ -56,11 +56,11 @@ export function Track({ activeImage, activeTrack, views }) {
     )
 }
 
-function Tracks({ views }) {
+const Tracks = forwardRef(({ views }, ref) => {
     const { activeImage, tiepoints, tracks, renderTarget } = useData();
 
     return (
-        <div className={styles.container}>
+        <div ref={ref} className={styles.container}>
             <h2 className={styles.header}>
                 Tracks
             </h2>
@@ -74,6 +74,6 @@ function Tracks({ views }) {
             ))}
         </div>
     );
-}
+});
 
 export default Tracks;
