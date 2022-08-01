@@ -1,15 +1,15 @@
 import { useRef, useState, useEffect } from 'react';
-import { TextureLoader, Box3, Vector2, Color } from 'three';
+import * as THREE from 'three';
 import { Canvas, useThree, useLoader } from '@react-three/fiber';
 import { Points, Line, useTexture } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 
-function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRenderTarget }) {
+function TiepointImage({ activeImage, images, tiepoints, offsetHeight, setImage, setRenderTarget }) {
     const { gl, camera, size } = useThree();
 
-    const map = useLoader(TextureLoader, `src/assets/example/${activeImage}.png`);
+    const map = useLoader(THREE.TextureLoader, getImageURL(activeImage));
     const sprite = useTexture('/src/assets/disc.png');
 
     const mesh = useRef();
@@ -18,7 +18,13 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
     const [initialResiduals, setInitialResiduals] = useState([]);
     const [finalResiduals, setFinalResiduals] = useState([]);
 
-    const baseVector = new Vector2();
+    const baseVector = new THREE.Vector2();
+
+    function getImageURL(id) {
+        const [_, fileId] = id.split('_');
+        const image = images.find((image) => image.name.includes(fileId));
+        return image.url;
+    }
 
     function initData() {
         const newPoints = [];
@@ -28,7 +34,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
         for (const [i, tiepoint] of tiepoints.entries()) {
             const isLeft = tiepoint.leftId === activeImage;
 
-            const pixel = isLeft ? new Vector2(...tiepoint.leftPixel) : new Vector2(...tiepoint.rightPixel);
+            const pixel = isLeft ? new THREE.Vector2(...tiepoint.leftPixel) : new THREE.Vector2(...tiepoint.rightPixel);
             pixel.setX(pixel.x - map.image.width / 2);
             pixel.setY(pixel.y - map.image.height / 2);
 
@@ -38,13 +44,13 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
                 newPoints.push(...pixel.toArray(), 1);
             }
 
-            const initialResidual = new Vector2(...tiepoint.initialResidual)
-            const finalResidual = new Vector2(...tiepoint.finalResidual)
+            const initialResidual = new THREE.Vector2(...tiepoint.initialResidual)
+            const finalResidual = new THREE.Vector2(...tiepoint.finalResidual)
 
             newInitialResiduals.push(
                 <Line
                     key={i}
-                    color={theme.color.initial}
+                    color={theme.color.initialHex}
                     points={[
                         [...pixel.toArray(), 0],
                         [...initialResidual.add(pixel).toArray(), 0],
@@ -55,7 +61,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
             newFinalResiduals.push(
                 <Line
                     key={i}
-                    color={theme.color.final}
+                    color={theme.color.finalHex}
                     points={[
                         [...pixel.toArray(), 0],
                         [...finalResidual.add(pixel).toArray(), 0],
@@ -70,7 +76,7 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
     }
 
     function fitCamera() {
-        const aabb = new Box3().setFromObject(mesh.current);
+        const aabb = new THREE.Box3().setFromObject(mesh.current);
         camera.zoom = Math.min(
             size.width / (aabb.max.x - aabb.min.x),
             size.height / (aabb.max.y - aabb.min.y)
@@ -124,7 +130,9 @@ function TiepointImage({ activeImage, tiepoints, offsetHeight, setImage, setRend
 }
 
 function Container() {
-    const { activeImage, tiepoints, setRenderTarget } = useData();
+    THREE.Object3D.DefaultUp.set(0, 1, 0);
+
+    const { activeImage, images, tiepoints, setRenderTarget } = useData();
 
     const container = useRef(null);
 
@@ -145,6 +153,7 @@ function Container() {
             <Canvas orthographic={true} gl={{ preserveDrawingBuffer: true }}>
                 <TiepointImage
                     activeImage={activeImage}
+                    images={images}
                     tiepoints={tiepoints[activeImage]}
                     offsetHeight={offsetHeight}
                     setImage={setImage}

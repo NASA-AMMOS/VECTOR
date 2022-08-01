@@ -6,10 +6,6 @@ import { useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
-// Need to import entire module instead of named module
-// to set proper axis to match SITE frame.
-THREE.Object3D.DefaultUp.set(0, 0, -1);
-
 function ViewCube() {
     const { gl, scene, camera, size } = useThree();
     
@@ -104,14 +100,14 @@ function Cameras({ tiepoints, cameras }) {
                     visible={false}
                 >
                     <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshLambertMaterial color={theme.color.initial} opacity={0.5} transparent={true} />
+                    <meshLambertMaterial color={theme.color.initialHex} opacity={theme.color.initialOpacity} transparent={true} />
                 </mesh>
             );
 
             newLines.push(
                 <Line
                     key={`${cameraId}_initial`}
-                    color={theme.color.initial}
+                    color={theme.color.initialHex}
                     points={[initialC, initialC.clone().add(initialA)]}
                     userData={{ cameraId, initial: true }}
                     visible={false}
@@ -134,14 +130,14 @@ function Cameras({ tiepoints, cameras }) {
                     onPointerOut={handlePointerOut}
                 >
                     <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshLambertMaterial color={theme.color.final} />
+                    <meshLambertMaterial color={theme.color.finalHex} />
                 </mesh>
             );
 
             newLines.push(
                 <Line
                     key={`${cameraId}_final`}
-                    color={theme.color.final}
+                    color={theme.color.finalHex}
                     points={[finalC, finalC.clone().add(finalA)]}
                     userData={{ cameraId, initial: false }}
                 />
@@ -154,14 +150,14 @@ function Cameras({ tiepoints, cameras }) {
         setInitialPoint(
             <mesh position={tiepoints[0].initialXYZ}>
                 <sphereGeometry args={[0.5]} />
-                <meshBasicMaterial color={theme.color.initial} />
+                <meshBasicMaterial color={theme.color.initialHex} />
             </mesh>
         );
 
         setFinalPoint(
             <mesh position={tiepoints[0].finalXYZ}>
                 <sphereGeometry args={[0.5]} />
-                <meshBasicMaterial color={theme.color.final} />
+                <meshBasicMaterial color={theme.color.finalHex} />
             </mesh>
         );
     }
@@ -226,14 +222,18 @@ function Cameras({ tiepoints, cameras }) {
             <pointLight position={[10, 10, 10]} intensity={0.5} />
             {boxes.length > 0 && boxes}
             {lines.length > 0 && lines}
-            {initialPoint}
-            {finalPoint}
+            {/*{initialPoint}*/}
+            {/*{finalPoint}*/}
             <ViewCube />
         </>
     )
 }
 
 function CameraViewport() {
+    // Need to import entire module instead of named module
+    // to set proper axis to match SITE frame.
+    THREE.Object3D.DefaultUp.set(0, 0, -1);
+
     const { tiepoints, cameras, activeImage, activeTrack } = useData();
 
     const activeTiepoints = useMemo(() => tiepoints[activeImage].filter((t) => t.trackId === activeTrack), [activeImage, activeTrack, tiepoints]);

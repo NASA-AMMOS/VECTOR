@@ -200,10 +200,10 @@ function Landing() {
             </div>
             <section className={styles.header}>
                 <h1 className={styles.title}>
-                    TARDIS
+                    VECTOR
                 </h1>
                 <p className={styles.body}>
-                    Tiepoint And Residual Display Interactive System
+                    Visualization and Editing of Camera Tiepoints, Orientations, and Residuals
                 </p>
             </section>
         </main>

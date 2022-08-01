@@ -32,11 +32,11 @@ export const header = style({
 });
 
 export const title = style({
-    fontSize: '8rem',
+    fontSize: '9rem',
 });
 
 export const body = style({
-    width: '27rem',
+    width: '36rem',
     textAlign: 'justify',
 
     selectors: {
