@@ -20,6 +20,7 @@ export const track = style({
     display: 'flex',
     alignItems: 'center',
     height: '10rem',
+    width: 'fit-content',
     cursor: 'pointer',
     padding: '1rem',
     backgroundColor: vars.color.background,
@@ -33,7 +34,7 @@ export const trackSpacing = style({
 
 export const subheader = style({
     flexShrink: 0,
-    width: '5rem',
+    width: '4rem',
     fontSize: '1rem',
     fontWeight: 500,
     textTransform: 'uppercase',
@@ -49,9 +50,11 @@ export const slope = style({
 export const tiepoints = style({
     display: 'flex',
     alignItems: 'center',
+    padding: '1rem',
 });
 
 export const tiepoint = style({
-    height: '6rem',
+    height: 'calc(10rem - 2rem)',
+    width: 'calc(10rem - 2rem)',
     marginRight: '1rem',
 });

@@ -12,9 +12,14 @@ export const container = style({
 });
 
 export const header = style({
+    height: 'calc(1.2rem + 1rem)',
     paddingBottom: '1rem',
     fontSize: '1.2rem',
     fontWeight: 500,
     textTransform: 'uppercase',
     textAlign: 'center',
+});
+
+export const stage = style({
+    height: 'calc(((92vh - 4rem) / 2 - 0.5rem) - 2rem - 2.2rem)'
 });

@@ -6,8 +6,8 @@ import { useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 
-function TiepointImage({ activeImage, images, tiepoints, offsetHeight, setImage, setRenderTarget }) {
-    const { gl, camera, size } = useThree();
+export function Scene({ activeImage, images, tiepoints, setRenderTarget }) {
+    const { gl, scene, camera, size } = useThree();
 
     const map = useLoader(THREE.TextureLoader, getImageURL(activeImage));
     const sprite = useTexture('/src/assets/disc.png');
@@ -85,25 +85,25 @@ function TiepointImage({ activeImage, images, tiepoints, offsetHeight, setImage,
     }
 
     function updateRenderTarget() {
-        setRenderTarget(gl.domElement.toDataURL());
+        const newTarget = new THREE.WebGLRenderTarget(size.width, size.height);
+        gl.setRenderTarget(newTarget);
+        gl.render(scene, camera);
+        setRenderTarget(newTarget);
+        gl.setRenderTarget(null);
     }
-
-    useEffect(() => {
-        if (map.image) {
-            setImage(map.image);
-        }
-    }, [map]);
 
     useEffect(() => {
         initData();
     }, [tiepoints]);
 
     useEffect(() => {
-        if (offsetHeight) {
-            fitCamera();
+        fitCamera();
+        // TODO: Update render target when initial render is finished,
+        // not on an arbitrary delay.
+        setTimeout(() => {
             updateRenderTarget();
-        }
-    }, [offsetHeight]);
+        }, 500);
+    }, []);
 
     return (
         <>
@@ -129,39 +129,17 @@ function TiepointImage({ activeImage, images, tiepoints, offsetHeight, setImage,
     );
 }
 
-function Container() {
-    THREE.Object3D.DefaultUp.set(0, 1, 0);
-
-    const { activeImage, images, tiepoints, setRenderTarget } = useData();
-
-    const container = useRef(null);
-
-    const [image, setImage] = useState(null);
-    const [offsetHeight, setOffsetHeight] = useState(null);
-
-    useEffect(() => {
-        if (image && image.width && image.height) {
-            setOffsetHeight(image.height * (container.current.offsetWidth / image.width));
-        }
-    }, [image]);
+function TiepointImage({ stage }) {
+    const { activeImage } = useData();
 
     return (
-        <section ref={container} className={styles.container}>
+        <section className={styles.container}>
             <h2 className={styles.header}>
                 Image ID: {activeImage}
             </h2>
-            <Canvas orthographic={true} gl={{ preserveDrawingBuffer: true }}>
-                <TiepointImage
-                    activeImage={activeImage}
-                    images={images}
-                    tiepoints={tiepoints[activeImage]}
-                    offsetHeight={offsetHeight}
-                    setImage={setImage}
-                    setRenderTarget={setRenderTarget}
-                />
-            </Canvas>
+            <div ref={stage} className={styles.stage} />
         </section>
     );
 }
 
-export default Container;
+export default TiepointImage;

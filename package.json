@@ -1,5 +1,5 @@
 {
-    "name": "slam",
+    "name": "vector",
     "private": true,
     "scripts": {
         "dev": "vite",
