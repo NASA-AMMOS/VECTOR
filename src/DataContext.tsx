@@ -13,7 +13,7 @@ export default function ProvideData({ children }) {
     const [tiepoints, setTiepoints] = useState(null);
     const [cameras, setCameras] = useState(null);
     const [images, setImages] = useState([]);
-    const [vicar, setVICAR] = useState([]);
+    const [vicar, setVICAR] = useState({});
 
     const [activeImage, setActiveImage] = useState(null);
     const [activeTrack, setActiveTrack] = useState(null);
@@ -63,6 +63,12 @@ export default function ProvideData({ children }) {
         return image.url;
     }, [images]);
 
+    const getVICARFile = useCallback((id) => {
+        const [_, fileId] = id.split('_');
+        const key = Object.keys(vicar).find((v) => v.includes(fileId));
+        return vicar[key];
+    }, [vicar]);
+
     return (
         <DataContext.Provider
             value={{
@@ -77,6 +83,7 @@ export default function ProvideData({ children }) {
                 tracks,
 
                 getImageURL,
+                getVICARFile,
 
                 setTiepoints,
                 setCameras,

@@ -68,7 +68,7 @@ function ViewCube() {
 function Scene() {
     const { scene, camera } = useThree();
 
-    const { tiepoints, cameras, activeImage, activeTrack } = useData();
+    const { tiepoints, cameras, vicar, activeImage, activeTrack, getVICARFile } = useData();
 
     const controls = useRef(null);
 
@@ -113,7 +113,9 @@ function Scene() {
         for (const cameraId of Object.keys(activeCameras)) {
             const camera = activeCameras[cameraId];
 
-            console.log(cameraId);
+            const metadata = getVICARFile(cameraId);
+            const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`);
+            const originOffset = metadata[frameIndex - 4].split('=')[1].replace(/\(|\)/g, '').split(',').map(Number);
 
             const initialC = new THREE.Vector3(...camera.initial.C);
             const initialA = new THREE.Vector3(...camera.initial.A);
@@ -187,14 +189,14 @@ function Scene() {
 
         setInitialPoint(
             <mesh position={activeTiepoints[0].initialXYZ}>
-                <sphereGeometry args={[0.5]} />
+                <sphereGeometry args={[0.1]} />
                 <meshBasicMaterial color={theme.color.initialHex} />
             </mesh>
         );
 
         setFinalPoint(
             <mesh position={activeTiepoints[0].finalXYZ}>
-                <sphereGeometry args={[0.5]} />
+                <sphereGeometry args={[0.1]} />
                 <meshBasicMaterial color={theme.color.finalHex} />
             </mesh>
         );
@@ -260,14 +262,18 @@ function Scene() {
             <pointLight position={[10, 10, 10]} intensity={0.1} />
             {boxes}
             {lines}
-            {/*{initialPoint}*/}
-            {/*{finalPoint}*/}
+            {/*{initialPoint}
+            {finalPoint}*/}
             <ViewCube />
         </>
     )
 }
 
 function CameraViewport() {
+    // Need to import entire module instead of named module
+    // to set proper axis to match SITE frame.
+    THREE.Object3D.DefaultUp.set(0, 0, -1);
+
     const ContextBridge = useContextBridge(DataContext);
 
     return (
