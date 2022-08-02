@@ -1,39 +1,57 @@
-import { useRef, useMemo, forwardRef } from 'react';
+import { useState, useMemo, useEffect, forwardRef } from 'react';
 import cn from 'classnames';
 import { Canvas } from '@react-three/fiber';
-import { View } from '@react-three/drei';
+import { View, useTexture } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import SlopeChart from '@/components/SlopeChart';
 import TiepointImage from '@/components/TiepointImage';
 import * as styles from '@/components/Tracks.css';
 
-export function Track({ activeImage, activeTrack, views }) {
-    const { tiepoints, activeTrack: contextTrack, setActiveTrack } = useData();
+function TrackImage({ activeImage, activeTiepoint }) {
+    const { getImageURL } = useData();
+
+    const imageTex = useTexture(getImageURL(activeTiepoint.leftId === activeImage ? activeTiepoint.leftId : activeTiepoint.rightId));
+
+    return (
+        <mesh>
+            <planeGeometry args={[imageTex.image.width, imageTex.image.height]} />
+            <meshBasicMaterial map={imageTex} />
+        </mesh>
+    );
+}
+
+export function Track({ activeImage, activeTrack, views, grouped }) {
+    const { tiepoints, setActiveTrack } = useData();
 
     const activeTiepoints = useMemo(() => {
-        if (!activeTrack) {
-            return tiepoints[activeImage];
-        }
-        return Object.values(tiepoints).flat().filter((t) => t.trackId === Number(activeTrack));
-    }, [activeImage, tiepoints]);
+        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
+            // Remove duplicate tiepoints that exist from image pairs.
+            return index === self.findIndex((t) => t.index === tiepoint.index);
+        }).filter((t) => t.trackId === Number(activeTrack));
+    }, [tiepoints, activeImage, activeTrack]);
 
     function handleClick() {
         setActiveTrack(Number(activeTrack));
     }
 
-    function updateViews(element) {
+    function updateViews(element, tiepoint) {
         if (element) {
-            views.current.push({ current: element });
+            views.current.push({
+                ref: { current: element },
+                scene: (
+                    <TrackImage activeImage={activeImage} activeTiepoint={tiepoint} />
+                ),
+            });
         }
     }
 
     return (
         <div
             key={activeTrack}
-            className={cn(styles.track, { [styles.trackSpacing]: !contextTrack })}
+            className={cn(styles.track, { [styles.trackSpacing]: grouped })}
             onClick={handleClick}
         >
-            {!contextTrack && (
+            {grouped && (
                 <>
                     <h3 className={styles.subheader}>
                         ID: {activeTrack}
@@ -46,7 +64,7 @@ export function Track({ activeImage, activeTrack, views }) {
             <div className={styles.tiepoints}>
                 {activeTiepoints.map((tiepoint, index) => (
                     <div
-                        ref={updateViews}
+                        ref={(element) => updateViews(element, tiepoint)}
                         key={index}
                         className={styles.tiepoint}
                     />
@@ -56,20 +74,21 @@ export function Track({ activeImage, activeTrack, views }) {
     )
 }
 
-const Tracks = forwardRef(({ views }, ref) => {
-    const { activeImage, tiepoints, tracks, renderTarget } = useData();
+const Tracks = forwardRef(({ activeTracks, views }, ref) => {
+    const { activeImage } = useData();
 
     return (
         <div ref={ref} className={styles.container}>
             <h2 className={styles.header}>
                 Tracks
             </h2>
-            {Object.keys(tracks).map((trackId) => (
+            {activeTracks.map((trackId) => (
                 <Track
                     key={trackId}
                     activeImage={activeImage}
                     activeTrack={trackId}
                     views={views}
+                    grouped
                 />
             ))}
         </div>

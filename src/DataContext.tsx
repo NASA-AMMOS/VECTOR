@@ -1,9 +1,9 @@
-import { createContext, useContext, useState, useMemo } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
 
 const baseVector = new Vector2();
 
-const DataContext = createContext({});
+export const DataContext = createContext({});
 
 export function useData() {
     return useContext(DataContext);
@@ -16,37 +16,6 @@ export default function ProvideData({ children }) {
 
     const [activeImage, setActiveImage] = useState(null);
     const [activeTrack, setActiveTrack] = useState(null);
-
-    const [renderTarget, setRenderTarget] = useState(null);
-
-    const residuals = useMemo(() => {
-        if (!tiepoints) return null;
-
-        const newResiduals = {};
-
-        const initialResiduals = [];
-        const finalResiduals = [];
-
-        for (const imageId of Object.keys(tiepoints)) {
-            const imageTiepoints = tiepoints[imageId];
-            for (const tiepoint of imageTiepoints) {
-                const initialResidual = new Vector2(...tiepoint.initialResidual);
-                const finalResidual = new Vector2(...tiepoint.finalResidual);
-
-                const initialDistance = Number(baseVector.distanceTo(initialResidual));
-                const finalDistance = Number(baseVector.distanceTo(finalResidual));
-
-                const item = {
-                    initial: initialDistance,
-                    final: finalDistance
-                };
-
-                newResiduals[imageId] = newResiduals[imageId] ? [...newResiduals[imageId], item] : [item];
-            }
-        }
-
-        return newResiduals;
-    }, [tiepoints]);
 
     const tracks = useMemo(() => {
         if (!activeImage || !tiepoints) return null;
@@ -70,8 +39,8 @@ export default function ProvideData({ children }) {
                 const initialResidual = new Vector2(...tiepoint.initialResidual);
                 const finalResidual = new Vector2(...tiepoint.finalResidual);
 
-                const initialResidualDistance = baseVector.clone().distanceTo(initialResidual);
-                const finalResidualDistance = baseVector.clone().distanceTo(finalResidual);
+                const initialResidualDistance = baseVector.distanceTo(initialResidual);
+                const finalResidualDistance = baseVector.distanceTo(finalResidual);
 
                 maxResidual = Math.max(maxResidual, initialResidualDistance, finalResidualDistance);
 
@@ -87,24 +56,32 @@ export default function ProvideData({ children }) {
         return newTracks;
     }, [activeImage, tiepoints]);
 
+    const getImageURL = useCallback((id) => {
+        const [_, fileId] = id.split('_');
+        const image = images.find((image) => image.name.includes(fileId));
+        return image.url;
+    }, [images]);
+
     return (
         <DataContext.Provider
             value={{
                 tiepoints,
                 cameras,
                 images,
+
                 activeImage,
                 activeTrack,
-                residuals,
+
                 tracks,
-                renderTarget,
+
+                getImageURL,
 
                 setTiepoints,
                 setCameras,
                 setImages,
+
                 setActiveImage,
                 setActiveTrack,
-                setRenderTarget
             }}
         >
             {children}
