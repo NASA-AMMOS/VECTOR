@@ -7,7 +7,7 @@ import { createPortal, useFrame, useThree, Size } from '@react-three/fiber';
 
 const isOrthographicCamera = (def: any): def is THREE.OrthographicCamera => def && (def as THREE.OrthographicCamera).isOrthographicCamera;
 
-export type ContainerProps = {
+type ContainerProps = {
     scene: THREE.Scene
     index: number
     children?: ReactNode
@@ -18,7 +18,7 @@ export type ContainerProps = {
     canvasSize: Size
 };
 
-export type ViewProps = {
+type ViewProps = {
     /** The tracking element, the view will be cut according to its whereabouts */
     track: MutableRefObject<HTMLElement>
     /** The parent element, the view will be visible based on its bounds */

@@ -1,26 +1,41 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useMemo, useRef, useState, useEffect, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, OrthographicCamera, Line, useCamera } from '@react-three/drei';
+import { OrbitControls, OrthographicCamera, useCamera } from '@react-three/drei';
 import { useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
+const matrix = new THREE.Matrix4();
+
+function Line({ points, userData, color, visible }) {
+    const ref = useRef<THREE.Line>();
+
+    useLayoutEffect(() => {
+        ref.current.geometry.setFromPoints(points);
+    }, [points]);
+
+    return (
+        <line ref={ref} userData={userData} visible={visible}>
+            <bufferGeometry />
+            <lineBasicMaterial color={color} />
+        </line>
+    );
+}
+
 function ViewCube() {
     const { gl, scene, camera, size } = useThree();
-    
-    const virtualScene = useMemo(() => new THREE.Scene(), []);
 
-    const ref = useRef();
+    const mesh = useRef();
+    const axes = useRef();
     const virtualCamera = useRef();
 
-    const [hover, set] = useState(null);
-
-    const matrix = new THREE.Matrix4();
+    const virtualScene = useMemo(() => new THREE.Scene(), []);
 
     useFrame(() => {
         matrix.copy(camera.matrix).invert();
-        ref.current.quaternion.setFromRotationMatrix(matrix);
+        mesh.current.quaternion.setFromRotationMatrix(matrix);
+        axes.current.quaternion.setFromRotationMatrix(matrix);
         gl.autoClear = true;
         gl.render(scene, camera);
         gl.autoClear = false;
@@ -32,17 +47,18 @@ function ViewCube() {
         <>
             <OrthographicCamera ref={virtualCamera} makeDefault={false} position={[0, 0, 100]} />
             <mesh
-                ref={ref}
+                ref={mesh}
                 raycast={useCamera(virtualCamera)}
-                position={[size.width / 2 - 80, size.height / 2 - 80, 0]}
-                onPointerOut={(e) => set(null)}
-                onPointerMove={(e) => set(Math.floor(e.faceIndex / 2))}
+                position={[size.width / 2 - 50, size.height / 2 - 50, 0]}
             >
-                {[...Array(6)].map((_, index) => (
-                    <meshLambertMaterial attachArray="material" key={index} color={hover === index ? 'hotpink' : 'white'} />
-                ))}
-                <boxBufferGeometry attach="geometry" args={[60, 60, 60]} />
+                <meshLambertMaterial color="white" />
+                <boxBufferGeometry args={[20, 20, 20]} />
             </mesh>
+            <axesHelper
+                ref={axes}
+                args={[50, 50, 50]}
+                position={[size.width / 2 - 50, size.height / 2 - 50, 0]}
+            />
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={0.5} />
         </>
@@ -99,8 +115,13 @@ function Cameras({ tiepoints, cameras }) {
                     userData={{ cameraId, initial: true }}
                     visible={false}
                 >
-                    <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshLambertMaterial color={theme.color.initialHex} opacity={theme.color.initialOpacity} transparent={true} />
+                    <planeGeometry args={[0.1, 0.1]} />
+                    <meshLambertMaterial
+                        color={theme.color.initialHex}
+                        opacity={theme.color.initialOpacity}
+                        transparent={true}
+                        side={THREE.DoubleSide}
+                    />
                 </mesh>
             );
 
@@ -110,7 +131,6 @@ function Cameras({ tiepoints, cameras }) {
                     color={theme.color.initialHex}
                     points={[initialC, initialC.clone().add(initialA)]}
                     userData={{ cameraId, initial: true }}
-                    visible={false}
                 />
             );
 
@@ -129,8 +149,11 @@ function Cameras({ tiepoints, cameras }) {
                     onPointerOver={handlePointerOver}
                     onPointerOut={handlePointerOut}
                 >
-                    <boxGeometry args={[0.1, 0.1, 0.1]} />
-                    <meshLambertMaterial color={theme.color.finalHex} />
+                    <planeGeometry args={[0.1, 0.1]} />
+                    <meshLambertMaterial
+                        color={theme.color.finalHex}
+                        side={THREE.DoubleSide}
+                    />
                 </mesh>
             );
 
@@ -219,9 +242,9 @@ function Cameras({ tiepoints, cameras }) {
         <>
             <OrbitControls ref={controls} screenSpacePanning />
             <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} intensity={0.5} />
-            {boxes.length > 0 && boxes}
-            {lines.length > 0 && lines}
+            <pointLight position={[10, 10, 10]} intensity={0.1} />
+            {boxes}
+            {lines}
             {/*{initialPoint}*/}
             {/*{finalPoint}*/}
             <ViewCube />

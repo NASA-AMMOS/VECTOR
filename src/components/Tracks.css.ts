@@ -32,6 +32,10 @@ export const trackSpacing = style({
     paddingBottom: '1rem',
 });
 
+export const trackWidth = style({
+    width: '100%',
+});
+
 export const subheader = style({
     flexShrink: 0,
     width: '4rem',

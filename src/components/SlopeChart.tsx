@@ -5,7 +5,7 @@ import { useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/SlopeChart.css';
 
-function SlopeChart({ activeImage, activeTrack }) {
+function SlopeChart({ activeImage, activeTrack, isSmall }) {
     const { tiepoints } = useData();
 
     const plot = useRef(null);
@@ -53,7 +53,7 @@ function SlopeChart({ activeImage, activeTrack }) {
             },
             x: {
                 type: 'point',
-                axis: 'top',
+                axis: isSmall ? null : 'top',
                 label: null,
                 domain: ['Initial', 'Final'],
                 clamp: true,

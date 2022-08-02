@@ -20,7 +20,7 @@ function TrackImage({ activeImage, activeTiepoint }) {
     );
 }
 
-export function Track({ activeImage, activeTrack, views, grouped }) {
+export function Track({ activeImage, activeTrack, views, isGrouped }) {
     const { tiepoints, setActiveTrack } = useData();
 
     const activeTiepoints = useMemo(() => {
@@ -48,16 +48,20 @@ export function Track({ activeImage, activeTrack, views, grouped }) {
     return (
         <div
             key={activeTrack}
-            className={cn(styles.track, { [styles.trackSpacing]: grouped })}
+            className={cn(styles.track, { [styles.trackSpacing]: isGrouped, [styles.trackWidth]: !isGrouped })}
             onClick={handleClick}
         >
-            {grouped && (
+            {isGrouped && (
                 <>
                     <h3 className={styles.subheader}>
                         ID: {activeTrack}
                     </h3>
                     <div className={styles.slope}>
-                        <SlopeChart activeImage={activeImage} activeTrack={activeTrack} />
+                        <SlopeChart
+                            activeImage={activeImage}
+                            activeTrack={activeTrack}
+                            isSmall
+                        />
                     </div>
                 </>
             )}
@@ -88,7 +92,7 @@ const Tracks = forwardRef(({ activeTracks, views }, ref) => {
                     activeImage={activeImage}
                     activeTrack={trackId}
                     views={views}
-                    grouped
+                    isGrouped
                 />
             ))}
         </div>
