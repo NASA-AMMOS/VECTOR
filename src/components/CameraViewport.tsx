@@ -1,8 +1,8 @@
-import { useMemo, useRef, useState, useEffect, useLayoutEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useLayoutEffect } from 'react';
 import * as THREE from 'three';
 import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, OrthographicCamera, useCamera } from '@react-three/drei';
-import { useData } from '@/DataContext';
+import { OrbitControls, OrthographicCamera, useContextBridge, useCamera } from '@react-three/drei';
+import { DataContext, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
@@ -65,8 +65,10 @@ function ViewCube() {
     , virtualScene);
 }
 
-function Cameras({ tiepoints, cameras }) {
+function Scene() {
     const { scene, camera } = useThree();
+
+    const { tiepoints, cameras, activeImage, activeTrack } = useData();
 
     const controls = useRef(null);
 
@@ -74,6 +76,16 @@ function Cameras({ tiepoints, cameras }) {
     const [lines, setLines] = useState([]);
     const [initialPoint, setInitialPoint] = useState(null);
     const [finalPoint, setFinalPoint] = useState(null);
+
+    const activeTiepoints = useMemo(() => tiepoints[activeImage].filter((t) => t.trackId === activeTrack), [activeImage, activeTrack, tiepoints]);
+
+    const activeCameras = useMemo(() => {
+        const newCameras = [...new Set(activeTiepoints.map((t) => [t.leftId, t.rightId]).flat())];
+        return Object.keys(cameras).filter((k) => newCameras.includes(k)).reduce((obj, key) => {
+            obj[key] = cameras[key];
+            return obj;
+        }, {});
+    }, [activeTiepoints, cameras]);
 
     const parser = new DOMParser();
 
@@ -98,8 +110,10 @@ function Cameras({ tiepoints, cameras }) {
         const newBoxes = [];
         const newLines = [];
 
-        for (const cameraId of Object.keys(cameras)) {
-            const camera = cameras[cameraId];
+        for (const cameraId of Object.keys(activeCameras)) {
+            const camera = activeCameras[cameraId];
+
+            console.log(cameraId);
 
             const initialC = new THREE.Vector3(...camera.initial.C);
             const initialA = new THREE.Vector3(...camera.initial.A);
@@ -131,6 +145,7 @@ function Cameras({ tiepoints, cameras }) {
                     color={theme.color.initialHex}
                     points={[initialC, initialC.clone().add(initialA)]}
                     userData={{ cameraId, initial: true }}
+                    visible={false}
                 />
             );
 
@@ -171,14 +186,14 @@ function Cameras({ tiepoints, cameras }) {
         setLines(newLines);
 
         setInitialPoint(
-            <mesh position={tiepoints[0].initialXYZ}>
+            <mesh position={activeTiepoints[0].initialXYZ}>
                 <sphereGeometry args={[0.5]} />
                 <meshBasicMaterial color={theme.color.initialHex} />
             </mesh>
         );
 
         setFinalPoint(
-            <mesh position={tiepoints[0].finalXYZ}>
+            <mesh position={activeTiepoints[0].finalXYZ}>
                 <sphereGeometry args={[0.5]} />
                 <meshBasicMaterial color={theme.color.finalHex} />
             </mesh>
@@ -227,10 +242,10 @@ function Cameras({ tiepoints, cameras }) {
     }
 
     useEffect(() => {
-        if (tiepoints && cameras) {
+        if (activeTiepoints && activeCameras) {
             initData();
         }
-    }, [tiepoints, cameras]);
+    }, [activeTiepoints, activeCameras]);
 
     useEffect(() => {
         if (boxes.length > 0) {
@@ -253,31 +268,15 @@ function Cameras({ tiepoints, cameras }) {
 }
 
 function CameraViewport() {
-    // Need to import entire module instead of named module
-    // to set proper axis to match SITE frame.
-    THREE.Object3D.DefaultUp.set(0, 0, -1);
-
-    const { tiepoints, cameras, activeImage, activeTrack } = useData();
-
-    const activeTiepoints = useMemo(() => tiepoints[activeImage].filter((t) => t.trackId === activeTrack), [activeImage, activeTrack, tiepoints]);
-
-    const activeCameras = useMemo(() => {
-        const newCameras = [...new Set(activeTiepoints.map((t) => [t.leftId, t.rightId]).flat())];
-        return Object.keys(cameras).filter((k) => newCameras.includes(k)).reduce((obj, key) => {
-            obj[key] = cameras[key];
-            return obj;
-        }, {});
-    }, [activeTiepoints, cameras]);
+    const ContextBridge = useContextBridge(DataContext);
 
     return (
         <Canvas className={styles.container}>
-            <color attach="background" args={['white']} />
-            <Cameras
-                tiepoints={activeTiepoints}
-                cameras={activeCameras}
-            />
+            <ContextBridge>
+                <Scene />
+            </ContextBridge>
         </Canvas>
-    );
+    )
 }
 
 export default CameraViewport;

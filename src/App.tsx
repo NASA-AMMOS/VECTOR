@@ -7,9 +7,9 @@ import { useData } from '@/DataContext';
 import * as styles from '@/App.css';
 
 function App() {
-    const { tiepoints, cameras, activeImage, activeTrack } = useData();
+    const { tiepoints, cameras, vicar, activeImage, activeTrack } = useData();
 
-    if (!tiepoints || !cameras) {
+    if (!tiepoints || !cameras || !vicar) {
         return <Landing />
     } else {
         return (

@@ -7,7 +7,7 @@ import * as styles from '@/components/Landing.css';
 const parser = new DOMParser();
 
 function Landing() {
-    const { setTiepoints, setCameras, setImages } = useData();
+    const { setTiepoints, setCameras, setImages, setVICAR } = useData();
 
     const [files, setFiles] = useState([]);
 
@@ -106,11 +106,13 @@ function Landing() {
             const initialC = initialCamera.querySelector('parameter[id="C"]');
             const initialA = initialCamera.querySelector('parameter[id="A"]');
             const initialH = initialCamera.querySelector('parameter[id="H"]');
+            const initialFrame = initialCamera.querySelector('reference_frame');
 
             const finalCamera = image.querySelector('camera_model');
             const finalC = finalCamera.querySelector('parameter[id="C"]');
             const finalA = finalCamera.querySelector('parameter[id="A"]');
             const finalH = finalCamera.querySelector('parameter[id="H"]');
+            const finalFrame = finalCamera.querySelector('reference_frame');
 
             newCameras[imageId] = {
                 initial: {
@@ -129,6 +131,10 @@ function Landing() {
                         Number(initialH.getAttribute('value2')),
                         Number(initialH.getAttribute('value3')),
                     ],
+                    frame: {
+                        name: initialFrame.getAttribute('name'),
+                        index: initialFrame.getAttribute('index1'),
+                    },
                 },
                 final: {
                     C: [
@@ -146,6 +152,10 @@ function Landing() {
                         Number(finalH.getAttribute('value2')),
                         Number(finalH.getAttribute('value3')),
                     ],
+                    frame: {
+                        name: finalFrame.getAttribute('name'),
+                        index: finalFrame.getAttribute('index1'),
+                    },
                 },
             };
         }
@@ -161,6 +171,10 @@ function Landing() {
     async function handleVICAR(file) {
         const text = await file.text();
         const metadata = text.split(/(\s+)/).map((t) => t.trim()).filter(Boolean);
+        setVICAR((v) => {
+            v[file.name] = metadata;
+            return v;
+        });
     }
 
     async function handleClick(event) {

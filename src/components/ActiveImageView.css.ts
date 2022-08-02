@@ -35,4 +35,4 @@ export const canvas = style({
     height: '100vh !important',
     width: '100vw !important',
     pointerEvents: 'none',
-})
+});
