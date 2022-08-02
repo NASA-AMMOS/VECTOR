@@ -10,6 +10,12 @@ function ResidualChart({ activeImage, activeTrack }) {
     const { tiepoints } = useData();
 
     const activeTiepoints = useMemo(() => {
+        if (!activeImage) {
+            return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
+                // Remove duplicate tiepoints that exist from image pairs.
+                return index === self.findIndex((t) => t.index === tiepoint.index);
+            });
+        }
         const newTiepoints = tiepoints[activeImage];
         if (!activeTrack) {
             return newTiepoints;
@@ -40,6 +46,7 @@ function ResidualChart({ activeImage, activeTrack }) {
             style: {
                 height: '100%',
                 fontSize: Pixel(1.5),
+                backgroundColor: 'transparent',
             },
             x: {
                 label: null,

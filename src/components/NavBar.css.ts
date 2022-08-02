@@ -7,7 +7,7 @@ export const container = style({
     alignItems: 'center',
     height: '8vh',
     padding: '2rem',
-    fontSize: '1.2rem',
+    fontSize: '1.5rem',
     backgroundColor: vars.color.white,
 });
 
@@ -17,17 +17,20 @@ export const header = style({
 
 export const button = style({
     padding: '1rem',
-    backgroundColor: vars.color.black,
-    color: vars.color.white,
+    color: vars.color.black,
     borderRadius: '0.4rem',
-    transition: 'opacity 0.1s',
+    transition: 'all 0.1s',
 
     selectors: {
         '&:not(:last-of-type)': {
             marginRight: '1rem',
         },
         '&:hover': {
-            opacity: 0.9,
+            opacity: 0.7,
         },
     },
+});
+
+export const active = style({
+    backgroundColor: vars.color.background,
 });
