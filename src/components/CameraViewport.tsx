@@ -77,7 +77,12 @@ function Scene() {
     const [initialPoint, setInitialPoint] = useState(null);
     const [finalPoint, setFinalPoint] = useState(null);
 
-    const activeTiepoints = useMemo(() => tiepoints[activeImage].filter((t) => t.trackId === activeTrack), [activeImage, activeTrack, tiepoints]);
+    const activeTiepoints = useMemo(() => {
+        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
+            // Remove duplicate tiepoints that exist from image pairs.
+            return index === self.findIndex((t) => t.index === tiepoint.index);
+        }).filter((t) => t.trackId === Number(activeTrack));
+    }, [tiepoints, activeImage, activeTrack]);
 
     const activeCameras = useMemo(() => {
         const newCameras = [...new Set(activeTiepoints.map((t) => [t.leftId, t.rightId]).flat())];

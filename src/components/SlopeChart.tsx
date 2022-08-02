@@ -14,7 +14,10 @@ function SlopeChart({ activeImage, activeTrack, isSmall }) {
         if (!activeTrack) {
             return tiepoints[activeImage];
         }
-        return Object.values(tiepoints).flat().filter((t) => t.trackId === Number(activeTrack));
+        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
+            // Remove duplicate tiepoints that exist from image pairs.
+            return index === self.findIndex((t) => t.index === tiepoint.index);
+        }).filter((t) => t.trackId === Number(activeTrack));
     }, [activeImage, tiepoints]);
 
     const baseVector = new Vector2();
