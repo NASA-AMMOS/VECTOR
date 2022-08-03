@@ -3,6 +3,28 @@ import { Vector2 } from 'three';
 
 const baseVector = new Vector2();
 
+export type Tiepoint = {
+    index: number;
+    trackId: number;
+    leftId: string;
+    rightId: string;
+    leftKey: number;
+    rightKey: number;
+    initialXYZ: [number, number, number];
+    finalXYZ: [number, number, number];
+    leftPixel: [number, number];
+    rightPixel: [number, number];
+    initialResidual: [number, number];
+    finalResidual: [number, number];
+};
+
+export enum ActionType {
+    STATISTICS = 'STATISTICS',
+    IMAGES = 'IMAGES',
+    CAMERAS = 'CAMERAS',
+    EXIT = 'EXIT',
+};
+
 export const DataContext = createContext({});
 
 export function useData() {
@@ -10,52 +32,21 @@ export function useData() {
 }
 
 export default function ProvideData({ children }) {
-    const [tiepoints, setTiepoints] = useState(null);
-    const [cameras, setCameras] = useState(null);
+    const [tiepoints, setTiepoints] = useState<Tiepoint[]>([]);
+    const [cameras, setCameras] = useState({});
     const [images, setImages] = useState([]);
     const [vicar, setVICAR] = useState({});
 
-    const [activeImage, setActiveImage] = useState(null);
-    const [activeTrack, setActiveTrack] = useState(null);
+    const [activeImage, setActiveImage] = useState<string>(null);
+    const [activeTrack, setActiveTrack] = useState<number>(null);
 
-    const tracks = useMemo(() => {
-        if (!activeImage || !tiepoints) return null;
-
-        const trackIds = tiepoints[activeImage].map((tiepoint) => tiepoint.trackId);
-
-        const activeTiepoints = Object.values(tiepoints).flat().filter((tiepoint) => trackIds.includes(tiepoint.trackId));
-
-        const trackMap = activeTiepoints.reduce((obj, tiepoint) => {
-            obj[tiepoint.trackId] = obj[tiepoint.trackId] ? [...obj[tiepoint.trackId], tiepoint] : [tiepoint];
+    const imageTiepoints = useMemo(() => {
+        return tiepoints.reduce((obj, tiepoint) => {
+            obj[tiepoint.leftId] = obj[tiepoint.leftId] ? [...obj[tiepoint.leftId], tiepoint] : [tiepoint];
+            obj[tiepoint.rightId] = obj[tiepoint.rightId] ? [...obj[tiepoint.rightId], tiepoint] : [tiepoint];
             return obj;
         }, {});
-
-        const newTracks = {};
-
-        for (const trackId of Object.keys(trackMap)) {
-            const newTrack = [];
-            let maxResidual = 0;
-            
-            for (const tiepoint of trackMap[trackId]) {
-                const initialResidual = new Vector2(...tiepoint.initialResidual);
-                const finalResidual = new Vector2(...tiepoint.finalResidual);
-
-                const initialResidualDistance = baseVector.distanceTo(initialResidual);
-                const finalResidualDistance = baseVector.distanceTo(finalResidual);
-
-                maxResidual = Math.max(maxResidual, initialResidualDistance, finalResidualDistance);
-
-                newTrack.push({ initialResidual: initialResidualDistance, finalResidual: finalResidualDistance });
-            }
-            
-            newTracks[trackId] = {
-                maxResidual,
-                tiepoints: newTrack,
-            };
-        }
-
-        return newTracks;
-    }, [activeImage, tiepoints]);
+    }, [tiepoints]);
 
     const getImageURL = useCallback((id) => {
         const [_, fileId] = id.split('_');
@@ -80,7 +71,7 @@ export default function ProvideData({ children }) {
                 activeImage,
                 activeTrack,
 
-                tracks,
+                imageTiepoints,
 
                 getImageURL,
                 getVICARFile,

@@ -1,26 +1,32 @@
 import { useRef, useMemo, useEffect } from 'react';
 import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
-import { useData } from '@/DataContext';
+import { Tiepoint, useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/SlopeChart.css';
 
-function SlopeChart({ activeImage, activeTrack, isSmall }) {
-    const { tiepoints } = useData();
+const baseVector = new Vector2();
 
-    const plot = useRef(null);
+type SlopeChartProps = {
+    activeImage?: string;
+    activeTrack?: number;
+    isSmall?: boolean;
+};
 
-    const activeTiepoints = useMemo(() => {
-        if (!activeTrack) {
-            return tiepoints[activeImage];
+function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeChartProps) {
+    const { tiepoints, imageTiepoints } = useData();
+
+    const plot = useRef<HTMLElement>(null);
+
+    const activeTiepoints = useMemo<Tiepoint[]>(() => {
+        if (activeImage && !activeTrack) {
+            return imageTiepoints[activeImage];
+        } else if (activeTrack) {
+            return tiepoints.filter((t) => t.trackId === Number(activeTrack));
+        } else {
+            return [];
         }
-        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
-            // Remove duplicate tiepoints that exist from image pairs.
-            return index === self.findIndex((t) => t.index === tiepoint.index);
-        }).filter((t) => t.trackId === Number(activeTrack));
-    }, [activeImage, tiepoints]);
-
-    const baseVector = new Vector2();
+    }, [tiepoints, imageTiepoints, activeImage]);
 
     useEffect(() => {
         const initialResiduals = activeTiepoints.map((tiepoint) => {

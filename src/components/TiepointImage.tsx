@@ -1,127 +1,85 @@
-import { useRef, useState, useMemo, useEffect } from 'react';
-import * as THREE from 'three';
-import { Canvas, useThree } from '@react-three/fiber';
-import { Points, Point, Line, useTexture } from '@react-three/drei';
-import { useData } from '@/DataContext';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 
-export function Scene({ activeImage }) {
-    const { camera, size } = useThree();
+function TiepointImage() {
+    const { imageTiepoints, activeImage, getImageURL } = useData();
 
-    const { tiepoints, getImageURL } = useData();
+    const [image, setImage] = useState<HTMLImageElement>(null);
 
-    const imageTex = useTexture(getImageURL(activeImage));
-    const discTex = useTexture('/src/assets/disc.png');
+    const imageURL = useMemo<string>(() => getImageURL(activeImage), [activeImage, getImageURL]);
 
-    const mesh = useRef();
-
-    const [points, setPoints] = useState([]);
-    const [initialResiduals, setInitialResiduals] = useState([]);
-    const [finalResiduals, setFinalResiduals] = useState([]);
-
-    const activeTiepoints = useMemo(() => tiepoints[activeImage], [tiepoints, activeImage]);
-
-    function initData() {
-        const newPoints = [];
-        const newInitialResiduals = [];
-        const newFinalResiduals = [];
-
-        for (const [i, tiepoint] of activeTiepoints.entries()) {
-            const isLeft = tiepoint.leftId === activeImage;
-
-            const pixel = isLeft ? new THREE.Vector2(...tiepoint.leftPixel) : new THREE.Vector2(...tiepoint.rightPixel);
-            pixel.setX(pixel.x - imageTex.image.width / 2);
-            pixel.setY(pixel.y - imageTex.image.height / 2);
-            newPoints.push(
-                <Point
-                    key={i}
-                    position={[...pixel.toArray(), 1]}
-                />
-            );
-
-            const initialResidual = new THREE.Vector2(...tiepoint.initialResidual)
-            const finalResidual = new THREE.Vector2(...tiepoint.finalResidual)
-
-            newInitialResiduals.push(
-                <Line
-                    key={i}
-                    color={theme.color.initialHex}
-                    points={[
-                        [...pixel.toArray(), 0],
-                        [...initialResidual.add(pixel).toArray(), 0],
-                    ]}
-                />
-            );
-
-            newFinalResiduals.push(
-                <Line
-                    key={i}
-                    color={theme.color.finalHex}
-                    points={[
-                        [...pixel.toArray(), 0],
-                        [...finalResidual.add(pixel).toArray(), 0],
-                    ]}
-                />
-            );
-        }
-
-        setPoints(newPoints);
-        setInitialResiduals(newInitialResiduals);
-        setFinalResiduals(newFinalResiduals);
-    }
-
-    function fitCamera() {
-        const aabb = new THREE.Box3().setFromObject(mesh.current);
-        camera.zoom = Math.min(
-            size.width / (aabb.max.x - aabb.min.x),
-            size.height / (aabb.max.y - aabb.min.y)
-        );
-        camera.updateProjectionMatrix();
-    }
+    const activeTiepoints = useMemo<Tiepoint[]>(() => imageTiepoints[activeImage], [imageTiepoints, activeImage]);    
 
     useEffect(() => {
-        initData();
-    }, [activeTiepoints]);
-
-    useEffect(() => {
-        if (imageTex) {
-            fitCamera();
+        if (imageURL) {
+            const newImage = new Image();
+            newImage.onload = () => {
+                setImage(newImage);
+            };
+            newImage.src = imageURL;
         }
-    }, [imageTex]);
+    }, [imageURL]);
 
-    return (
-        <>
-            <mesh ref={mesh}>
-                <planeGeometry args={[imageTex.image.width, imageTex.image.height]} />
-                <meshBasicMaterial map={imageTex} />
-            </mesh>
-            <Points>
-                <pointsMaterial
-                    sizeAttenuation={false}
-                    size={3}
-                    map={discTex}
-                    alphaTest={0.5}
-                    transparent={true}
-                    color={theme.color.black}
-                />
-                {points}
-            </Points>
-            {initialResiduals}
-            {finalResiduals}
-        </>
-    );
-}
+    const stage = useCallback((canvas) => {
+        if (canvas && image) {
+            const ctx = canvas.getContext('2d');
 
-function TiepointImage({ stage }) {
-    const { activeImage } = useData();
+            // Clear canvas.
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+
+            // Preserve aspect ratio w/ dynamic sizing.
+            // This will prevent image distortion.
+            const aspectRatio = image.width / image.height;
+            canvas.style.width = `${canvas.offsetHeight * aspectRatio}px`;
+
+            // Draw image.
+            ctx.drawImage(image, 0, 0);
+
+            // Draw Residuals
+            for (const tiepoint of activeTiepoints) {
+                const { initialResidual, finalResidual } = tiepoint;
+
+                // Check which pixel to use for the active image.
+                const pixel = tiepoint.leftId === activeImage ? tiepoint.leftPixel : tiepoint.rightPixel;
+
+                // Draw pixel as circle.
+                ctx.beginPath();
+                ctx.arc(...pixel, 2.5, 0, Math.PI * 2, true);
+                ctx.fill();
+
+                // Draw initial residual.
+                ctx.beginPath();
+                ctx.strokeStyle = theme.color.initialHex;
+                ctx.lineWidth = 2;
+                ctx.moveTo(...pixel);
+                ctx.lineTo(...pixel.map((p, i) => p + initialResidual[i]));
+                ctx.stroke();
+
+                // Draw final residual.
+                ctx.beginPath();
+                ctx.strokeStyle = theme.color.finalHex;
+                ctx.lineWidth = 2;
+                ctx.moveTo(...pixel);
+                ctx.lineTo(...pixel.map((p, i) => p + finalResidual[i]));
+                ctx.stroke();
+            }
+        }
+    }, [image, activeTiepoints]);
 
     return (
         <section className={styles.container}>
             <h2 className={styles.header}>
                 Image ID: {activeImage}
             </h2>
-            <div ref={stage} className={styles.stage} />
+            <canvas
+                ref={stage}
+                className={styles.stage}
+                width={image?.width}
+                height={image?.height}
+            />
         </section>
     );
 }

@@ -2,7 +2,7 @@ import GlobalStatistics from '@/components/GlobalStatistics';
 import GlobalImageView from '@/components/GlobalImageView';
 import { useData } from '@/DataContext';
 
-function Overview({ state }) {
+function Overview({ state, dispatch }) {
     const { activeImage } = useData();
 
     if (!activeImage) {
@@ -12,10 +12,9 @@ function Overview({ state }) {
             );
         } else {
             return (
-                <GlobalImageView />
+                <GlobalImageView dispatch={dispatch} />
             );
         }
-
     }
 }
 

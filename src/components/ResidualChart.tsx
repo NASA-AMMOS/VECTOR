@@ -1,34 +1,34 @@
 import { useMemo, useRef, useEffect } from 'react';
 import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
-import { useData } from '@/DataContext';
+import { Tiepoint, useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import { Pixel } from '@/utils/helpers';
 import * as styles from '@/components/ResidualChart.css';
 
-function ResidualChart({ activeImage, activeTrack }) {
-    const { tiepoints } = useData();
+const baseVector = new Vector2();
 
-    const activeTiepoints = useMemo(() => {
-        if (!activeImage) {
-            return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
-                // Remove duplicate tiepoints that exist from image pairs.
-                return index === self.findIndex((t) => t.index === tiepoint.index);
-            });
+type ResidualChartProps = {
+    activeImage?: string;
+    activeTrack?: number;
+};
+
+function ResidualChart({ activeImage, activeTrack }: ResidualChartProps) {
+    const { tiepoints, imageTiepoints } = useData();
+
+    const plot = useRef<HTMLElement>(null);
+
+    const activeTiepoints = useMemo<Tiepoint[]>(() => {
+        if (!activeImage && !activeTrack) {
+            return tiepoints;
+        } else if (activeImage && !activeTrack) {
+            return imageTiepoints[activeImage];
+        } else if (activeTrack) {
+            return tiepoints.filter((t) => t.trackId === Number(activeTrack));
+        } else {
+            return [];
         }
-        const newTiepoints = tiepoints[activeImage];
-        if (!activeTrack) {
-            return newTiepoints;
-        }
-        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
-            // Remove duplicate tiepoints that exist from image pairs.
-            return index === self.findIndex((t) => t.index === tiepoint.index);
-        }).filter((t) => t.trackId === Number(activeTrack));
-    }, [activeImage, tiepoints]);
-
-    const plot = useRef(null);
-
-    const baseVector = new Vector2();
+    }, [tiepoints, imageTiepoints, activeImage]);
 
     useEffect(() => {
         const initialResiduals = [];

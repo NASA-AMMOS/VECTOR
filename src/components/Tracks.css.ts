@@ -33,7 +33,7 @@ export const trackSpacing = style({
 });
 
 export const trackWidth = style({
-    width: '100%',
+    minWidth: '100%',
 });
 
 export const subheader = style({
@@ -54,11 +54,5 @@ export const slope = style({
 export const tiepoints = style({
     display: 'flex',
     alignItems: 'center',
-    padding: '1rem',
-});
-
-export const tiepoint = style({
-    height: 'calc(10rem - 2rem)',
-    width: 'calc(10rem - 2rem)',
-    marginRight: '1rem',
+    height: '100%',
 });

@@ -1,31 +1,31 @@
 import { useMemo, useRef, useEffect } from 'react';
 import * as d3 from 'd3';
-import { useData } from '@/DataContext';
+import { Tiepoint, useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import { Polar } from '@/utils/helpers';
 import * as styles from '@/components/RadialChart.css';
 
-function RadialChart({ activeImage, activeTrack }) {
-    const { tiepoints } = useData();
+type RadialChartProps = {
+    activeImage?: string;
+    activeTrack?: number;
+};
 
-    const activeTiepoints = useMemo(() => {
-        if (!activeImage) {
-            return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
-                // Remove duplicate tiepoints that exist from image pairs.
-                return index === self.findIndex((t) => t.index === tiepoint.index);
-            });
-        }
-        const newTiepoints = tiepoints[activeImage];
-        if (!activeTrack) {
-            return newTiepoints;
-        }
-        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
-            // Remove duplicate tiepoints that exist from image pairs.
-            return index === self.findIndex((t) => t.index === tiepoint.index);
-        }).filter((t) => t.trackId === Number(activeTrack));
-    }, [activeImage, tiepoints]);
+function RadialChart({ activeImage, activeTrack }: RadialChartProps) {
+    const { tiepoints, imageTiepoints } = useData();
 
-    const plot = useRef(null);
+    const plot = useRef<HTMLElement>(null);
+
+    const activeTiepoints = useMemo<Tiepoint[]>(() => {
+        if (!activeImage && !activeTrack) {
+            return tiepoints;
+        } else if (activeImage && !activeTrack) {
+            return imageTiepoints[activeImage];
+        } else if (activeTrack) {
+            return tiepoints.filter((t) => t.trackId === Number(activeTrack));
+        } else {
+            return [];
+        }
+    }, [tiepoints, imageTiepoints, activeImage]);
 
     useEffect(() => {
         const residuals = activeTiepoints.map((t) => [{ ...Polar(t.initialResidual), initial: true }, { ...Polar(t.finalResidual), initial: false }]).flat();

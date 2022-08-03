@@ -31,7 +31,7 @@ function Landing() {
 
     function handleTiepoints(xml) {
         const tiepoints = xml.querySelectorAll('tie');
-        const newTiepoints = {};
+        const newTiepoints = [];
 
         for (const [index, tiepoint] of tiepoints.entries()) {
             const leftKey = Number(tiepoint.getAttribute('left_key'));
@@ -61,7 +61,7 @@ function Landing() {
             const leftFinalResidual = tiepoint.querySelector('left_final_residual');
             const rightFinalResidual = tiepoint.querySelector('right_final_residual');
 
-            const item = {
+            newTiepoints.push({
                 index,
                 trackId,
                 leftId,
@@ -86,10 +86,7 @@ function Landing() {
                     Number(leftFinalResidual.getAttribute('samp')) + Number(rightFinalResidual.getAttribute('samp')),
                     Number(leftFinalResidual.getAttribute('line')) + Number(rightFinalResidual.getAttribute('line')),
                 ],
-            };
-
-            newTiepoints[leftId] = newTiepoints[leftId] ? [...newTiepoints[leftId], item] : [item];
-            newTiepoints[rightId] = newTiepoints[rightId] ? [...newTiepoints[rightId], item] : [item];
+            });
         }
 
         setTiepoints(newTiepoints);
@@ -171,10 +168,7 @@ function Landing() {
     async function handleVICAR(file) {
         const text = await file.text();
         const metadata = text.split(/(\s+)/).map((t) => t.trim()).filter(Boolean);
-        setVICAR((v) => {
-            v[file.name] = metadata;
-            return v;
-        });
+        setVICAR((v) => ({ ...v, [file.name]: metadata }));
     }
 
     async function handleClick(event) {

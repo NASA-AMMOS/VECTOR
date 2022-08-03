@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { Track } from '@/components/Tracks';
 import CameraViewport from '@/components/CameraViewport';
 import RadialChart from '@/components/RadialChart';
@@ -10,8 +9,6 @@ import * as styles from '@/components/ActiveTrackView.css';
 function ActiveTrackView() {
     const { activeImage, activeTrack } = useData();
 
-    const views = useRef([]);
-
     return (
         <section className={styles.grid}>
             <div className={styles.panel}>
@@ -22,7 +19,6 @@ function ActiveTrackView() {
                     <Track
                         activeImage={activeImage}
                         activeTrack={activeTrack}
-                        views={views}
                     />
                 </div>
                 <CameraViewport />

@@ -4,6 +4,7 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'center',
     height: 'calc((92vh - 4rem) / 2 - 0.5rem)',
     padding: '1rem',
     marginBottom: '1rem',
