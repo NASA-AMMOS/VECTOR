@@ -4,23 +4,25 @@ import Overview from '@/components/Overview';
 import ActiveImageView from '@/components/ActiveImageView';
 import ActiveTrackView from '@/components/ActiveTrackView';
 import NavBar from '@/components/NavBar';
-import { ActionType, useData } from '@/DataContext';
+import { PageType, useData } from '@/DataContext';
 import * as styles from '@/App.css';
 
 interface IReducer {
-    type: ActionType;
+    type: PageType;
 };
 
 function reducer(state, action): Reducer<number, IReducer> {
     switch (action.type) {
-        case ActionType.STATISTICS:
+        case PageType.STATISTICS:
             return 0;
-        case ActionType.IMAGES:
+        case PageType.CAMERAS:
             return 1;
-        case ActionType.CAMERAS:
+        case PageType.IMAGES:
             return 2;
-        case ActionType.ENTER:
-            return -1;
+        case PageType.IMAGE:
+            return 3;
+        case PageType.TRACK:
+            return 4;
         default:
             return state;
     }
@@ -32,9 +34,11 @@ function App() {
     const [state, dispatch] = useReducer<Reducer<number, IReducer>>(reducer, 0);
 
     useEffect(() => {
-        if (state !== -1) {
+        if (state < 3) {
             // Clear out active selections after returning to global view.
             setActiveImage(null);
+            setActiveTrack(null);
+        } else if (state === 3) {
             setActiveTrack(null);
         }
     }, [state]);
@@ -46,8 +50,8 @@ function App() {
             <>
                 <main className={styles.container}>
                     <Overview state={state} dispatch={dispatch} />
-                    <ActiveImageView />
-                    {activeImage && activeTrack && <ActiveTrackView />}
+                    <ActiveImageView dispatch={dispatch} />
+                    <ActiveTrackView dispatch={dispatch} />
                 </main>
                 <NavBar state={state} dispatch={dispatch} />
             </>

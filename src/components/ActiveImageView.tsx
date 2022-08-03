@@ -6,7 +6,7 @@ import ResidualChart from '@/components/ResidualChart';
 import { DataContext, useData } from '@/DataContext';
 import * as styles from '@/components/ActiveImageView.css';
 
-function ActiveImageView() {
+function ActiveImageView({ dispatch }) {
     const { activeImage, activeTrack } = useData();
 
     if (activeImage && !activeTrack) {
@@ -23,7 +23,7 @@ function ActiveImageView() {
                         </div>
                     </div>
                 </div>
-                <Tracks />
+                <Tracks dispatch={dispatch} />
             </section>
         );
     }

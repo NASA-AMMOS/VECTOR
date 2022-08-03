@@ -1,12 +1,17 @@
-import { useRef, useState, useMemo, useEffect, useLayoutEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useLayoutEffect, useReducer } from 'react';
 import * as THREE from 'three';
-import { Canvas, createPortal, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, OrthographicCamera, useContextBridge, useCamera } from '@react-three/drei';
-import { DataContext, useData } from '@/DataContext';
+import { Canvas, createPortal, useFrame, useThree, extend } from '@react-three/fiber';
+import { OrbitControls, OrthographicCamera, Bounds, useContextBridge, useCamera, useBounds } from '@react-three/drei';
+import { Tiepoint, DataContext, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
 const matrix = new THREE.Matrix4();
+
+enum PositionType {
+    INITIAL = 'INITIAL',
+    FINAL = 'FINAL',
+};
 
 function Line({ points, userData, color, visible }) {
     const ref = useRef<THREE.Line>();
@@ -49,15 +54,15 @@ function ViewCube() {
             <mesh
                 ref={mesh}
                 raycast={useCamera(virtualCamera)}
-                position={[size.width / 2 - 50, size.height / 2 - 50, 0]}
+                position={[size.width / 2 - 30, size.height / 2 - 30, 0]}
             >
                 <meshLambertMaterial color="white" />
                 <boxBufferGeometry args={[20, 20, 20]} />
             </mesh>
             <axesHelper
                 ref={axes}
-                args={[50, 50, 50]}
-                position={[size.width / 2 - 50, size.height / 2 - 50, 0]}
+                args={[25, 25, 25]}
+                position={[size.width / 2 - 30, size.height / 2 - 30, 0]}
             />
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={0.5} />
@@ -65,24 +70,45 @@ function ViewCube() {
     , virtualScene);
 }
 
-function Scene() {
-    const { scene, camera } = useThree();
+// This component will wrap children in a group with a click handler.
+// Clicking any object will refresh and fit bounds.
+function SelectToZoom({ children }) {
+    const api = useBounds();
 
-    const { tiepoints, cameras, vicar, activeImage, activeTrack, getVICARFile } = useData();
+    function handleClick(event) {
+        event.stopPropagation();
+        if (event.delta <= 2) {
+            api.refresh(event.object).fit();
+        }
+    }
+
+    function handlePointerMissed() {
+        if (event.button === 0) {
+            api.refresh().fit();
+        }
+    }
+
+    return (
+        <group
+            onClick={handleClick}
+            onPointerMissed={handlePointerMissed}
+        >
+            {children}
+        </group>
+    );
+}
+
+function Scene({ state }) {
+    const { tiepoints, cameras, vicar, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
 
     const controls = useRef(null);
 
-    const [boxes, setBoxes] = useState([]);
+    const [planes, setPlanes] = useState([]);
     const [lines, setLines] = useState([]);
     const [initialPoint, setInitialPoint] = useState(null);
     const [finalPoint, setFinalPoint] = useState(null);
 
-    const activeTiepoints = useMemo(() => {
-        return Object.values(tiepoints).flat().filter((tiepoint, index, self) => {
-            // Remove duplicate tiepoints that exist from image pairs.
-            return index === self.findIndex((t) => t.index === tiepoint.index);
-        }).filter((t) => t.trackId === Number(activeTrack));
-    }, [tiepoints, activeImage, activeTrack]);
+    const activeTiepoints = useMemo<Tiepoint[]>(() => tiepoints.filter((t) => t.trackId === activeTrack), [tiepoints, activeTrack]);
 
     const activeCameras = useMemo(() => {
         const newCameras = [...new Set(activeTiepoints.map((t) => [t.leftId, t.rightId]).flat())];
@@ -92,51 +118,39 @@ function Scene() {
         }, {});
     }, [activeTiepoints, cameras]);
 
-    const parser = new DOMParser();
-
-    function handlePointerOver(event) {
-        const cameraId = event.object.userData.cameraId;
-        scene.traverse((object) => {
-            if (object.userData.cameraId === cameraId && object.userData.initial) {
-                object.visible = true;
-            }
-        });
-    }
-
-    function handlePointerOut(event) {
-        scene.traverse((object) => {
-            if (object.userData.initial) {
-                object.visible = false;
-            }
-        });
-    }
-
     async function initData() {
-        const newBoxes = [];
+        const newPlanes = [];
         const newLines = [];
 
         for (const cameraId of Object.keys(activeCameras)) {
             const camera = activeCameras[cameraId];
 
             const metadata = getVICARFile(cameraId);
-            const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`);
-            const originOffset = metadata[frameIndex - 4].split('=')[1].replace(/\(|\)/g, '').split(',').map(Number);
 
-            const initialC = new THREE.Vector3(...camera.initial.C);
+            // Get coordinate system transformation group.
+            const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
+            const group = metadata.slice(frameIndex - 10, frameIndex + 1);
+
+            const originOffset = new THREE.Vector3(...parseVICARField(group[5]));
+            const originRotation = new THREE.Quaternion(
+                ...parseVICARField(group[6]).slice(1, 4),
+                ...parseVICARField(group[6]).slice(0, 1),
+            );
+
+            // Apply coordinate transformation to SITE frame.
+            const initialC = new THREE.Vector3(...camera.initial.C).applyQuaternion(originRotation).add(originOffset);
             const initialA = new THREE.Vector3(...camera.initial.A);
             const initialH = new THREE.Vector3(...camera.initial.H);
+            const initialHxA = initialH.clone().cross(initialA).normalize().applyQuaternion(originRotation).multiplyScalar(-1);
 
-            const initialHxA = new THREE.Euler().setFromVector3(initialH.clone().cross(initialA).normalize());
-
-            newBoxes.push(
+            newPlanes.push(
                 <mesh
                     key={`${cameraId}_initial`}
                     position={initialC}
-                    rotation={initialHxA}
-                    userData={{ cameraId, initial: true }}
-                    visible={false}
+                    rotation={initialHxA.toArray()}
+                    visible={state.initial}
                 >
-                    <planeGeometry args={[0.1, 0.1]} />
+                    <planeGeometry args={[1, 1]} />
                     <meshLambertMaterial
                         color={theme.color.initialHex}
                         opacity={theme.color.initialOpacity}
@@ -145,33 +159,28 @@ function Scene() {
                     />
                 </mesh>
             );
-
             newLines.push(
                 <Line
                     key={`${cameraId}_initial`}
                     color={theme.color.initialHex}
-                    points={[initialC, initialC.clone().add(initialA)]}
-                    userData={{ cameraId, initial: true }}
-                    visible={false}
+                    points={[initialC, initialC.clone().add(initialA).multiplyScalar(1.025)]}
+                    visible={state.initial}
                 />
             );
 
-            const finalC = new THREE.Vector3(...camera.final.C);
+            const finalC = new THREE.Vector3(...camera.final.C).applyQuaternion(originRotation).add(originOffset);
             const finalA = new THREE.Vector3(...camera.final.A);
             const finalH = new THREE.Vector3(...camera.final.H);
+            const finalHxA = finalH.clone().cross(finalA).normalize().applyQuaternion(originRotation).multiplyScalar(-1);
 
-            const finalHxA = new THREE.Euler().setFromVector3(finalH.clone().cross(finalA).normalize());
-
-            newBoxes.push(
+            newPlanes.push(
                 <mesh
                     key={`${cameraId}_final`}
                     position={finalC}
-                    rotation={finalHxA}
-                    userData={{ cameraId, initial: false }}
-                    onPointerOver={handlePointerOver}
-                    onPointerOut={handlePointerOut}
+                    rotation={finalHxA.toArray()}
+                    visible={state.final}
                 >
-                    <planeGeometry args={[0.1, 0.1]} />
+                    <planeGeometry args={[1, 1]} />
                     <meshLambertMaterial
                         color={theme.color.finalHex}
                         side={THREE.DoubleSide}
@@ -184,94 +193,87 @@ function Scene() {
                     key={`${cameraId}_final`}
                     color={theme.color.finalHex}
                     points={[finalC, finalC.clone().add(finalA)]}
-                    userData={{ cameraId, initial: false }}
+                    visible={state.final}
                 />
             );
         }
 
-        setBoxes(newBoxes);
+        setPlanes(newPlanes);
         setLines(newLines);
 
         setInitialPoint(
-            <mesh position={activeTiepoints[0].initialXYZ}>
-                <sphereGeometry args={[0.1]} />
-                <meshBasicMaterial color={theme.color.initialHex} />
+            <mesh position={activeTiepoints[0].initialXYZ} visible={state.initial}>
+                <sphereGeometry args={[0.25]} />
+                <meshLambertMaterial color={theme.color.initialHex} />
             </mesh>
         );
-
         setFinalPoint(
-            <mesh position={activeTiepoints[0].finalXYZ}>
-                <sphereGeometry args={[0.1]} />
-                <meshBasicMaterial color={theme.color.finalHex} />
+            <mesh position={activeTiepoints[0].finalXYZ} visible={state.final}>
+                <sphereGeometry args={[0.25]} />
+                <meshLambertMaterial color={theme.color.finalHex} />
             </mesh>
         );
-    }
-
-    function fitCamera() {
-        const offset = 1.5;
-
-        const meshes = [];
-        scene.traverse((object) => object.isMesh && !object.isLine2 && meshes.push(object));
-
-        const center = new THREE.Vector3();
-        const size = new THREE.Vector3();
-
-        const aabb = new THREE.Box3();
-        aabb.makeEmpty();
-
-        for (const mesh of meshes) {
-            aabb.expandByObject(mesh);
-        }
-
-        aabb.getCenter(center);
-        aabb.getSize(size);
-
-        const maxSize = Math.max(size.x, size.y, size.z);
-        const fitHeightDistance = maxSize / (2 * Math.atan(Math.PI * camera.fov / 360));
-        const fitWidthDistance = fitHeightDistance / camera.aspect;
-        const distance = offset * Math.max(fitHeightDistance, fitWidthDistance);
-
-        const direction = controls.current.target.clone()
-            .sub(camera.position)
-            .normalize()
-            .multiplyScalar(distance);
-
-        controls.current.maxDistance = distance * 10;
-        controls.current.target.copy(center);
-
-        camera.near = distance / 100;
-        camera.far = distance * 100;
-        camera.updateProjectionMatrix();
-
-        camera.position.copy(controls.current.target).sub(direction);
-
-        controls.current.update();
     }
 
     useEffect(() => {
-        if (activeTiepoints && activeCameras) {
+        if (state && activeTiepoints && activeCameras) {
             initData();
         }
-    }, [activeTiepoints, activeCameras]);
-
-    useEffect(() => {
-        if (boxes.length > 0) {
-            fitCamera();
-        }
-    }, [boxes]);
+    }, [state, activeTiepoints, activeCameras]);
 
     return (
         <>
-            <OrbitControls ref={controls} screenSpacePanning />
             <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} intensity={0.1} />
-            {boxes}
-            {lines}
-            {/*{initialPoint}
-            {finalPoint}*/}
+            <Bounds fit clip observe margin={1.2}>
+                <SelectToZoom>
+                    {planes}
+                    {lines}
+                    {initialPoint}
+                    {finalPoint}
+                </SelectToZoom>
+            </Bounds>
+            <gridHelper args={[1000, 1000]} rotation={[Math.PI / 2, 0, 0]} />
+            <OrbitControls
+                ref={controls}
+                minPolarAngle={0}
+                maxPolarAngle={Math.PI / 1.75}
+                makeDefault
+                screenSpacePanning
+            />
             <ViewCube />
         </>
     )
+}
+
+function Tooltip({ state, dispatch }) {
+    return (
+        <div className={styles.tooltip}>
+            <div className={styles.item}>
+                <input
+                    type="checkbox"
+                    id="initial"
+                    className={styles.checkbox}
+                    checked={state.initial}
+                    onChange={() => dispatch({ type: PositionType.INITIAL })}
+                />
+                <label htmlFor="initial" className={styles.label}>
+                    Initial Position
+                </label>
+            </div>
+            <div className={styles.item}>
+                <input
+                    type="checkbox"
+                    id="final"
+                    className={styles.checkbox}
+                    checked={state.final}
+                    onChange={() => dispatch({ type: PositionType.FINAL })}
+                />
+                <label htmlFor="final" className={styles.label}>
+                    Final Position
+                </label>
+            </div>
+        </div>
+    );
 }
 
 function CameraViewport() {
@@ -281,12 +283,28 @@ function CameraViewport() {
 
     const ContextBridge = useContextBridge(DataContext);
 
+    const [state, dispatch] = useReducer(reducer, { initial: false, final: true });
+
+    function reducer(state, action) {
+        switch (action.type) {
+            case PositionType.INITIAL:
+                return { ...state, initial: !state.initial };
+            case PositionType.FINAL:
+                return { ...state, final: !state.final };
+            default:
+                return state;
+        }
+    }
+
     return (
-        <Canvas className={styles.container}>
-            <ContextBridge>
-                <Scene />
-            </ContextBridge>
-        </Canvas>
+        <section className={styles.container}>
+            <Tooltip state={state} dispatch={dispatch} />
+            <Canvas className={styles.canvas}>
+                <ContextBridge>
+                    <Scene state={state} />
+                </ContextBridge>
+            </Canvas>
+        </section>
     )
 }
 

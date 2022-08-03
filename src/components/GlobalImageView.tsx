@@ -1,14 +1,14 @@
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
-import { ActionType, useData } from '@/DataContext';
+import { PageType, useData } from '@/DataContext';
 import * as styles from '@/components/GlobalImageView.css';
 
 function GlobalImageView({ dispatch }) {
     const { imageTiepoints, getImageURL, setActiveImage } = useData();
 
     function handleClick(id) {
-        dispatch(ActionType.EXIT);
+        dispatch({ type: PageType.IMAGE });
         setActiveImage(id);
     }
 

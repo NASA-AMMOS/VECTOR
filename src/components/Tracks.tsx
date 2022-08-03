@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import cn from 'classnames';
 import SlopeChart from '@/components/SlopeChart';
-import { Tiepoint, useData } from '@/DataContext';
+import { PageType, Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
 
@@ -174,10 +174,11 @@ function Stage({ activeTrack }) {
     );
 }
 
-export function Track({ activeImage, activeTrack, isGrouped }) {
+export function Track({ dispatch, activeImage, activeTrack, isGrouped }) {
     const { setActiveTrack } = useData();
 
     function handleClick() {
+        dispatch({ type: PageType.TRACK });
         setActiveTrack(activeTrack);
     }
 
@@ -206,7 +207,7 @@ export function Track({ activeImage, activeTrack, isGrouped }) {
     )
 }
 
-function Tracks() {
+function Tracks({ dispatch }) {
     const { imageTiepoints, activeImage } = useData();
 
     const activeTracks = useMemo(() => {
@@ -225,6 +226,7 @@ function Tracks() {
             {activeTracks.map((trackId) => (
                 <Track
                     key={trackId}
+                    dispatch={dispatch}
                     activeImage={activeImage}
                     activeTrack={trackId}
                     isGrouped

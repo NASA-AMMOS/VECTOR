@@ -18,11 +18,12 @@ export type Tiepoint = {
     finalResidual: [number, number];
 };
 
-export enum ActionType {
+export enum PageType {
     STATISTICS = 'STATISTICS',
     IMAGES = 'IMAGES',
     CAMERAS = 'CAMERAS',
-    EXIT = 'EXIT',
+    IMAGE = 'IMAGE',
+    TRACK = 'TRACK',
 };
 
 export const DataContext = createContext({});
@@ -60,6 +61,12 @@ export default function ProvideData({ children }) {
         return vicar[key];
     }, [vicar]);
 
+    const parseVICARField = useCallback((field) => {
+        const [_, vector] = field.replace(/[\(\)]/g, '').split('=');
+        const values = vector.split(',');
+        return values.map(Number);
+    }, []);
+
     return (
         <DataContext.Provider
             value={{
@@ -75,6 +82,7 @@ export default function ProvideData({ children }) {
 
                 getImageURL,
                 getVICARFile,
+                parseVICARField,
 
                 setTiepoints,
                 setCameras,

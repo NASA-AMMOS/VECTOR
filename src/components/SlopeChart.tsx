@@ -79,6 +79,7 @@ function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeChartProps) {
                     z: 'tiepoint',
                     stroke: (d) => d.decreased ? vars.color.decrease : vars.color.increase,
                     strokeWidth: 3,
+                    strokeOpacity: (d) => d.decreased ? 0.3 : 1,
                 }),
                 Plot.text(residuals, Plot.selectFirst({
                     x: 'group',
@@ -92,8 +93,8 @@ function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeChartProps) {
                     z: 'tiepoint',
                     text: '',
                 })),
-                Plot.ruleX(['Initial'], { stroke: 'black', strokeWidth: 3 }),
-                Plot.ruleX(['Final'], { stroke: 'black', strokeWidth: 3 }),
+                Plot.ruleX(['Initial'], { stroke: vars.color.initial, strokeWidth: 3 }),
+                Plot.ruleX(['Final'], { stroke: vars.color.final, strokeWidth: 3 }),
             ],
         });
         plot.current.replaceChildren(svg);
