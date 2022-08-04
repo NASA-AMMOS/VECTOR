@@ -1,6 +1,8 @@
 import { useRef, useState, useMemo, useEffect, useLayoutEffect, useReducer } from 'react';
+import { fileOpen } from 'browser-fs-access';
 import * as THREE from 'three';
-import { Canvas, createPortal, useFrame, useThree, extend } from '@react-three/fiber';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { Canvas, createPortal, useLoader, useFrame, useThree, extend } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, Bounds, useContextBridge, useCamera, useBounds } from '@react-three/drei';
 import { Tiepoint, DataContext, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
@@ -8,9 +10,10 @@ import * as styles from '@/components/CameraViewport.css';
 
 const matrix = new THREE.Matrix4();
 
-enum PositionType {
+enum ToolType {
     INITIAL = 'INITIAL',
     FINAL = 'FINAL',
+    MESH = 'MESH',
 };
 
 function Line({ points, userData, color, visible }) {
@@ -101,6 +104,8 @@ function SelectToZoom({ children }) {
 function Scene({ state }) {
     const { tiepoints, cameras, vicar, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
 
+    const mesh = state.mesh && useLoader(OBJLoader, state.mesh);
+
     const controls = useRef(null);
 
     const [planes, setPlanes] = useState([]);
@@ -177,18 +182,20 @@ function Scene({ state }) {
         setPlanes(newPlanes);
         setLines(newLines);
 
-        setInitialPoint(
-            <mesh position={initialXYZ} visible={state.initial}>
-                <sphereGeometry args={[0.05]} />
-                <meshLambertMaterial color={theme.color.initialHex} />
-            </mesh>
-        );
-        setFinalPoint(
-            <mesh position={finalXYZ} visible={state.final}>
-                <sphereGeometry args={[0.05]} />
-                <meshLambertMaterial color={theme.color.finalHex} />
-            </mesh>
-        );
+        if (activeTrack) {
+            setInitialPoint(
+                <mesh position={initialXYZ} visible={state.initial}>
+                    <sphereGeometry args={[0.05]} />
+                    <meshLambertMaterial color={theme.color.initialHex} />
+                </mesh>
+            );
+            setFinalPoint(
+                <mesh position={finalXYZ} visible={state.final}>
+                    <sphereGeometry args={[0.05]} />
+                    <meshLambertMaterial color={theme.color.finalHex} />
+                </mesh>
+            );
+        }
     }
 
     function renderCamera(id ,camera, originOffset, originRotation, color, visible) {
@@ -238,6 +245,7 @@ function Scene({ state }) {
                     {lines}
                     {initialPoint}
                     {finalPoint}
+                    {state.mesh && <primitive object={mesh} />}
                 </SelectToZoom>
             </Bounds>
             <gridHelper args={[1000, 1000]} position={[0, 0, finalXYZ[2]]} rotation={[Math.PI / 2, 0, 0]} />
@@ -254,15 +262,25 @@ function Scene({ state }) {
 }
 
 function Tooltip({ state, dispatch }) {
+    async function handleFileInput(event) {
+        const file = await fileOpen({ extensions: ['.obj'] });
+        dispatch({ type: ToolType.MESH, data: URL.createObjectURL(file) });
+    }
+
     return (
         <div className={styles.tooltip}>
+            <div className={styles.item}>
+                <button className={styles.input} onClick={handleFileInput}>
+                    Upload Mesh
+                </button>
+            </div>
             <div className={styles.item}>
                 <input
                     type="checkbox"
                     id="initial"
                     className={styles.checkbox}
                     checked={state.initial}
-                    onChange={() => dispatch({ type: PositionType.INITIAL })}
+                    onChange={() => dispatch({ type: ToolType.INITIAL })}
                 />
                 <label htmlFor="initial" className={styles.label}>
                     Initial Position
@@ -274,12 +292,26 @@ function Tooltip({ state, dispatch }) {
                     id="final"
                     className={styles.checkbox}
                     checked={state.final}
-                    onChange={() => dispatch({ type: PositionType.FINAL })}
+                    onChange={() => dispatch({ type: ToolType.FINAL })}
                 />
                 <label htmlFor="final" className={styles.label}>
                     Final Position
                 </label>
             </div>
+            {state.mesh && (
+                <div className={styles.item}>
+                    <input
+                        type="checkbox"
+                        id="mesh"
+                        className={styles.checkbox}
+                        checked={!!(state.mesh)}
+                        onChange={() => dispatch({ type: ToolType.MESH })}
+                    />
+                    <label htmlFor="mesh" className={styles.label}>
+                        Mesh
+                    </label>
+                </div>
+            )}
         </div>
     );
 }
@@ -291,14 +323,16 @@ function CameraViewport() {
 
     const ContextBridge = useContextBridge(DataContext);
 
-    const [state, dispatch] = useReducer(reducer, { initial: false, final: true });
+    const [state, dispatch] = useReducer(reducer, { initial: false, final: true, mesh: null });
 
     function reducer(state, action) {
         switch (action.type) {
-            case PositionType.INITIAL:
+            case ToolType.INITIAL:
                 return { ...state, initial: !state.initial };
-            case PositionType.FINAL:
+            case ToolType.FINAL:
                 return { ...state, final: !state.final };
+            case ToolType.MESH:
+                return { ...state, mesh: action.data };
             default:
                 return state;
         }

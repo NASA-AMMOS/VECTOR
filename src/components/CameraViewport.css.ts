@@ -36,6 +36,14 @@ export const item = style({
     },
 });
 
+export const input = style({
+    backgroundColor: vars.color.white,
+    width: '100%',
+    padding: '1rem',
+    fontSize: '1.4rem',
+    borderRadius: '0.4rem',
+})
+
 export const checkbox = style({
     appearance: 'none',
     height: '1.4rem',
