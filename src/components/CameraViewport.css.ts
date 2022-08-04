@@ -4,6 +4,7 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     position: 'relative',
     gridColumn: '1 / -1',
+    height: '100%',
     border: `0.4rem solid ${vars.color.background}`,
     borderRadius: '0.4rem',
 });

@@ -108,7 +108,12 @@ function Scene({ state }) {
     const [initialPoint, setInitialPoint] = useState(null);
     const [finalPoint, setFinalPoint] = useState(null);
 
-    const activeTiepoints = useMemo<Tiepoint[]>(() => tiepoints.filter((t) => t.trackId === activeTrack), [tiepoints, activeTrack]);
+    const activeTiepoints = useMemo<Tiepoint[]>(() => {
+        if (!activeTrack) {
+            return tiepoints;
+        }
+        return tiepoints.filter((t) => t.trackId === activeTrack);
+    }, [tiepoints, activeTrack]);
 
     const activeCameras = useMemo(() => {
         const newCameras = [...new Set(activeTiepoints.map((t) => [t.leftId, t.rightId]).flat())];
@@ -117,6 +122,14 @@ function Scene({ state }) {
             return obj;
         }, {});
     }, [activeTiepoints, cameras]);
+
+    const [initialXYZ, finalXYZ] = useMemo(() => {
+        if (activeTiepoints.length === 0) {
+            return [[], []];
+        }
+        const tiepoint = activeTiepoints[0];
+        return [tiepoint.initialXYZ, tiepoint.finalXYZ];
+    }, [activeTiepoints]);
 
     async function initData() {
         const newPlanes = [];
@@ -131,88 +144,83 @@ function Scene({ state }) {
             const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
             const group = metadata.slice(frameIndex - 10, frameIndex + 1);
 
-            const originOffset = new THREE.Vector3(...parseVICARField(group[5]));
+            const originOffset = new THREE.Vector3(...parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR'));
             const originRotation = new THREE.Quaternion(
-                ...parseVICARField(group[6]).slice(1, 4),
-                ...parseVICARField(group[6]).slice(0, 1),
+                ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(1, 4),
+                ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(0, 1),
             );
 
             // Apply coordinate transformation to SITE frame.
-            const initialC = new THREE.Vector3(...camera.initial.C).applyQuaternion(originRotation).add(originOffset);
-            const initialA = new THREE.Vector3(...camera.initial.A);
-            const initialH = new THREE.Vector3(...camera.initial.H);
-            const initialHxA = initialH.clone().cross(initialA).normalize().applyQuaternion(originRotation).multiplyScalar(-1);
-
-            newPlanes.push(
-                <mesh
-                    key={`${cameraId}_initial`}
-                    position={initialC}
-                    rotation={initialHxA.toArray()}
-                    visible={state.initial}
-                >
-                    <planeGeometry args={[1, 1]} />
-                    <meshLambertMaterial
-                        color={theme.color.initialHex}
-                        opacity={theme.color.initialOpacity}
-                        transparent={true}
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
+            const initialCamera = renderCamera(
+                cameraId,
+                camera.initial,
+                originOffset,
+                originRotation,
+                theme.color.initialHex,
+                state.initial
             );
-            newLines.push(
-                <Line
-                    key={`${cameraId}_initial`}
-                    color={theme.color.initialHex}
-                    points={[initialC, initialC.clone().add(initialA).multiplyScalar(1.025)]}
-                    visible={state.initial}
-                />
-            );
+            newPlanes.push(initialCamera[0]);
+            newLines.push(initialCamera[1]);
 
-            const finalC = new THREE.Vector3(...camera.final.C).applyQuaternion(originRotation).add(originOffset);
-            const finalA = new THREE.Vector3(...camera.final.A);
-            const finalH = new THREE.Vector3(...camera.final.H);
-            const finalHxA = finalH.clone().cross(finalA).normalize().applyQuaternion(originRotation).multiplyScalar(-1);
-
-            newPlanes.push(
-                <mesh
-                    key={`${cameraId}_final`}
-                    position={finalC}
-                    rotation={finalHxA.toArray()}
-                    visible={state.final}
-                >
-                    <planeGeometry args={[1, 1]} />
-                    <meshLambertMaterial
-                        color={theme.color.finalHex}
-                        side={THREE.DoubleSide}
-                    />
-                </mesh>
+            const finalCamera = renderCamera(
+                cameraId,
+                camera.final,
+                originOffset,
+                originRotation,
+                theme.color.finalHex,
+                state.final
             );
-
-            newLines.push(
-                <Line
-                    key={`${cameraId}_final`}
-                    color={theme.color.finalHex}
-                    points={[finalC, finalC.clone().add(finalA)]}
-                    visible={state.final}
-                />
-            );
+            newPlanes.push(finalCamera[0]);
+            newLines.push(finalCamera[1]);
         }
 
         setPlanes(newPlanes);
         setLines(newLines);
 
         setInitialPoint(
-            <mesh position={activeTiepoints[0].initialXYZ} visible={state.initial}>
-                <sphereGeometry args={[0.25]} />
+            <mesh position={initialXYZ} visible={state.initial}>
+                <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.initialHex} />
             </mesh>
         );
         setFinalPoint(
-            <mesh position={activeTiepoints[0].finalXYZ} visible={state.final}>
-                <sphereGeometry args={[0.25]} />
+            <mesh position={finalXYZ} visible={state.final}>
+                <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.finalHex} />
             </mesh>
         );
+    }
+
+    function renderCamera(id ,camera, originOffset, originRotation, color, visible) {
+        const C = new THREE.Vector3(...camera.C).applyQuaternion(originRotation).add(originOffset);
+        const A = new THREE.Vector3(...camera.A);
+        const H = new THREE.Vector3(...camera.H);
+        const HxA = H.clone().cross(A).applyQuaternion(originRotation).normalize();
+
+        A.applyQuaternion(originRotation);
+
+        const plane = (
+            <mesh
+                key={`${id}_${color}`}
+                position={C}
+                rotation={HxA.toArray()}
+                visible={visible}
+            >
+                <planeGeometry />
+                <meshLambertMaterial color={color} wireframe />
+            </mesh>
+        );
+
+        const line = (
+            <Line
+                key={`${id}_${color}`}
+                color={color}
+                points={[C, C.clone().add(A)]}
+                visible={visible}
+            />
+        );
+
+        return [plane, line];
     }
 
     useEffect(() => {
@@ -223,7 +231,7 @@ function Scene({ state }) {
 
     return (
         <>
-            <ambientLight intensity={0.5} />
+            <ambientLight />
             <Bounds fit clip observe margin={1.2}>
                 <SelectToZoom>
                     {planes}
@@ -232,7 +240,7 @@ function Scene({ state }) {
                     {finalPoint}
                 </SelectToZoom>
             </Bounds>
-            <gridHelper args={[1000, 1000]} rotation={[Math.PI / 2, 0, 0]} />
+            <gridHelper args={[1000, 1000]} position={[0, 0, finalXYZ[2]]} rotation={[Math.PI / 2, 0, 0]} />
             <OrbitControls
                 ref={controls}
                 minPolarAngle={0}

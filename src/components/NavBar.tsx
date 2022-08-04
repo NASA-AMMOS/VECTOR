@@ -5,8 +5,6 @@ import * as styles from '@/components/NavBar.css';
 function NavBar({ state, dispatch }) {
     const { activeImage, activeTrack } = useData();
 
-    console.log(state);
-
     return (
         <nav className={styles.container}>
             <h1 className={styles.header}>

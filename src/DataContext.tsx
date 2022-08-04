@@ -61,7 +61,8 @@ export default function ProvideData({ children }) {
         return vicar[key];
     }, [vicar]);
 
-    const parseVICARField = useCallback((field) => {
+    const parseVICARField = useCallback((metadata, fieldName) => {
+        const field = metadata.find((f) => f.startsWith(fieldName));
         const [_, vector] = field.replace(/[\(\)]/g, '').split('=');
         const values = vector.split(',');
         return values.map(Number);

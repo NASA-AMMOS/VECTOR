@@ -45,6 +45,9 @@ function ResidualChart({ activeImage, activeTrack }: ResidualChartProps) {
             finalResiduals.push({ Residual: finalDistance, initial: false });
         }
 
+        const residuals = [...initialResiduals, ...finalResiduals].map((r) => r.Residual);
+        const maxResidual = Math.max(...residuals);
+
         const svg = Plot.plot({
             style: {
                 height: '100%',
@@ -54,6 +57,8 @@ function ResidualChart({ activeImage, activeTrack }: ResidualChartProps) {
             x: {
                 label: null,
                 ticks: 5,
+                domain: [0, maxResidual],
+                nice: true,
             },
             y: {
                 axis: null,
