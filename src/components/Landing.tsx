@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
-import { useData } from '@/DataContext';
+import { Tiepoint, Cameras, useData } from '@/DataContext';
 import * as styles from '@/components/Landing.css';
 
 const parser = new DOMParser();
 
-function Landing() {
+export default function Landing() {
     const { setTiepoints, setCameras, setImages, setVICAR } = useData();
 
-    const [files, setFiles] = useState([]);
+    const [files, setFiles] = useState<File[]>([]);
 
     async function parseFiles() {
         for (const file of files) {
@@ -29,7 +29,7 @@ function Landing() {
         }
     }
 
-    function handleTiepoints(xml) {
+    function handleTiepoints(xml: XMLDocument) {
         const tiepoints = xml.querySelectorAll('tie');
         const newTiepoints = [];
 
@@ -37,23 +37,23 @@ function Landing() {
             const leftKey = Number(tiepoint.getAttribute('left_key'));
             const rightKey = Number(tiepoint.getAttribute('right_key'));
 
-            const leftId = xml.querySelector(`image[key="${leftKey}"]`).getAttribute('unique_id');
-            const rightId = xml.querySelector(`image[key="${rightKey}"]`).getAttribute('unique_id');
+            const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id');
+            const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id');
 
             const leftPixel = tiepoint.querySelector('left');
             const rightPixel = tiepoint.querySelector('right');
 
-            const trackId = Number(tiepoint.querySelector('track').getAttribute('id'));
+            const trackId = Number(tiepoint.querySelector('track')!.getAttribute('id'));
 
             const initialXYZ = tiepoint.querySelector('init_xyz');
-            const initialX = Number(initialXYZ.getAttribute('x'));
-            const initialY = Number(initialXYZ.getAttribute('y'));
-            const initialZ = Number(initialXYZ.getAttribute('z'));
+            const initialX = Number(initialXYZ!.getAttribute('x'));
+            const initialY = Number(initialXYZ!.getAttribute('y'));
+            const initialZ = Number(initialXYZ!.getAttribute('z'));
 
             const finalXYZ = tiepoint.querySelector('final_xyz');
-            const finalX = Number(finalXYZ.getAttribute('x'));
-            const finalY = Number(finalXYZ.getAttribute('y'));
-            const finalZ = Number(finalXYZ.getAttribute('z'));
+            const finalX = Number(finalXYZ!.getAttribute('x'));
+            const finalY = Number(finalXYZ!.getAttribute('y'));
+            const finalZ = Number(finalXYZ!.getAttribute('z'));
 
             const leftInitialResidual = tiepoint.querySelector('left_init_residual');
             const rightInitialResidual = tiepoint.querySelector('right_init_residual');
@@ -71,45 +71,45 @@ function Landing() {
                 initialXYZ: [initialX, initialY, initialZ],
                 finalXYZ: [finalX, finalY, finalZ],
                 leftPixel: [
-                    Number(leftPixel.getAttribute('samp')),
-                    Number(leftPixel.getAttribute('line')),
+                    Number(leftPixel!.getAttribute('samp')),
+                    Number(leftPixel!.getAttribute('line')),
                 ],
                 rightPixel: [
-                    Number(rightPixel.getAttribute('samp')),
-                    Number(rightPixel.getAttribute('line')),
+                    Number(rightPixel!.getAttribute('samp')),
+                    Number(rightPixel!.getAttribute('line')),
                 ],
                 initialResidual: [
-                    Number(leftInitialResidual.getAttribute('samp')) + Number(rightInitialResidual.getAttribute('samp')),
-                    Number(leftInitialResidual.getAttribute('line')) + Number(rightInitialResidual.getAttribute('line')),
+                    Number(leftInitialResidual!.getAttribute('samp')) + Number(rightInitialResidual!.getAttribute('samp')),
+                    Number(leftInitialResidual!.getAttribute('line')) + Number(rightInitialResidual!.getAttribute('line')),
                 ],
                 finalResidual: [
-                    Number(leftFinalResidual.getAttribute('samp')) + Number(rightFinalResidual.getAttribute('samp')),
-                    Number(leftFinalResidual.getAttribute('line')) + Number(rightFinalResidual.getAttribute('line')),
+                    Number(leftFinalResidual!.getAttribute('samp')) + Number(rightFinalResidual!.getAttribute('samp')),
+                    Number(leftFinalResidual!.getAttribute('line')) + Number(rightFinalResidual!.getAttribute('line')),
                 ],
-            });
+            } as Tiepoint);
         }
 
         setTiepoints(newTiepoints);
     }
 
-    function handleNavigation(xml) {
+    function handleNavigation(xml: XMLDocument) {
         const solutions = xml.querySelectorAll('solution');
-        const newCameras = {};
+        const newCameras: Cameras = {};
 
         for (const image of solutions) {
-            const imageId = image.querySelector('image').getAttribute('unique_id');
+            const imageId = image.querySelector('image')!.getAttribute('unique_id')!;
 
             const initialCamera = image.querySelector('original_camera_model');
-            const initialC = initialCamera.querySelector('parameter[id="C"]');
-            const initialA = initialCamera.querySelector('parameter[id="A"]');
-            const initialH = initialCamera.querySelector('parameter[id="H"]');
-            const initialFrame = initialCamera.querySelector('reference_frame');
+            const initialC = initialCamera!.querySelector('parameter[id="C"]')!;
+            const initialA = initialCamera!.querySelector('parameter[id="A"]')!;
+            const initialH = initialCamera!.querySelector('parameter[id="H"]')!;
+            const initialFrame = initialCamera!.querySelector('reference_frame')!;
 
             const finalCamera = image.querySelector('camera_model');
-            const finalC = finalCamera.querySelector('parameter[id="C"]');
-            const finalA = finalCamera.querySelector('parameter[id="A"]');
-            const finalH = finalCamera.querySelector('parameter[id="H"]');
-            const finalFrame = finalCamera.querySelector('reference_frame');
+            const finalC = finalCamera!.querySelector('parameter[id="C"]')!;
+            const finalA = finalCamera!.querySelector('parameter[id="A"]')!;
+            const finalH = finalCamera!.querySelector('parameter[id="H"]')!;
+            const finalFrame = finalCamera!.querySelector('reference_frame')!;
 
             newCameras[imageId] = {
                 initial: {
@@ -129,8 +129,8 @@ function Landing() {
                         Number(initialH.getAttribute('value3')),
                     ],
                     frame: {
-                        name: initialFrame.getAttribute('name'),
-                        index: initialFrame.getAttribute('index1'),
+                        name: initialFrame.getAttribute('name')!,
+                        index: initialFrame.getAttribute('index1')!,
                     },
                 },
                 final: {
@@ -150,8 +150,8 @@ function Landing() {
                         Number(finalH.getAttribute('value3')),
                     ],
                     frame: {
-                        name: finalFrame.getAttribute('name'),
-                        index: finalFrame.getAttribute('index1'),
+                        name: finalFrame.getAttribute('name')!,
+                        index: finalFrame.getAttribute('index1')!,
                     },
                 },
             };
@@ -160,30 +160,30 @@ function Landing() {
         setCameras(newCameras);
     }
 
-    async function handleImage(file) {
+    async function handleImage(file: File) {
         const url = URL.createObjectURL(file);
         setImages((oldImages) => [...oldImages, { name: file.name, url }]);
     }
 
-    async function handleVICAR(file) {
+    async function handleVICAR(file: File) {
         const text = await file.text();
         const metadata = text.split(/(\s+)/).map((t) => t.trim()).filter(Boolean);
         setVICAR((v) => ({ ...v, [file.name]: metadata }));
     }
 
-    async function handleClick(event) {
+    async function handleClick(event: React.MouseEvent) {
         const file = await fileOpen();
         setFiles((oldFiles) => oldFiles.filter((f) => f.name !== file.name).concat([file]));
     }
 
-    async function handleDrop(event) {
+    async function handleDrop(event: React.DragEvent) {
         event.preventDefault();
         const newFiles = await getFilesFromDataTransferItems(event.dataTransfer.items);
         const newFilenames = newFiles.map((f) => f.name);
         setFiles((oldFiles) => oldFiles.filter((f) => !newFilenames.includes(f.name)).concat(newFiles));
     }
 
-    function disableEvent(event) {
+    function disableEvent(event: React.DragEvent) {
         event.preventDefault();
     }
 
@@ -217,5 +217,3 @@ function Landing() {
         </main>
     );
 }
-
-export default Landing;

@@ -3,14 +3,19 @@ import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 
-function TiepointImage() {
+export default function TiepointImage() {
     const { imageTiepoints, activeImage, getImageURL } = useData();
 
-    const [image, setImage] = useState<HTMLImageElement>(null);
+    const [image, setImage] = useState<HTMLImageElement>(null!);
 
-    const imageURL = useMemo<string>(() => getImageURL(activeImage), [activeImage, getImageURL]);
+    const imageURL = useMemo<string | null>(() => activeImage && getImageURL(activeImage), [activeImage, getImageURL]);
 
-    const activeTiepoints = useMemo<Tiepoint[]>(() => imageTiepoints[activeImage], [imageTiepoints, activeImage]);    
+    const activeTiepoints = useMemo<Tiepoint[] | never[]>(() => {
+        if (activeImage) {
+            return imageTiepoints[activeImage];
+        }
+        return [];
+    }, [imageTiepoints, activeImage]);    
 
     useEffect(() => {
         if (imageURL) {
@@ -22,9 +27,10 @@ function TiepointImage() {
         }
     }, [imageURL]);
 
-    const stage = useCallback((canvas) => {
+    const stage = useCallback((canvas: HTMLCanvasElement) => {
         if (canvas && image) {
             const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error();
 
             // Clear canvas.
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -55,7 +61,7 @@ function TiepointImage() {
                 ctx.strokeStyle = theme.color.initialHex;
                 ctx.lineWidth = 2;
                 ctx.moveTo(...pixel);
-                ctx.lineTo(...pixel.map((p, i) => p + initialResidual[i]));
+                ctx.lineTo(...pixel.map((p, i) => p + initialResidual[i]) as [number, number]);
                 ctx.stroke();
 
                 // Draw final residual.
@@ -63,7 +69,7 @@ function TiepointImage() {
                 ctx.strokeStyle = theme.color.finalHex;
                 ctx.lineWidth = 2;
                 ctx.moveTo(...pixel);
-                ctx.lineTo(...pixel.map((p, i) => p + finalResidual[i]));
+                ctx.lineTo(...pixel.map((p, i) => p + finalResidual[i]) as [number, number]);
                 ctx.stroke();
             }
         }
@@ -83,5 +89,3 @@ function TiepointImage() {
         </section>
     );
 }
-
-export default TiepointImage;

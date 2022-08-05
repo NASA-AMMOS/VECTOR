@@ -1,8 +1,14 @@
 import cn from 'classnames';
-import { PageType, useData } from '@/DataContext';
+import { PageAction, PageType } from '@/App';
+import { useData } from '@/DataContext';
 import * as styles from '@/components/NavBar.css';
 
-function NavBar({ state, dispatch }) {
+interface NavBarProps {
+    state: number;
+    dispatch: React.Dispatch<PageAction>;
+};
+
+export default function NavBar({ state, dispatch }: NavBarProps) {
     const { activeImage, activeTrack } = useData();
 
     return (
@@ -56,5 +62,3 @@ function NavBar({ state, dispatch }) {
         </nav>
     );
 }
-
-export default NavBar;

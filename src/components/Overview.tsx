@@ -1,26 +1,26 @@
 import GlobalStatistics from '@/components/GlobalStatistics';
 import CameraViewport from '@/components/CameraViewport';
 import GlobalImageView from '@/components/GlobalImageView';
+import { PageAction } from '@/App';
 import { useData } from '@/DataContext';
 
-function Overview({ state, dispatch }) {
+interface OverviewProps {
+    state: number;
+    dispatch: React.Dispatch<PageAction>;
+};
+
+export default function Overview({ state, dispatch }: OverviewProps) {
     const { activeImage } = useData();
 
-    if (!activeImage) {
-        if (state === 0) {
-            return (
-                <GlobalStatistics /> 
-            );
-        } else if (state === 1) {
-            return (
-                <CameraViewport />
-            );
-        } else if (state === 2) {
-            return (
-                <GlobalImageView dispatch={dispatch} />
-            );
-        }
-    }
+    return (
+        <>
+            {!activeImage && (
+                <>
+                    {state === 0 && <GlobalStatistics /> }
+                    {state === 1 && <CameraViewport /> }
+                    {state === 2 && <GlobalImageView dispatch={dispatch} />}
+                </>
+            )}
+        </>
+    );
 }
-
-export default Overview;

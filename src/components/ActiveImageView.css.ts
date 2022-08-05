@@ -27,12 +27,3 @@ export const block = style({
 export const item = style({
     height: 'calc((92vh - 4rem) / 2 - 0.5rem - 2rem)',
 });
-
-export const canvas = style({
-    position: 'fixed !important',
-    top: 0,
-    left: 0,
-    height: '100vh !important',
-    width: '100vw !important',
-    pointerEvents: 'none',
-});

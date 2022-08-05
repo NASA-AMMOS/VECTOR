@@ -1,18 +1,34 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import cn from 'classnames';
 import SlopeChart from '@/components/SlopeChart';
-import { PageType, Tiepoint, useData } from '@/DataContext';
+import { PageAction, PageType } from '@/App';
+import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
 
-function Stage({ activeTrack }) {
+interface StageProps {
+    activeTrack: number | null;
+};
+
+interface TrackProps {
+    activeImage: string | null;
+    activeTrack: number | null;
+    dispatch: React.Dispatch<PageAction>;
+    isGrouped?: boolean;
+};
+
+interface TracksProps {
+    dispatch: React.Dispatch<PageAction>;
+};
+
+function Stage({ activeTrack }: StageProps) {
     const height = 400;
     const padding = 40;
     const offset = 10;
 
     const { tiepoints, imageTiepoints, getImageURL } = useData();
 
-    const [images, setImages] = useState<HTMLImageElement[]>([]);
+    const [images, setImages] = useState<[string, HTMLImageElement][]>([]);
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => tiepoints.filter((t) => t.trackId === activeTrack), [tiepoints, activeTrack]);
 
@@ -22,9 +38,10 @@ function Stage({ activeTrack }) {
         return imageIds.map((id) => [id, getImageURL(id)]);
     }, [activeTiepoints, getImageURL]);
 
-    const stage = useCallback((canvas) => {
+    const stage = useCallback((canvas: HTMLCanvasElement) => {
         if (canvas && activeTiepoints.length > 0 && images.length > 0) {
             const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error();
 
             // Clear canvas.
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -46,8 +63,8 @@ function Stage({ activeTrack }) {
                 const { leftId, rightId, leftPixel, rightPixel, initialResidual, finalResidual } = tiepoint;
 
                 // Find the correct images for this tiepoint.
-                const leftImage = images.find((image) => image[0] === leftId)[1];
-                const rightImage = images.find((image) => image[0] === rightId)[1];
+                let leftImage = images.find((image) => image[0] === leftId)![1];
+                const rightImage = images.find((image) => image[0] === rightId)![1];
 
                 // Get nearest tiepoints based on offset per image.
                 const leftImageTiepoints = imageTiepoints[leftId].filter((t) => {
@@ -67,14 +84,14 @@ function Stage({ activeTrack }) {
 
                 // Crop image correctly to tiepoint location.
                 ctx.drawImage(leftImage,
-                    ...leftPixel.map((p) => p - offset),     // Top-Left Corner
-                    offset * 2, offset * 2,                  // Crop Area
-                    (count * height) + (count * padding), 0, // Canvas Location
-                    height, height                           // Width & Height
+                    ...leftPixel.map((p) => p - offset) as [number, number], // Top-Left Corner
+                    offset * 2, offset * 2,                                  // Crop Area
+                    (count * height) + (count * padding), 0,                 // Canvas Location
+                    height, height                                           // Width & Height
                 );
 
                 // Draw main tiepoint.
-                let imageCenter = [(count * height) + (count * padding) + (height / 2), height / 2];
+                let imageCenter: [number, number] = [(count * height) + (count * padding) + (height / 2), height / 2];
                 drawTiepoint(ctx, imageCenter, count, initialResidual, finalResidual);
 
                 // Draw relevant tiepoints
@@ -90,10 +107,10 @@ function Stage({ activeTrack }) {
 
                 // Draw sibling image.
                 ctx.drawImage(rightImage,
-                    ...rightPixel.map((p) => p - offset),    // Top-Left Corner
-                    offset * 2, offset * 2,                  // Crop Area
-                    (count * height) + (count * padding), 0, // Canvas Location
-                    height, height                           // Width & Height
+                    ...rightPixel.map((p) => p - offset) as [number, number], // Top-Left Corner
+                    offset * 2, offset * 2,                                   // Crop Area
+                    (count * height) + (count * padding), 0,                  // Canvas Location
+                    height, height                                            // Width & Height
                 );
                 imageCenter = [(count * height) + (count * padding) + (height / 2), height / 2];
                 drawTiepoint(ctx, imageCenter, count, initialResidual, finalResidual);
@@ -110,7 +127,13 @@ function Stage({ activeTrack }) {
         }
     }, [activeTiepoints, images]);
 
-    function drawTiepoint(ctx, position, count, initialResidual, finalResidual) {
+    function drawTiepoint(
+        ctx: CanvasRenderingContext2D,
+        position: [number, number],
+        count: number,
+        initialResidual: [number, number],
+        finalResidual: [number, number]
+    ) {
         if (
             position[0] < (count * height) + (count * padding) ||
             position[0] > (count * height) + (count * padding) + height
@@ -132,7 +155,7 @@ function Stage({ activeTrack }) {
                 dist = (count * height) + (count * padding) + height;
             }
             return dist;
-        }));
+        }) as [number, number]);
         ctx.stroke();
 
         // Draw final residual.
@@ -146,22 +169,26 @@ function Stage({ activeTrack }) {
                 dist = (count * height) + (count * padding) + height;
             }
             return dist;
-        }));
+        }) as [number, number]);
         ctx.stroke();
     }
 
     useEffect(() => {
         if (imageURLs) {;
-            const newImages = [];
+            const newImages: [string, HTMLImageElement][] = [];
             for (const [id, imageURL] of imageURLs) {
-                const newImage = new Image();
-                newImage.onload = () => {
-                    newImages.push([id, newImage]);
-                    if (newImages.length === imageURLs.length) {
-                        setImages(newImages);
-                    }
-                };
-                newImage.src = imageURL;
+                if (id && imageURL) {
+                    const newImage = new Image();
+                    newImage.onload = () => {
+                        newImages.push([id, newImage]);
+                        if (newImages.length === imageURLs.length) {
+                            setImages(newImages);
+                        }
+                    };
+                    newImage.src = imageURL;
+                } else {
+                    throw new Error();
+                }
             }
         }
     }, [imageURLs]);
@@ -174,7 +201,7 @@ function Stage({ activeTrack }) {
     );
 }
 
-export function Track({ dispatch, activeImage, activeTrack, isGrouped }) {
+export function Track({ dispatch, activeImage, activeTrack, isGrouped }: TrackProps) {
     const { setActiveTrack } = useData();
 
     function handleClick() {
@@ -188,7 +215,7 @@ export function Track({ dispatch, activeImage, activeTrack, isGrouped }) {
             className={cn(styles.track, { [styles.trackSpacing]: isGrouped, [styles.trackWidth]: !isGrouped })}
             onClick={handleClick}
         >
-            {isGrouped && (
+            {isGrouped && activeImage && activeTrack && (
                 <>
                     <h3 className={styles.subheader}>
                         ID: {activeTrack}
@@ -207,10 +234,10 @@ export function Track({ dispatch, activeImage, activeTrack, isGrouped }) {
     )
 }
 
-function Tracks({ dispatch }) {
+export default function Tracks({ dispatch }: TracksProps) {
     const { imageTiepoints, activeImage } = useData();
 
-    const activeTracks = useMemo(() => {
+    const activeTracks = useMemo<number[]>(() => {
         if (Object.keys(imageTiepoints).length === 0 || !activeImage) {
             return [];
         } else {
@@ -235,5 +262,3 @@ function Tracks({ dispatch }) {
         </div>
     );
 }
-
-export default Tracks;

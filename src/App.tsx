@@ -1,17 +1,27 @@
-import { Reducer, useReducer, useEffect } from 'react';
+import { useReducer, useEffect } from 'react';
 import Landing from '@/components/Landing';
 import Overview from '@/components/Overview';
 import ActiveImageView from '@/components/ActiveImageView';
 import ActiveTrackView from '@/components/ActiveTrackView';
 import NavBar from '@/components/NavBar';
-import { PageType, useData } from '@/DataContext';
+import { useData } from '@/DataContext';
 import * as styles from '@/App.css';
 
-interface IReducer {
+export enum PageType {
+    STATISTICS = 'STATISTICS',
+    IMAGES = 'IMAGES',
+    CAMERAS = 'CAMERAS',
+    IMAGE = 'IMAGE',
+    TRACK = 'TRACK',
+};
+
+export type PageAction = {
     type: PageType;
 };
 
-function reducer(state, action): Reducer<number, IReducer> {
+const initialState = 0;
+
+function reducer(state: number, action: PageAction): number {
     switch (action.type) {
         case PageType.STATISTICS:
             return 0;
@@ -28,10 +38,10 @@ function reducer(state, action): Reducer<number, IReducer> {
     }
 }
 
-function App() {
+export default function App() {
     const { tiepoints, cameras, vicar, activeImage, activeTrack, setActiveImage, setActiveTrack } = useData();
 
-    const [state, dispatch] = useReducer<Reducer<number, IReducer>>(reducer, 0);
+    const [state, dispatch] = useReducer(reducer, initialState);
 
     useEffect(() => {
         if (state < 3) {
@@ -43,20 +53,20 @@ function App() {
         }
     }, [state]);
 
-    if (tiepoints.length === 0 || Object.keys(cameras).length === 0 || Object.keys(vicar).length === 0) {
-        return <Landing />
-    } else {
-        return (
-            <>
-                <main className={styles.container}>
-                    <Overview state={state} dispatch={dispatch} />
-                    <ActiveImageView dispatch={dispatch} />
-                    <ActiveTrackView dispatch={dispatch} />
-                </main>
-                <NavBar state={state} dispatch={dispatch} />
-            </>
-        );
-    }
+    return (
+        <>
+            {tiepoints.length === 0 || Object.keys(cameras).length === 0 || Object.keys(vicar).length === 0 ? (
+                <Landing />
+            ) : (
+                <>
+                    <main className={styles.container}>
+                        <Overview state={state} dispatch={dispatch} />
+                        <ActiveImageView dispatch={dispatch} />
+                        <ActiveTrackView dispatch={dispatch} />
+                    </main>
+                    <NavBar state={state} dispatch={dispatch} />
+                </>
+            )}    
+        </>
+    );
 }
-
-export default App;
