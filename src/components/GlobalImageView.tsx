@@ -1,3 +1,4 @@
+import Toolbar from '@/components/Toolbar';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
@@ -18,24 +19,29 @@ export default function GlobalImageView({ dispatch }: GlobalImageViewProps) {
     }
 
     return (
-        <section className={styles.container}>
-            {Object.keys(imageTiepoints).map((id) => (
-                <div key={id} className={styles.item} onClick={() => handleClick(id)}>
-                    <div>
-                        <h2 className={styles.header}>
-                            Image ID: {id}
-                        </h2>
-                        <img
-                            className={styles.image}
-                            src={getImageURL(id)!}
-                            alt={`Image with ID: ${id}`}
-                        />
+        <>
+            <Toolbar>
+                <h1>Hi</h1>
+            </Toolbar>
+            <section className={styles.container}>
+                {Object.keys(imageTiepoints).map((id) => (
+                    <div key={id} className={styles.item} onClick={() => handleClick(id)}>
+                        <div>
+                            <h2 className={styles.header}>
+                                Image ID: {id}
+                            </h2>
+                            <img
+                                className={styles.image}
+                                src={getImageURL(id)!}
+                                alt={`Image with ID: ${id}`}
+                            />
+                        </div>
+                        <RadialChart activeImage={id} />
+                        <ResidualChart activeImage={id} />
+                        <SlopeChart activeImage={id} />
                     </div>
-                    <RadialChart activeImage={id} />
-                    <ResidualChart activeImage={id} />
-                    <SlopeChart activeImage={id} />
-                </div>
-            ))}
-        </section>
+                ))}
+            </section>
+        </>
     );
 }
