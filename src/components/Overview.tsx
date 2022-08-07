@@ -18,7 +18,7 @@ export default function Overview({ state, dispatch }: OverviewProps) {
                 <>
                     {state === 0 && <GlobalStatistics /> }
                     {state === 1 && <CameraViewport /> }
-                    {state === 2 && <GlobalImageView dispatch={dispatch} />}
+                    {state === 2 && <GlobalImageView route={dispatch} />}
                 </>
             )}
         </>

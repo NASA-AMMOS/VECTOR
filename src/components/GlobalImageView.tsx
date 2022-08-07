@@ -1,27 +1,75 @@
+import { useReducer } from 'react';
 import Toolbar from '@/components/Toolbar';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
+import Checkbox from '@/components/Checkbox';
 import { PageAction, PageType } from '@/App';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/GlobalImageView.css';
 
-interface GlobalImageViewProps {
-    dispatch: React.Dispatch<PageAction>;
+enum ActionType {
+    INITIAL = 'INITIAL',
+    FINAL = 'FINAL',
 };
 
-export default function GlobalImageView({ dispatch }: GlobalImageViewProps) {
+interface State {
+    initial: boolean;
+    final: boolean;
+};
+
+interface Action {
+    type: string;
+};
+
+interface GlobalImageViewProps {
+    route: React.Dispatch<PageAction>;
+};
+
+const initialState: State = { initial: true, final: true };
+
+function reducer(state: State, action: Action) {
+    switch (action.type) {
+        case ActionType.INITIAL:
+            return { ...state, initial: !state.initial };
+        case ActionType.FINAL:
+            return { ...state, final: !state.final };
+        default:
+            return state;
+    }
+}
+
+export default function GlobalImageView({ route }: GlobalImageViewProps) {
     const { imageTiepoints, getImageURL, setActiveImage } = useData();
 
+    const [state, dispatch] = useReducer(reducer, initialState);
+
+    function handleChange(event: React.FormEvent<HTMLInputElement>) {
+        dispatch({ type: event.currentTarget.value });
+    }
+
     function handleClick(id: string) {
-        dispatch({ type: PageType.IMAGE });
+        route({ type: PageType.IMAGE });
         setActiveImage(id);
     }
 
     return (
         <>
             <Toolbar>
-                <h1>Hi</h1>
+                <Checkbox
+                    name={ActionType.INITIAL}
+                    checked={!!(state.initial)}
+                    onChange={handleChange}
+                >
+                    Initial
+                </Checkbox>
+                <Checkbox
+                    name={ActionType.FINAL}
+                    checked={!!(state.final)}
+                    onChange={handleChange}
+                >
+                    Final
+                </Checkbox>
             </Toolbar>
             <section className={styles.container}>
                 {Object.keys(imageTiepoints).map((id) => (
@@ -36,8 +84,8 @@ export default function GlobalImageView({ dispatch }: GlobalImageViewProps) {
                                 alt={`Image with ID: ${id}`}
                             />
                         </div>
-                        <RadialChart activeImage={id} />
-                        <ResidualChart activeImage={id} />
+                        <RadialChart activeImage={id} state={state} />
+                        <ResidualChart activeImage={id} state={state} />
                         <SlopeChart activeImage={id} />
                     </div>
                 ))}

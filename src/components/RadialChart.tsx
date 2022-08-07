@@ -5,12 +5,18 @@ import { vars } from '@/utils/theme.css';
 import { Polar } from '@/utils/helpers';
 import * as styles from '@/components/RadialChart.css';
 
+interface RadialChartState {
+    initial: boolean;
+    final: boolean;
+};
+
 interface RadialChartProps {
+    state: RadialChartState;
     activeImage?: string;
     activeTrack?: number;
 };
 
-export default function RadialChart({ activeImage, activeTrack }: RadialChartProps) {
+export default function RadialChart({ state, activeImage, activeTrack }: RadialChartProps) {
     const { tiepoints, imageTiepoints } = useData();
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
@@ -26,7 +32,7 @@ export default function RadialChart({ activeImage, activeTrack }: RadialChartPro
     }, [tiepoints, imageTiepoints, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
-        if (activeTiepoints.length > 0 && element) {
+        if ((state.initial || state.final) && activeTiepoints.length > 0 && element) {
             const residuals = activeTiepoints.map((t) => [{ ...Polar(t.initialResidual), initial: true }, { ...Polar(t.finalResidual), initial: false }]).flat();
 
             const initialMin = residuals.filter((r) => r.initial).reduce((prev, curr) => prev.radius < curr.radius ? prev : curr);
@@ -49,7 +55,14 @@ export default function RadialChart({ activeImage, activeTrack }: RadialChartPro
                     .attr('transform', `translate(${(width + padding) / 2 } ${(height + padding) / 2})`)
             
             parent.selectAll('point')
-                .data(residuals)
+                .data(residuals.filter((r) => {
+                    if (r.initial && state.initial) {
+                        return true;
+                    } else if (!r.initial && state.final) {
+                        return true;
+                    }
+                    return false;
+                }))
                 .enter()
                     .append('circle')
                         .attr('cx', (d) => d.radius * Math.cos(d.angle))
@@ -57,41 +70,44 @@ export default function RadialChart({ activeImage, activeTrack }: RadialChartPro
                         .attr('r', radius)
                         .attr('fill', (d) => d.initial ? vars.color.initial : vars.color.final);
 
-            parent.append('circle')
-                .attr('cx', 0)
-                .attr('cy', 0)
-                .attr('r', initialMin.radius)
-                .attr('stroke', vars.color.initial)
-                .attr('stroke-width', radius)
-                .attr('fill', 'transparent');
+            if (state.initial) {
+                parent.append('circle')
+                    .attr('cx', 0)
+                    .attr('cy', 0)
+                    .attr('r', initialMin.radius)
+                    .attr('stroke', vars.color.initial)
+                    .attr('stroke-width', radius)
+                    .attr('fill', 'transparent');
+                parent.append('circle')
+                    .attr('cx', 0)
+                    .attr('cy', 0)
+                    .attr('r', initialMax.radius)
+                    .attr('stroke', vars.color.initial)
+                    .attr('stroke-width', radius)
+                    .attr('fill', 'transparent');
+            }
 
-            parent.append('circle')
-                .attr('cx', 0)
-                .attr('cy', 0)
-                .attr('r', initialMax.radius)
-                .attr('stroke', vars.color.initial)
-                .attr('stroke-width', radius)
-                .attr('fill', 'transparent');
+            if (state.final) {
+                parent.append('circle')
+                    .attr('cx', 0)
+                    .attr('cy', 0)
+                    .attr('r', finalMin.radius)
+                    .attr('stroke', vars.color.final)
+                    .attr('stroke-width', radius)
+                    .attr('fill', 'transparent');
 
-            parent.append('circle')
-                .attr('cx', 0)
-                .attr('cy', 0)
-                .attr('r', finalMin.radius)
-                .attr('stroke', vars.color.final)
-                .attr('stroke-width', radius)
-                .attr('fill', 'transparent');
-
-            parent.append('circle')
-                .attr('cx', 0)
-                .attr('cy', 0)
-                .attr('r', finalMax.radius)
-                .attr('stroke', vars.color.final)
-                .attr('stroke-width', radius)
-                .attr('fill', 'transparent');
+                parent.append('circle')
+                    .attr('cx', 0)
+                    .attr('cy', 0)
+                    .attr('r', finalMax.radius)
+                    .attr('stroke', vars.color.final)
+                    .attr('stroke-width', radius)
+                    .attr('fill', 'transparent');
+            }
 
             element.replaceChildren(svg.node() as Node);
         }
-    }, [activeTiepoints]);
+    }, [state, activeTiepoints]);
 
     return (
         <div ref={plot} className={styles.container}></div>

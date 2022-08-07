@@ -9,12 +9,18 @@ import * as styles from '@/components/ResidualChart.css';
 
 const baseVector = new Vector2();
 
+interface ResidualChartState {
+    initial: boolean;
+    final: boolean;
+};
+
 interface ResidualChartProps {
+    state: ResidualChartState;
     activeImage?: string;
     activeTrack?: number;
 };
 
-export default function ResidualChart({ activeImage, activeTrack }: ResidualChartProps) {
+export default function ResidualChart({ state, activeImage, activeTrack }: ResidualChartProps) {
     const { tiepoints, imageTiepoints } = useData();
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
@@ -30,7 +36,7 @@ export default function ResidualChart({ activeImage, activeTrack }: ResidualChar
     }, [tiepoints, imageTiepoints, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
-        if (activeTiepoints.length > 0 && element) {
+        if ((state.initial || state.final) && activeTiepoints.length > 0 && element) {
             const initialResiduals = [];
             const finalResiduals = [];
 
@@ -64,15 +70,21 @@ export default function ResidualChart({ activeImage, activeTrack }: ResidualChar
                     axis: null,
                 },
                 marks: [
-                    Plot.rectY(initialResiduals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: vars.color.initial, thresholds: 15 })),
-                    Plot.rectY(finalResiduals, Plot.binX({ y: 'count' }, { x: 'Residual', fill: vars.color.final, thresholds: 15 })),
+                    Plot.rectY(initialResiduals, Plot.binX(
+                        { y: 'count' },
+                        { x: 'Residual', fill: state.initial ? vars.color.initial : 'transparent', thresholds: 15 }
+                    )),
+                    Plot.rectY(finalResiduals, Plot.binX(
+                        { y: 'count' },
+                        { x: 'Residual', fill: state.final ? vars.color.final : 'transparent', thresholds: 15 }
+                    )),
                     Plot.ruleY([0]),
                 ],
             });
 
             element.replaceChildren(svg);
         }
-    }, [activeTiepoints]);
+    }, [state, activeTiepoints]);
 
     return (
         <div ref={plot} className={styles.container}></div>
