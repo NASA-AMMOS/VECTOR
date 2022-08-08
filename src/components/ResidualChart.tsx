@@ -13,6 +13,8 @@ interface ResidualChartState {
     isInitial: boolean;
     isFinal: boolean;
     isRelative?: boolean;
+    residualMin?: number;
+    residualMax?: number;
 };
 
 interface ResidualChartProps {
@@ -38,8 +40,8 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
 
     const plot = useCallback((element: HTMLDivElement) => {
         if ((state.isInitial || state.isFinal) && activeTiepoints.length > 0 && element) {
-            const initialResiduals = [];
-            const finalResiduals = [];
+            let initialResiduals = [];
+            let finalResiduals = [];
 
             for (const tiepoint of activeTiepoints) {
                 const initialResidual = new Vector2(...tiepoint.initialResidual);
@@ -50,6 +52,16 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
 
                 initialResiduals.push(initialDistance);
                 finalResiduals.push(finalDistance);
+            }
+
+            if (state.residualMin) {
+                initialResiduals = initialResiduals.filter((r) => r >= state.residualMin!);
+                finalResiduals = finalResiduals.filter((r) => r >= state.residualMin!);
+            }
+
+            if (state.residualMax) {
+                initialResiduals = initialResiduals.filter((r) => r <= state.residualMax!);
+                finalResiduals = finalResiduals.filter((r) => r <= state.residualMax!);
             }
 
             const residuals = [...initialResiduals, ...finalResiduals];

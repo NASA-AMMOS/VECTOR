@@ -3,6 +3,7 @@ import Toolbar from '@/components/Toolbar';
 import Pill from '@/components/Pill';
 import Checkbox from '@/components/Checkbox';
 import Radio from '@/components/Radio';
+import NumberInput from '@/components/NumberInput';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
@@ -15,23 +16,28 @@ enum ActionType {
     RESIDUAL_FINAL = 'RESIDUAL_FINAL',
     RELATIVE_AXIS = 'RELATIVE_AXIS',
     ABSOLUTE_AXIS = 'ABSOLUTE_AXIS',
+    RESIDUAL_MIN = 'RESIDUAL_MIN',
+    RESIDUAL_MAX = 'RESIDUAL_MAX',
 };
 
 interface State {
     isInitial: boolean;
     isFinal: boolean;
     isRelative: boolean;
+    residualMin: number;
+    residualMax: number;
 };
 
 interface Action {
     type: string;
+    data: string;
 };
 
 interface GlobalImageViewProps {
     route: React.Dispatch<PageAction>;
 };
 
-const initialState: State = { isInitial: true, isFinal: true, isRelative: true };
+const initialState: State = { isInitial: true, isFinal: true, isRelative: true, residualMin: 0, residualMax: 0 };
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
@@ -43,6 +49,10 @@ function reducer(state: State, action: Action) {
             return { ...state, isRelative: true };
         case ActionType.ABSOLUTE_AXIS:
             return { ...state, isRelative: false };
+        case ActionType.RESIDUAL_MIN:
+            return { ...state, residualMin: Number(action.data) };
+        case ActionType.RESIDUAL_MAX:
+            return { ...state, residualMax: Number(action.data) };
         default:
             return state;
     }
@@ -54,7 +64,7 @@ export default function GlobalImageView({ route }: GlobalImageViewProps) {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     function handleChange(event: React.FormEvent<HTMLInputElement>) {
-        dispatch({ type: event.currentTarget.value });
+        dispatch({ type: event.currentTarget.name, data: event.currentTarget.value });
     }
 
     function handleClick(id: string) {
@@ -97,6 +107,22 @@ export default function GlobalImageView({ route }: GlobalImageViewProps) {
                         Absolute
                     </Radio>
                 </Pill>
+                <Pill>
+                    <NumberInput
+                        name={ActionType.RESIDUAL_MIN}
+                        value={state.residualMin}
+                        onChange={handleChange}
+                    >
+                        Min
+                    </NumberInput>
+                    <NumberInput
+                        name={ActionType.RESIDUAL_MAX}
+                        value={state.residualMax}
+                        onChange={handleChange}
+                    >
+                        Max
+                    </NumberInput>
+                </Pill>
             </Toolbar>
             <section className={styles.container}>
                 {Object.keys(imageTiepoints).map((id) => (
@@ -111,9 +137,18 @@ export default function GlobalImageView({ route }: GlobalImageViewProps) {
                                 alt={`Image with ID: ${id}`}
                             />
                         </div>
-                        <RadialChart activeImage={id} state={state} />
-                        <ResidualChart activeImage={id} state={state} />
-                        <SlopeChart activeImage={id} />
+                        <RadialChart
+                            state={state}
+                            activeImage={id}
+                        />
+                        <ResidualChart
+                            state={state}
+                            activeImage={id}
+                        />
+                        <SlopeChart
+                            state={state}
+                            activeImage={id}
+                        />
                     </div>
                 ))}
             </section>

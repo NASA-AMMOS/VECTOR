@@ -8,7 +8,14 @@ import * as styles from '@/components/SlopeChart.css';
 
 const baseVector = new Vector2();
 
+interface SlopeChartState {
+    isRelative: boolean;
+    residualMin: number;
+    residualMax: number;
+};
+
 interface SlopeChartProps {
+    state: SlopeChartState;
     activeImage?: string;
     activeTrack?: number;
     isSmall?: boolean;
@@ -21,8 +28,8 @@ interface Residual {
     decreased: boolean;
 };
 
-export default function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeChartProps) {
-    const { tiepoints, imageTiepoints } = useData();
+export default function SlopeChart({ state, activeImage, activeTrack, isSmall }: SlopeChartProps) {
+    const { tiepoints, imageTiepoints, residualBounds } = useData();
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
         if (activeImage && !activeTrack) {
@@ -36,7 +43,7 @@ export default function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeC
 
     const plot = useCallback((element: HTMLDivElement) => {
         if (activeTiepoints.length > 0 && element) {
-            const initialResiduals = activeTiepoints.map((tiepoint) => {
+            let initialResiduals = activeTiepoints.map((tiepoint) => {
                 const initialResidual = new Vector2(...tiepoint.initialResidual);
                 const initialDistance = Math.trunc(baseVector.clone().distanceTo(initialResidual));
 
@@ -51,7 +58,7 @@ export default function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeC
                 };
             });
 
-            const finalResiduals = activeTiepoints.map((tiepoint) => {
+            let finalResiduals = activeTiepoints.map((tiepoint) => {
                 const finalResidual = new Vector2(...tiepoint.finalResidual);
                 return {
                     group: 'Final',
@@ -60,7 +67,23 @@ export default function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeC
                 };
             });
 
+            if (state.residualMin) {
+                initialResiduals = initialResiduals.filter((r) => r.residual >= state.residualMin!);
+                finalResiduals = finalResiduals.filter((r) => r.residual >= state.residualMin!);
+            }
+
+            if (state.residualMax) {
+                initialResiduals = initialResiduals.filter((r) => r.residual <= state.residualMax!);
+                finalResiduals = finalResiduals.filter((r) => r.residual <= state.residualMax!);
+            }
+
             const residuals = [...initialResiduals, ...finalResiduals];
+            let maxResidual;
+            if (state.isRelative) {
+                maxResidual = Math.max(...residuals.map((r) => r.residual));
+            } else {
+                maxResidual = residualBounds[0][1];
+            }
 
             const svg = Plot.plot({
                 style: {
@@ -77,6 +100,7 @@ export default function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeC
                 },
                 y: {
                     axis: null,
+                    domain: [0, maxResidual],
                     inset: 20,
                 },
                 marks: [
@@ -107,7 +131,7 @@ export default function SlopeChart({ activeImage, activeTrack, isSmall }: SlopeC
 
             element.replaceChildren(svg);
         }
-    }, [activeTiepoints]);
+    }, [state, activeTiepoints]);
 
     return (
         <div ref={plot} className={styles.container}></div>

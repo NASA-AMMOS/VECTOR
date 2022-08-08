@@ -6,19 +6,27 @@ import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
 
+interface TrackState {
+    isRelative: boolean;
+    residualMin: number;
+    residualMax: number;
+};
+
 interface StageProps {
     activeTrack: number | null;
 };
 
 interface TrackProps {
+    state: TrackState;
+    route: React.Dispatch<PageAction>;
     activeImage: string | null;
     activeTrack: number | null;
-    dispatch: React.Dispatch<PageAction>;
     isGrouped?: boolean;
 };
 
 interface TracksProps {
-    dispatch: React.Dispatch<PageAction>;
+    state: TrackState;
+    route: React.Dispatch<PageAction>;
 };
 
 function Stage({ activeTrack }: StageProps) {
@@ -201,11 +209,11 @@ function Stage({ activeTrack }: StageProps) {
     );
 }
 
-export function Track({ dispatch, activeImage, activeTrack, isGrouped }: TrackProps) {
+export function Track({ state, route, activeImage, activeTrack, isGrouped }: TrackProps) {
     const { setActiveTrack } = useData();
 
     function handleClick() {
-        dispatch({ type: PageType.TRACK });
+        route({ type: PageType.TRACK });
         setActiveTrack(activeTrack);
     }
 
@@ -222,6 +230,7 @@ export function Track({ dispatch, activeImage, activeTrack, isGrouped }: TrackPr
                     </h3>
                     <div className={styles.slope}>
                         <SlopeChart
+                            state={state}
                             activeImage={activeImage}
                             activeTrack={activeTrack}
                             isSmall
@@ -234,7 +243,7 @@ export function Track({ dispatch, activeImage, activeTrack, isGrouped }: TrackPr
     )
 }
 
-export default function Tracks({ dispatch }: TracksProps) {
+export default function Tracks({ state, route }: TracksProps) {
     const { imageTiepoints, activeImage } = useData();
 
     const activeTracks = useMemo<number[]>(() => {
@@ -253,7 +262,8 @@ export default function Tracks({ dispatch }: TracksProps) {
             {activeTracks.map((trackId) => (
                 <Track
                     key={trackId}
-                    dispatch={dispatch}
+                    state={state}
+                    route={route}
                     activeImage={activeImage}
                     activeTrack={trackId}
                     isGrouped
