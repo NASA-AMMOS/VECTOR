@@ -1,9 +1,24 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Vector2 } from 'three';
 import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 
-export default function TiepointImage() {
+const baseVector = new Vector2();
+
+interface TiepointImageState {
+    isInitial: boolean;
+    isFinal: boolean;
+    residualMin: number;
+    residualMax: number;
+    residualScale: number;
+};
+
+interface TiepointImageProps {
+    state: TiepointImageState;
+};
+
+export default function TiepointImage({ state }: TiepointImageProps) {
     const { imageTiepoints, activeImage, getImageURL } = useData();
 
     const [image, setImage] = useState<HTMLImageElement>(null!);
@@ -48,32 +63,54 @@ export default function TiepointImage() {
             for (const tiepoint of activeTiepoints) {
                 const { initialResidual, finalResidual } = tiepoint;
 
+                // Calculate residual distance for filtering.
+                const initialDistance = Number(baseVector.distanceTo(new Vector2(...initialResidual)).toFixed(1));
+                const finalDistance = Number(baseVector.distanceTo(new Vector2(...finalResidual)).toFixed(1));
+
                 // Check which pixel to use for the active image.
                 const pixel = tiepoint.leftId === activeImage ? tiepoint.leftPixel : tiepoint.rightPixel;
 
-                // Draw pixel as circle.
-                ctx.beginPath();
-                ctx.arc(...pixel, 2.5, 0, Math.PI * 2, true);
-                ctx.fill();
+                let isResidualRendered = false;
 
                 // Draw initial residual.
-                ctx.beginPath();
-                ctx.strokeStyle = theme.color.initialHex;
-                ctx.lineWidth = 2;
-                ctx.moveTo(...pixel);
-                ctx.lineTo(...pixel.map((p, i) => p + initialResidual[i]) as [number, number]);
-                ctx.stroke();
+                if (
+                    state.isInitial &&
+                    (!state.residualMin || (state.residualMin && state.residualMin <= initialDistance)) && 
+                    (!state.residualMax || (state.residualMax && state.residualMax >= initialDistance))
+                ) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = theme.color.initialHex;
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(...pixel);
+                    ctx.lineTo(...pixel.map((p, i) => (p + initialResidual[i]) * state.residualScale) as [number, number]);
+                    ctx.stroke();
+                    isResidualRendered = true;
+                }
 
                 // Draw final residual.
-                ctx.beginPath();
-                ctx.strokeStyle = theme.color.finalHex;
-                ctx.lineWidth = 2;
-                ctx.moveTo(...pixel);
-                ctx.lineTo(...pixel.map((p, i) => p + finalResidual[i]) as [number, number]);
-                ctx.stroke();
+                if (
+                    state.isFinal &&
+                    (!state.residualMin || (state.residualMin && state.residualMin <= finalDistance)) && 
+                    (!state.residualMax || (state.residualMax && state.residualMax >= finalDistance))
+                ) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = theme.color.finalHex;
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(...pixel);
+                    ctx.lineTo(...pixel.map((p, i) => (p + finalResidual[i]) * state.residualScale) as [number, number]);
+                    ctx.stroke();
+                    isResidualRendered = true;
+                }
+
+                // Draw pixel as circle.
+                if (isResidualRendered) {
+                    ctx.beginPath();
+                    ctx.arc(...pixel, 2.5 * state.residualScale, 0, Math.PI * 2, true);
+                    ctx.fill();
+                }
             }
         }
-    }, [image, activeTiepoints]);
+    }, [state, image, activeTiepoints]);
 
     return (
         <section className={styles.container}>

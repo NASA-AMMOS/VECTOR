@@ -19,6 +19,7 @@ enum ActionType {
     ABSOLUTE_AXIS = 'ABSOLUTE_AXIS',
     RESIDUAL_MIN = 'RESIDUAL_MIN',
     RESIDUAL_MAX = 'RESIDUAL_MAX',
+    RESIDUAL_SCALE = 'RESIDUAL_SCALE',
 };
 
 interface State {
@@ -27,6 +28,7 @@ interface State {
     isRelative: boolean;
     residualMin: number;
     residualMax: number;
+    residualScale: number;
 };
 
 interface Action {
@@ -38,7 +40,7 @@ interface ActiveImageViewProps {
     route: React.Dispatch<PageAction>;
 };
 
-const initialState: State = { isInitial: true, isFinal: true, isRelative: true, residualMin: 0, residualMax: 0 };
+const initialState: State = { isInitial: true, isFinal: true, isRelative: true, residualMin: 0, residualMax: 0, residualScale: 1 };
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
@@ -54,6 +56,8 @@ function reducer(state: State, action: Action) {
             return { ...state, residualMin: Number(action.data) };
         case ActionType.RESIDUAL_MAX:
             return { ...state, residualMax: Number(action.data) };
+        case ActionType.RESIDUAL_SCALE:
+            return { ...state, residualScale: Number(action.data) === 0 ? 1 : Number(action.data) };
         default:
             return state;
     }
@@ -121,10 +125,19 @@ export default function ActiveImageView({ route }: ActiveImageViewProps) {
                                 Max
                             </NumberInput>
                         </Pill>
+                        <Pill>
+                            <NumberInput
+                                name={ActionType.RESIDUAL_SCALE}
+                                value={state.residualScale}
+                                onChange={handleChange}
+                            >
+                                Scale
+                            </NumberInput>
+                        </Pill>
                     </Toolbar>
                     <section className={styles.grid}>
                         <div className={styles.column}>
-                            <TiepointImage />
+                            <TiepointImage state={state} />
                             <div className={styles.block}>
                                 <div className={styles.item}>
                                     <RadialChart

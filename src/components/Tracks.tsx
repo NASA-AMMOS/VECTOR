@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Vector2 } from 'three';
 import cn from 'classnames';
 import SlopeChart from '@/components/SlopeChart';
 import { PageAction, PageType } from '@/App';
@@ -6,13 +7,18 @@ import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
 
+const baseVector = new Vector2();
+
 interface TrackState {
+    isInitial: boolean;
+    isFinal: boolean;
     isRelative: boolean;
     residualMin: number;
     residualMax: number;
 };
 
 interface StageProps {
+    state: TrackState;
     activeTrack: number | null;
 };
 
@@ -29,7 +35,7 @@ interface TracksProps {
     route: React.Dispatch<PageAction>;
 };
 
-function Stage({ activeTrack }: StageProps) {
+function Stage({ state, activeTrack }: StageProps) {
     const height = 400;
     const padding = 40;
     const offset = 10;
@@ -133,7 +139,7 @@ function Stage({ activeTrack }: StageProps) {
                 count++;
             }
         }
-    }, [activeTiepoints, images]);
+    }, [state, activeTiepoints, images]);
 
     function drawTiepoint(
         ctx: CanvasRenderingContext2D,
@@ -147,38 +153,60 @@ function Stage({ activeTrack }: StageProps) {
             position[0] > (count * height) + (count * padding) + height
         ) return;
 
-        // Draw pixel as circle.
-        ctx.beginPath();
-        ctx.arc(...position, 15, 0, Math.PI * 2, true);
-        ctx.fill();
+        // Calculate residual distance for filtering.
+        const initialDistance = Number(baseVector.distanceTo(new Vector2(...initialResidual)).toFixed(1));
+        const finalDistance = Number(baseVector.distanceTo(new Vector2(...finalResidual)).toFixed(1));
+
+        let isResidualRendered = false;
 
         // Draw initial residual.
-        ctx.beginPath();
-        ctx.strokeStyle = theme.color.initialHex;
-        ctx.lineWidth = 5;
-        ctx.moveTo(...position);
-        ctx.lineTo(...position.map((p, i) => {
-            let dist = (p + initialResidual[i]) * 1.5;
-            if (dist > (count * height) + (count * padding) + height) {
-                dist = (count * height) + (count * padding) + height;
-            }
-            return dist;
-        }) as [number, number]);
-        ctx.stroke();
+        if (
+            state.isInitial &&
+            (!state.residualMin || (state.residualMin && state.residualMin <= initialDistance)) && 
+            (!state.residualMax || (state.residualMax && state.residualMax >= initialDistance))
+        ) {
+            ctx.beginPath();
+            ctx.strokeStyle = theme.color.initialHex;
+            ctx.lineWidth = 5;
+            ctx.moveTo(...position);
+            ctx.lineTo(...position.map((p, i) => {
+                let dist = (p + initialResidual[i]) * 1.5;
+                if (dist > (count * height) + (count * padding) + height) {
+                    dist = (count * height) + (count * padding) + height;
+                }
+                return dist;
+            }) as [number, number]);
+            ctx.stroke();
+            isResidualRendered = true;
+        }
 
         // Draw final residual.
-        ctx.beginPath();
-        ctx.strokeStyle = theme.color.finalHex;
-        ctx.lineWidth = 5;
-        ctx.moveTo(...position);
-        ctx.lineTo(...position.map((p, i) => {
-            let dist = (p + finalResidual[i]) * 1.5;
-            if (dist > (count * height) + (count * padding) + height) {
-                dist = (count * height) + (count * padding) + height;
-            }
-            return dist;
-        }) as [number, number]);
-        ctx.stroke();
+        if (
+            state.isFinal &&
+            (!state.residualMin || (state.residualMin && state.residualMin <= finalDistance)) && 
+            (!state.residualMax || (state.residualMax && state.residualMax >= finalDistance))
+        ) {
+            ctx.beginPath();
+            ctx.strokeStyle = theme.color.finalHex;
+            ctx.lineWidth = 5;
+            ctx.moveTo(...position);
+            ctx.lineTo(...position.map((p, i) => {
+                let dist = (p + finalResidual[i]) * 1.5;
+                if (dist > (count * height) + (count * padding) + height) {
+                    dist = (count * height) + (count * padding) + height;
+                }
+                return dist;
+            }) as [number, number]);
+            ctx.stroke();
+            isResidualRendered = true;
+        }
+
+        // Draw pixel as circle.
+        if (isResidualRendered) {
+            ctx.beginPath();
+            ctx.arc(...position, 15, 0, Math.PI * 2, true);
+            ctx.fill();
+        }
     }
 
     useEffect(() => {
@@ -238,7 +266,10 @@ export function Track({ state, route, activeImage, activeTrack, isGrouped }: Tra
                     </div>
                 </>
             )}
-            <Stage activeTrack={activeTrack} />
+            <Stage
+                state={state}
+                activeTrack={activeTrack}
+            />
         </div>
     )
 }

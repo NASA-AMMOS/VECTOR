@@ -56,7 +56,7 @@ export default function NavBar({ state, dispatch }: NavBarProps) {
             </div>
             <div>
                 <button className={cn(styles.button, styles.active)}>
-                    Filter & Sort
+                    TODO
                 </button>
             </div>
         </nav>
