@@ -9,6 +9,12 @@ import * as styles from '@/components/ResidualChart.css';
 
 const baseVector = new Vector2();
 
+interface Residual {
+    distance: number;
+    angle: number;
+    isInitial: boolean;
+};
+
 interface ResidualChartState {
     isInitial: boolean;
     isFinal: boolean;
@@ -55,8 +61,8 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 const initialAngle = Polar(tiepoint.initialResidual).angle;
                 const finalAngle = Polar(tiepoint.finalResidual).angle;
 
-                initialResiduals.push({ distance: initialDistance, angle: initialAngle });
-                finalResiduals.push({ distance: finalDistance, angle: finalAngle });
+                initialResiduals.push({ distance: initialDistance, angle: initialAngle, isInitial: true });
+                finalResiduals.push({ distance: finalDistance, angle: finalAngle, isInitial: false });
             }
 
             // Calculate axes bounds before filtering.
@@ -90,8 +96,15 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 finalResiduals = finalResiduals.filter((r) => r.angle <= state.residualAngleMax!);
             }
 
-            initialResiduals = initialResiduals.map((r) => r.distance);
-            finalResiduals = finalResiduals.map((r) => r.distance);
+            const residuals = [];
+
+            if (state.isInitial) {
+                residuals.push(...initialResiduals);
+            }
+
+            if (state.isFinal) {
+                residuals.push(...finalResiduals);   
+            }
 
             const svg = Plot.plot({
                 style: {
@@ -109,13 +122,15 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                     axis: null,
                 },
                 marks: [
-                    Plot.rectY(initialResiduals, Plot.binX(
-                        { y: 'count' },
-                        { fill: state.isInitial ? vars.color.initial : 'transparent', thresholds: 15 }
-                    )),
-                    Plot.rectY(finalResiduals, Plot.binX(
-                        { y: 'count' },
-                        { fill: state.isFinal ? vars.color.final : 'transparent', thresholds: 15 }
+                    Plot.rectY(residuals, Plot.binX(
+                        {
+                            y: 'count'
+                        },
+                        {
+                            x: 'distance',
+                            fill: (d: Residual) => d.isInitial ? vars.color.initial : vars.color.final,
+                            thresholds: 15,
+                        },
                     )),
                     Plot.ruleY([0]),
                 ],
