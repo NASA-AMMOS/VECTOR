@@ -7,9 +7,7 @@ interface ToolbarProps {
 export default function Toolbar({ children }: ToolbarProps) {
     return (
         <section className={styles.container}>
-            <div className={styles.item}>
-                {children}
-            </div>
+            {children}
         </section>
     )
 }

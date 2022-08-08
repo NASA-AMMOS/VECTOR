@@ -15,8 +15,8 @@ enum ActionType {
 };
 
 interface State {
-    initial: boolean;
-    final: boolean;
+    isInitial: boolean;
+    isFinal: boolean;
 };
 
 interface Action {
@@ -27,14 +27,14 @@ interface ActiveImageViewProps {
     route: React.Dispatch<PageAction>;
 };
 
-const initialState: State = { initial: true, final: true };
+const initialState: State = { isInitial: true, isFinal: true };
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
         case ActionType.INITIAL:
-            return { ...state, initial: !state.initial };
+            return { ...state, isInitial: !state.isInitial };
         case ActionType.FINAL:
-            return { ...state, final: !state.final };
+            return { ...state, isFinal: !state.isFinal };
         default:
             return state;
     }
@@ -56,14 +56,14 @@ export default function ActiveImageView({ route }: ActiveImageViewProps) {
                     <Toolbar>
                         <Checkbox
                             name={ActionType.INITIAL}
-                            checked={!!(state.initial)}
+                            checked={state.isInitial}
                             onChange={handleChange}
                         >
                             Initial
                         </Checkbox>
                         <Checkbox
                             name={ActionType.FINAL}
-                            checked={!!(state.final)}
+                            checked={state.isFinal}
                             onChange={handleChange}
                         >
                             Final

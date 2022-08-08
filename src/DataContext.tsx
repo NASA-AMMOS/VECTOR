@@ -1,5 +1,6 @@
 import { ReactNode, Dispatch, SetStateAction, createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
+import { Polar } from '@/utils/helpers';
 
 const baseVector = new Vector2();
 
@@ -58,6 +59,7 @@ export interface IDataContext {
     activeTrack: number | null;
 
     imageTiepoints: Record<string, Tiepoint[]>;
+    residualBounds: [[number, number], [number, number]];
 
     getImageURL: (id: string) => string | null;
     getVICARFile: (id: string) => string[];
@@ -99,6 +101,23 @@ export default function ProvideData({ children }: ProvideDataProps) {
         }, {});
     }, [tiepoints]);
 
+    const residualBounds = useMemo<[[number, number], [number, number]]>(() => {
+        const cartResiduals = [0];
+        const polarResiduals = [0];
+        for (const tiepoint of tiepoints) {
+            const initialResidual = new Vector2(...tiepoint.initialResidual);
+            const finalResidual = new Vector2(...tiepoint.finalResidual);
+            const initialDistance = Number(baseVector.distanceTo(initialResidual).toFixed(1));
+            const finalDistance = Number(baseVector.distanceTo(finalResidual).toFixed(1));
+            cartResiduals.push(initialDistance, finalDistance);
+            polarResiduals.push(Polar(tiepoint.initialResidual).radius, Polar(tiepoint.finalResidual).radius);
+        }
+        return [
+            [Math.min(...cartResiduals), Math.max(...cartResiduals)],
+            [Math.min(...polarResiduals), Math.max(...polarResiduals)],
+        ];
+    }, [tiepoints]);
+
     const getImageURL = useCallback((id: string) => {
         const [_, fileId] = id.split('_');
         const image = images.find((image) => image.name.includes(fileId));
@@ -133,6 +152,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 activeTrack,
 
                 imageTiepoints,
+                residualBounds,
 
                 getImageURL,
                 getVICARFile,

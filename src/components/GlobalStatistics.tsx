@@ -1,5 +1,6 @@
 import { useReducer } from 'react';
 import Toolbar from '@/components/Toolbar';
+import Pill from '@/components/Pill';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import Checkbox from '@/components/Checkbox';
@@ -11,22 +12,22 @@ enum ActionType {
 };
 
 interface State {
-    initial: boolean;
-    final: boolean;
+    isInitial: boolean;
+    isFinal: boolean;
 };
 
 interface Action {
     type: string;
 };
 
-const initialState: State = { initial: true, final: true };
+const initialState: State = { isInitial: true, isFinal: true };
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
         case ActionType.INITIAL:
-            return { ...state, initial: !state.initial };
+            return { ...state, isInitial: !state.isInitial };
         case ActionType.FINAL:
-            return { ...state, final: !state.final };
+            return { ...state, isFinal: !state.isFinal };
         default:
             return state;
     }
@@ -42,20 +43,22 @@ export default function GlobalStatistics() {
     return (
         <>
             <Toolbar>
-                <Checkbox
-                    name={ActionType.INITIAL}
-                    checked={!!(state.initial)}
-                    onChange={handleChange}
-                >
-                    Initial
-                </Checkbox>
-                <Checkbox
-                    name={ActionType.FINAL}
-                    checked={!!(state.final)}
-                    onChange={handleChange}
-                >
-                    Final
-                </Checkbox>
+                <Pill>
+                    <Checkbox
+                        name={ActionType.INITIAL}
+                        checked={state.isInitial}
+                        onChange={handleChange}
+                    >
+                        Initial
+                    </Checkbox>
+                    <Checkbox
+                        name={ActionType.FINAL}
+                        checked={state.isFinal}
+                        onChange={handleChange}
+                    >
+                        Final
+                    </Checkbox>
+                </Pill>
             </Toolbar>
             <section className={styles.container}>
                 <div className={styles.item}>

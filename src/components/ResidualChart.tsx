@@ -10,8 +10,9 @@ import * as styles from '@/components/ResidualChart.css';
 const baseVector = new Vector2();
 
 interface ResidualChartState {
-    initial: boolean;
-    final: boolean;
+    isInitial: boolean;
+    isFinal: boolean;
+    isRelative?: boolean;
 };
 
 interface ResidualChartProps {
@@ -21,7 +22,7 @@ interface ResidualChartProps {
 };
 
 export default function ResidualChart({ state, activeImage, activeTrack }: ResidualChartProps) {
-    const { tiepoints, imageTiepoints } = useData();
+    const { tiepoints, imageTiepoints, residualBounds } = useData();
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
         if (!activeImage && !activeTrack) {
@@ -36,7 +37,7 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
     }, [tiepoints, imageTiepoints, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
-        if ((state.initial || state.final) && activeTiepoints.length > 0 && element) {
+        if ((state.isInitial || state.isFinal) && activeTiepoints.length > 0 && element) {
             const initialResiduals = [];
             const finalResiduals = [];
 
@@ -47,12 +48,17 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 const initialDistance = Number(baseVector.distanceTo(initialResidual).toFixed(1));
                 const finalDistance = Number(baseVector.distanceTo(finalResidual).toFixed(1));
 
-                initialResiduals.push({ Residual: initialDistance, initial: true });
-                finalResiduals.push({ Residual: finalDistance, initial: false });
+                initialResiduals.push(initialDistance);
+                finalResiduals.push(finalDistance);
             }
 
-            const residuals = [...initialResiduals, ...finalResiduals].map((r) => r.Residual);
-            const maxResidual = Math.max(...residuals);
+            const residuals = [...initialResiduals, ...finalResiduals];
+            let maxResidual;
+            if (state.isRelative) {
+                maxResidual = Math.max(...residuals);
+            } else {
+                maxResidual = residualBounds[0][1];
+            }
 
             const svg = Plot.plot({
                 style: {
@@ -72,11 +78,11 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 marks: [
                     Plot.rectY(initialResiduals, Plot.binX(
                         { y: 'count' },
-                        { x: 'Residual', fill: state.initial ? vars.color.initial : 'transparent', thresholds: 15 }
+                        { fill: state.isInitial ? vars.color.initial : 'transparent', thresholds: 15 }
                     )),
                     Plot.rectY(finalResiduals, Plot.binX(
                         { y: 'count' },
-                        { x: 'Residual', fill: state.final ? vars.color.final : 'transparent', thresholds: 15 }
+                        { fill: state.isFinal ? vars.color.final : 'transparent', thresholds: 15 }
                     )),
                     Plot.ruleY([0]),
                 ],

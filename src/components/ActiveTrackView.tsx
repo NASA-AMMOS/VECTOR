@@ -16,8 +16,8 @@ enum ActionType {
 };
 
 interface State {
-    initial: boolean;
-    final: boolean;
+    isInitial: boolean;
+    isFinal: boolean;
 };
 
 interface Action {
@@ -28,14 +28,14 @@ interface ActiveTrackViewProps {
     route: React.Dispatch<PageAction>;
 };
 
-const initialState: State = { initial: true, final: true };
+const initialState: State = { isInitial: true, isFinal: true };
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
         case ActionType.INITIAL:
-            return { ...state, initial: !state.initial };
+            return { ...state, isInitial: !state.isInitial };
         case ActionType.FINAL:
-            return { ...state, final: !state.final };
+            return { ...state, isFinal: !state.isFinal };
         default:
             return state;
     }
@@ -57,14 +57,14 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                     <Toolbar>
                         <Checkbox
                             name={ActionType.INITIAL}
-                            checked={!!(state.initial)}
+                            checked={state.isInitial}
                             onChange={handleChange}
                         >
                             Initial
                         </Checkbox>
                         <Checkbox
                             name={ActionType.FINAL}
-                            checked={!!(state.final)}
+                            checked={state.isFinal}
                             onChange={handleChange}
                         >
                             Final
@@ -100,7 +100,10 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                 />
                             </div>
                             <div className={styles.item}>
-                                <SlopeChart activeImage={activeImage} activeTrack={activeTrack} />
+                                <SlopeChart
+                                    activeImage={activeImage}
+                                    activeTrack={activeTrack}
+                                />
                             </div>
                         </div>
                     </section>

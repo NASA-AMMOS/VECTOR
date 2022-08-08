@@ -1,12 +1,17 @@
 import { style } from '@vanilla-extract/css';
 import { vars } from '../utils/theme.css';
 
-export const TOOLBAR_HEIGHT = '7vh';
-
 export const container = style({
     display: 'flex',
-    justifyContent: 'center',
     alignItems: 'center',
-    height: TOOLBAR_HEIGHT,
+    height: '100%',
     padding: '1rem',
+    backgroundColor: vars.color.white,
+    borderRadius: '0.4rem',
+
+    selectors: {
+        '&:not(:last-of-type)': {
+            marginRight: '1rem',
+        },
+    },
 });
