@@ -10,8 +10,8 @@ import { useData } from '@/DataContext';
 import * as styles from '@/components/GlobalStatistics.css';
 
 enum ActionType {
-    INITIAL = 'INITIAL',
-    FINAL = 'FINAL',
+    RESIDUAL_INITIAL = 'RESIDUAL_INITIAL',
+    RESIDUAL_FINAL = 'RESIDUAL_FINAL',
     RESIDUAL_LENGTH_MIN = 'RESIDUAL_LENGTH_MIN',
     RESIDUAL_LENGTH_MAX = 'RESIDUAL_LENGTH_MAX',
     RESIDUAL_ANGLE_MIN = 'RESIDUAL_ANGLE_MIN',
@@ -43,9 +43,9 @@ const initialState: State = {
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
-        case ActionType.INITIAL:
+        case ActionType.RESIDUAL_INITIAL:
             return { ...state, isInitial: !state.isInitial };
-        case ActionType.FINAL:
+        case ActionType.RESIDUAL_FINAL:
             return { ...state, isFinal: !state.isFinal };
         case ActionType.RESIDUAL_LENGTH_MIN:
             return { ...state, residualMin: Number(action.data) };
@@ -77,7 +77,7 @@ export default function GlobalStatistics() {
                         Residual Type
                     </Label>
                     <Checkbox
-                        name={ActionType.INITIAL}
+                        name={ActionType.RESIDUAL_INITIAL}
                         checked={state.isInitial}
                         onChange={handleChange}
                     >
@@ -89,7 +89,7 @@ export default function GlobalStatistics() {
                         </span>
                     </Checkbox>
                     <Checkbox
-                        name={ActionType.FINAL}
+                        name={ActionType.RESIDUAL_FINAL}
                         checked={state.isFinal}
                         onChange={handleChange}
                         isInverted

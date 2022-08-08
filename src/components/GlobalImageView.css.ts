@@ -11,7 +11,7 @@ export const container = style({
 
 export const item = style({
     display: 'grid',
-    gridTemplateRows: 'minmax(0, 1.25fr) repeat(3, minmax(0, 1fr))',
+    gridTemplateRows: 'minmax(0, 1.3fr) repeat(3, minmax(0, 1fr))',
     margin: '1rem',
     padding: '1rem',
     backgroundColor: vars.color.white,

@@ -59,6 +59,17 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 finalResiduals.push({ distance: finalDistance, angle: finalAngle });
             }
 
+            // Calculate axes bounds before filtering.
+            let maxResidual;
+            if (state.isRelative) {
+                maxResidual = Math.max(...[
+                    ...initialResiduals.map((r) => r.distance),
+                    ...finalResiduals.map((r) => r.distance)
+                ]);
+            } else {
+                maxResidual = residualBounds[0][1];
+            }
+
             if (state.residualMin) {
                 initialResiduals = initialResiduals.filter((r) => r.distance >= state.residualMin!);
                 finalResiduals = finalResiduals.filter((r) => r.distance >= state.residualMin!);
@@ -81,14 +92,6 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
 
             initialResiduals = initialResiduals.map((r) => r.distance);
             finalResiduals = finalResiduals.map((r) => r.distance);
-
-            const residuals = [...initialResiduals, ...finalResiduals];
-            let maxResidual;
-            if (state.isRelative) {
-                maxResidual = Math.max(...residuals);
-            } else {
-                maxResidual = residualBounds[0][1];
-            }
 
             const svg = Plot.plot({
                 style: {

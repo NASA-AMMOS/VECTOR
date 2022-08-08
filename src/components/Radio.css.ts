@@ -4,11 +4,12 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     display: 'flex',
     alignItems: 'center',
+    height: '2rem',
     fontSize: '1.2rem',
 
     selectors: {
         '&:not(:last-of-type)': {
-            marginRight: '1.6rem',
+            marginBottom: '1rem',
         },
     },
 });
