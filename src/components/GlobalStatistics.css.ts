@@ -14,5 +14,15 @@ export const item = style({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    height: `calc(92vh - ${TOOLBAR_HEIGHT})`,
-})
+    height: `calc(92vh - ${TOOLBAR_HEIGHT} - 2rem)`,
+    margin: '1rem',
+    padding: '2rem',
+    backgroundColor: vars.color.white,
+    borderRadius: '0.4rem',
+});
+
+export const title = style({
+    marginBottom: '2rem',
+    fontSize: '2rem',
+    fontWeight: 500,
+});

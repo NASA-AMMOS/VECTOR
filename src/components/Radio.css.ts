@@ -21,7 +21,7 @@ export const input = style({
     transition: 'all 0.3s',
     backgroundColor: vars.color.white,
     borderRadius: '50%',
-    border: `0.1rem solid ${vars.color.initialHex}`,
+    border: `0.1rem solid ${vars.color.gray}`,
     cursor: 'pointer',
 
     selectors: {
@@ -34,7 +34,7 @@ export const input = style({
             borderRadius: '50%',
         },
         '&:checked': {
-            backgroundColor: vars.color.initialHex,
+            backgroundColor: vars.color.gray,
         },
     },
 });

@@ -59,6 +59,8 @@ export interface IDataContext {
     activeTrack: number | null;
 
     imageTiepoints: Record<string, Tiepoint[]>;
+    initialResidualBounds: [[number, number], [number, number]];
+    finalResidualBounds: [[number, number], [number, number]];
     residualBounds: [[number, number], [number, number]];
 
     getImageURL: (id: string) => string | null;
@@ -101,22 +103,48 @@ export default function ProvideData({ children }: ProvideDataProps) {
         }, {});
     }, [tiepoints]);
 
-    const residualBounds = useMemo<[[number, number], [number, number]]>(() => {
-        const cartResiduals = [0];
-        const polarResiduals = [0];
+    const [initialResidualBounds, finalResidualBounds] = useMemo<[[[number, number], [number, number]], [[number, number], [number, number]]]>(() => {
+        const cartInitialResiduals = [];
+        const polarInitialResiduals = [];
+
+        const cartFinalResiduals = [];
+        const polarFinalResiduals = [];
+
         for (const tiepoint of tiepoints) {
             const initialResidual = new Vector2(...tiepoint.initialResidual);
             const finalResidual = new Vector2(...tiepoint.finalResidual);
             const initialDistance = Number(baseVector.distanceTo(initialResidual).toFixed(1));
             const finalDistance = Number(baseVector.distanceTo(finalResidual).toFixed(1));
-            cartResiduals.push(initialDistance, finalDistance);
-            polarResiduals.push(Polar(tiepoint.initialResidual).radius, Polar(tiepoint.finalResidual).radius);
+            cartInitialResiduals.push(initialDistance);
+            cartFinalResiduals.push(finalDistance);
+            polarInitialResiduals.push(Polar(tiepoint.initialResidual).radius);
+            polarFinalResiduals.push(Polar(tiepoint.finalResidual).radius);
         }
+
         return [
-            [Math.min(...cartResiduals), Math.max(...cartResiduals)],
-            [Math.min(...polarResiduals), Math.max(...polarResiduals)],
+            [
+                [Math.min(...cartInitialResiduals), Math.max(...cartInitialResiduals)],
+                [Math.min(...polarInitialResiduals), Math.max(...polarInitialResiduals)],
+            ],
+            [
+                [Math.min(...cartFinalResiduals), Math.max(...cartFinalResiduals)],
+                [Math.min(...polarFinalResiduals), Math.max(...polarFinalResiduals)],
+            ],
         ];
     }, [tiepoints]);
+
+    const residualBounds = useMemo<[[number, number], [number, number]]>(() => {
+        return [
+            [
+                Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]),
+                Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1])
+            ],
+            [
+                Math.min(initialResidualBounds[1][0], finalResidualBounds[1][0]),
+                Math.max(initialResidualBounds[1][1], finalResidualBounds[1][1])
+            ],
+        ];
+    }, [initialResidualBounds, finalResidualBounds]);
 
     const getImageURL = useCallback((id: string) => {
         const [_, fileId] = id.split('_');
@@ -152,6 +180,8 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 activeTrack,
 
                 imageTiepoints,
+                initialResidualBounds,
+                finalResidualBounds,
                 residualBounds,
 
                 getImageURL,

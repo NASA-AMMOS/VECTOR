@@ -1,14 +1,21 @@
 import { useMemo, useCallback } from 'react';
+import { Vector2 } from 'three';
 import * as d3 from 'd3';
 import { Tiepoint, useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
 import { Polar } from '@/utils/helpers';
 import * as styles from '@/components/RadialChart.css';
 
+const baseVector = new Vector2();
+
 interface RadialChartState {
     isInitial: boolean;
     isFinal: boolean;
     isRelative?: boolean;
+    residualMin?: number;
+    residualMax?: number;
+    residualAngleMin?: number;
+    residualAngleMax?: number;
 };
 
 interface RadialChartProps {
@@ -34,7 +41,18 @@ export default function RadialChart({ state, activeImage, activeTrack }: RadialC
 
     const plot = useCallback((element: HTMLDivElement) => {
         if ((state.isInitial || state.isFinal) && activeTiepoints.length > 0 && element) {
-            const residuals = activeTiepoints.map((t) => [{ ...Polar(t.initialResidual), isInitial: true }, { ...Polar(t.finalResidual), isInitial: false }]).flat();
+            let residuals = activeTiepoints.map((t) => [
+                {
+                    ...Polar(t.initialResidual),
+                    distance: Number(baseVector.distanceTo(new Vector2(...t.initialResidual)).toFixed(1)),
+                    isInitial: true,
+                },
+                {
+                    ...Polar(t.finalResidual),
+                    distance: Number(baseVector.distanceTo(new Vector2(...t.finalResidual)).toFixed(1)),
+                    isInitial: false,
+                }
+            ]).flat();
 
             const initialMin = residuals.filter((r) => r.isInitial).reduce((prev, curr) => prev.radius < curr.radius ? prev : curr);
             const initialMax = residuals.filter((r) => r.isInitial).reduce((prev, curr) => prev.radius > curr.radius ? prev : curr);
@@ -53,6 +71,23 @@ export default function RadialChart({ state, activeImage, activeTrack }: RadialC
             const height = width;
             const padding = width * 0.25;
             const radius = width * 0.005;
+
+            // Filter residuals after calculating circular bounds
+            if (state.residualMin) {
+                residuals = residuals.filter((r) => r.distance >= state.residualMin!);
+            }
+
+            if (state.residualMax) {
+                residuals = residuals.filter((r) => r.distance <= state.residualMax!);
+            }
+
+            if (state.residualAngleMin) {
+                residuals = residuals.filter((r) => r.angle >= state.residualAngleMin!);
+            }
+
+            if (state.residualAngleMax) {
+                residuals = residuals.filter((r) => r.angle <= state.residualAngleMax!);
+            }
 
             const svg = d3.create('svg')
                 .attr('height', '100%')

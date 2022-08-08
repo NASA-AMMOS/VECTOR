@@ -59,12 +59,12 @@ export default function App() {
                 <Landing />
             ) : (
                 <>
+                    <NavBar state={state} dispatch={dispatch} />
                     <main className={styles.container}>
                         <Overview state={state} dispatch={dispatch} />
                         <ActiveImageView route={dispatch} />
                         <ActiveTrackView route={dispatch} />
                     </main>
-                    <NavBar state={state} dispatch={dispatch} />
                 </>
             )}    
         </>

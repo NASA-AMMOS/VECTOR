@@ -4,11 +4,12 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     display: 'flex',
     alignItems: 'center',
+    height: '2rem',
     fontSize: '1.2rem',
 
     selectors: {
         '&:not(:last-of-type)': {
-            marginRight: '1.6rem',
+            marginBottom: '1rem',
         },
     },
 });
@@ -21,7 +22,7 @@ export const input = style({
     transition: 'all 0.3s',
     backgroundColor: vars.color.white,
     borderRadius: '0.2rem',
-    border: `0.1rem solid ${vars.color.initialHex}`,
+    border: `0.1rem solid ${vars.color.initial}`,
     cursor: 'pointer',
 
     selectors: {
@@ -34,11 +35,24 @@ export const input = style({
             borderRadius: '0.2rem',
         },
         '&:checked': {
-            backgroundColor: vars.color.initialHex,
+            backgroundColor: vars.color.initial,
+        },
+    },
+});
+
+export const inverted = style({
+    border: `0.1rem solid ${vars.color.final}`,
+
+    selectors: {
+        '&:checked': {
+            backgroundColor: vars.color.final,
         },
     },
 });
 
 export const label = style({
+    flex: '1',
+    display: 'flex',
+    justifyContent: 'space-between',
     cursor: 'pointer',
 });

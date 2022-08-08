@@ -10,9 +10,6 @@ interface NumberInputProps {
 export default function NumberInput({ name, value, onChange, children }: NumberInputProps) {
     return (
         <div className={styles.container}>
-            <label className={styles.label} htmlFor={name}>
-                {children}
-            </label>
             <input
                 className={styles.input}
                 id={name}
@@ -22,6 +19,9 @@ export default function NumberInput({ name, value, onChange, children }: NumberI
                 value={value}
                 onChange={onChange}
             />
+            <label className={styles.label} htmlFor={name}>
+                {children}
+            </label>
         </div>
     );
 }

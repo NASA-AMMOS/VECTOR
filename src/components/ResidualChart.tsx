@@ -4,7 +4,7 @@ import { Vector2 } from 'three';
 import * as Plot from '@observablehq/plot';
 import { Tiepoint, useData } from '@/DataContext';
 import { vars } from '@/utils/theme.css';
-import { Pixel } from '@/utils/helpers';
+import { Pixel, Polar } from '@/utils/helpers';
 import * as styles from '@/components/ResidualChart.css';
 
 const baseVector = new Vector2();
@@ -15,6 +15,8 @@ interface ResidualChartState {
     isRelative?: boolean;
     residualMin?: number;
     residualMax?: number;
+    residualAngleMin?: number;
+    residualAngleMax?: number;
 };
 
 interface ResidualChartProps {
@@ -50,19 +52,35 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 const initialDistance = Number(baseVector.distanceTo(initialResidual).toFixed(1));
                 const finalDistance = Number(baseVector.distanceTo(finalResidual).toFixed(1));
 
-                initialResiduals.push(initialDistance);
-                finalResiduals.push(finalDistance);
+                const initialAngle = Polar(tiepoint.initialResidual).angle;
+                const finalAngle = Polar(tiepoint.finalResidual).angle;
+
+                initialResiduals.push({ distance: initialDistance, angle: initialAngle });
+                finalResiduals.push({ distance: finalDistance, angle: finalAngle });
             }
 
             if (state.residualMin) {
-                initialResiduals = initialResiduals.filter((r) => r >= state.residualMin!);
-                finalResiduals = finalResiduals.filter((r) => r >= state.residualMin!);
+                initialResiduals = initialResiduals.filter((r) => r.distance >= state.residualMin!);
+                finalResiduals = finalResiduals.filter((r) => r.distance >= state.residualMin!);
             }
 
             if (state.residualMax) {
-                initialResiduals = initialResiduals.filter((r) => r <= state.residualMax!);
-                finalResiduals = finalResiduals.filter((r) => r <= state.residualMax!);
+                initialResiduals = initialResiduals.filter((r) => r.distance <= state.residualMax!);
+                finalResiduals = finalResiduals.filter((r) => r.distance <= state.residualMax!);
             }
+
+            if (state.residualAngleMin) {
+                initialResiduals = initialResiduals.filter((r) => r.angle >= state.residualAngleMin!);
+                finalResiduals = finalResiduals.filter((r) => r.angle >= state.residualAngleMin!);
+            }
+
+            if (state.residualAngleMax) {
+                initialResiduals = initialResiduals.filter((r) => r.angle <= state.residualAngleMax!);
+                finalResiduals = finalResiduals.filter((r) => r.angle <= state.residualAngleMax!);
+            }
+
+            initialResiduals = initialResiduals.map((r) => r.distance);
+            finalResiduals = finalResiduals.map((r) => r.distance);
 
             const residuals = [...initialResiduals, ...finalResiduals];
             let maxResidual;

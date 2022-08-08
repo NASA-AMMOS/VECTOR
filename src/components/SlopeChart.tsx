@@ -124,8 +124,8 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall }:
                         z: 'tiepoint',
                         text: '',
                     })),
-                    Plot.ruleX(['Initial'], { stroke: vars.color.initial, strokeWidth: 3 }),
-                    Plot.ruleX(['Final'], { stroke: vars.color.final, strokeWidth: 3 }),
+                    Plot.ruleX(['Initial'], { stroke: vars.color.initialHex, strokeWidth: 10 }),
+                    Plot.ruleX(['Final'], { stroke: vars.color.finalHex, strokeWidth: 10 }),
                 ],
             });
 
