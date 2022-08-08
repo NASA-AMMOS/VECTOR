@@ -128,6 +128,7 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                         },
                         {
                             x: 'distance',
+                            domain: [0, maxResidual],
                             fill: (d: Residual) => d.isInitial ? vars.color.initial : vars.color.final,
                             thresholds: 15,
                         },
