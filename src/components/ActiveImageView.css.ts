@@ -13,19 +13,19 @@ export const grid = style({
 
 export const column = style({
     gridColumn: '1 / 4',
-    height: `calc(92vh - ${TOOLBAR_HEIGHT} - 4rem)`,
+    height: `calc(92vh - ${TOOLBAR_HEIGHT} - 1rem)`,
 });
 
 export const block = style({
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
     gridTemplateRows: '1fr',
-    height: `calc((92vh - ${TOOLBAR_HEIGHT} - 4rem) / 2 - 0.5rem)`,
+    height: `calc((92vh - ${TOOLBAR_HEIGHT} - 1rem) / 2 - 0.5rem)`,
     padding: '1rem',
     backgroundColor: vars.color.white,
     borderRadius: '0.4rem',
 });
 
 export const item = style({
-    height: `calc((92vh - ${TOOLBAR_HEIGHT} - 4rem) / 2 - 0.5rem - 2rem)`,
+    height: `calc((92vh - ${TOOLBAR_HEIGHT} - 1rem) / 2 - 0.5rem - 2rem)`,
 });

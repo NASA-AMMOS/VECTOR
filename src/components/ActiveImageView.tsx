@@ -5,6 +5,7 @@ import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import Toolbar from '@/components/Toolbar';
 import Pill from '@/components/Pill';
+import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import Radio from '@/components/Radio';
 import NumberInput from '@/components/NumberInput';
@@ -17,8 +18,10 @@ enum ActionType {
     RESIDUAL_FINAL = 'RESIDUAL_FINAL',
     RELATIVE_AXIS = 'RELATIVE_AXIS',
     ABSOLUTE_AXIS = 'ABSOLUTE_AXIS',
-    RESIDUAL_MIN = 'RESIDUAL_MIN',
-    RESIDUAL_MAX = 'RESIDUAL_MAX',
+    RESIDUAL_LENGTH_MIN = 'RESIDUAL_LENGTH_MIN',
+    RESIDUAL_LENGTH_MAX = 'RESIDUAL_LENGTH_MAX',
+    RESIDUAL_ANGLE_MIN = 'RESIDUAL_ANGLE_MIN',
+    RESIDUAL_ANGLE_MAX = 'RESIDUAL_ANGLE_MAX',
     RESIDUAL_SCALE = 'RESIDUAL_SCALE',
 };
 
@@ -28,6 +31,8 @@ interface State {
     isRelative: boolean;
     residualMin: number;
     residualMax: number;
+    residualAngleMin: number;
+    residualAngleMax: number;
     residualScale: number;
 };
 
@@ -40,7 +45,16 @@ interface ActiveImageViewProps {
     route: React.Dispatch<PageAction>;
 };
 
-const initialState: State = { isInitial: true, isFinal: true, isRelative: true, residualMin: 0, residualMax: 0, residualScale: 1 };
+const initialState: State = {
+    isInitial: true,
+    isFinal: true,
+    isRelative: true,
+    residualMin: 0,
+    residualMax: 0,
+    residualAngleMin: 0,
+    residualAngleMax: 0,
+    residualScale: 1,
+};
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
@@ -52,10 +66,14 @@ function reducer(state: State, action: Action) {
             return { ...state, isRelative: true };
         case ActionType.ABSOLUTE_AXIS:
             return { ...state, isRelative: false };
-        case ActionType.RESIDUAL_MIN:
+        case ActionType.RESIDUAL_LENGTH_MIN:
             return { ...state, residualMin: Number(action.data) };
-        case ActionType.RESIDUAL_MAX:
+        case ActionType.RESIDUAL_LENGTH_MAX:
             return { ...state, residualMax: Number(action.data) };
+        case ActionType.RESIDUAL_ANGLE_MIN:
+            return { ...state, residualAngleMin: Number(action.data) };
+        case ActionType.RESIDUAL_ANGLE_MAX:
+            return { ...state, residualAngleMax: Number(action.data) };
         case ActionType.RESIDUAL_SCALE:
             return { ...state, residualScale: Number(action.data) === 0 ? 1 : Number(action.data) };
         default:
@@ -64,7 +82,7 @@ function reducer(state: State, action: Action) {
 }
 
 export default function ActiveImageView({ route }: ActiveImageViewProps) {
-    const { activeImage, activeTrack } = useData();
+    const { initialResidualBounds, finalResidualBounds, activeImage, activeTrack } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -78,22 +96,9 @@ export default function ActiveImageView({ route }: ActiveImageViewProps) {
                 <>
                     <Toolbar>
                         <Pill>
-                            <Checkbox
-                                name={ActionType.RESIDUAL_INITIAL}
-                                checked={state.isInitial}
-                                onChange={handleChange}
-                            >
-                                Initial
-                            </Checkbox>
-                            <Checkbox
-                                name={ActionType.RESIDUAL_FINAL}
-                                checked={state.isFinal}
-                                onChange={handleChange}
-                            >
-                                Final
-                            </Checkbox>
-                        </Pill>
-                        <Pill>
+                            <Label>
+                                Axes Scale
+                            </Label>
                             <Radio
                                 name={ActionType.RELATIVE_AXIS}
                                 checked={state.isRelative}
@@ -110,15 +115,48 @@ export default function ActiveImageView({ route }: ActiveImageViewProps) {
                             </Radio>
                         </Pill>
                         <Pill>
+                            <Label>
+                                Residual Type
+                            </Label>
+                            <Checkbox
+                                name={ActionType.RESIDUAL_INITIAL}
+                                checked={state.isInitial}
+                                onChange={handleChange}
+                            >
+                                <span>
+                                    Initial
+                                </span>
+                                <span>
+                                    [{initialResidualBounds[0][0]}, {initialResidualBounds[0][1]}]
+                                </span>
+                            </Checkbox>
+                            <Checkbox
+                                name={ActionType.RESIDUAL_FINAL}
+                                checked={state.isFinal}
+                                onChange={handleChange}
+                                isInverted
+                            >
+                                <span>
+                                    Final
+                                </span>
+                                <span>
+                                    [{finalResidualBounds[0][0]}, {finalResidualBounds[0][1]}]
+                                </span>
+                            </Checkbox>
+                        </Pill>
+                        <Pill>
+                            <Label>
+                                Residual Length
+                            </Label>
                             <NumberInput
-                                name={ActionType.RESIDUAL_MIN}
+                                name={ActionType.RESIDUAL_LENGTH_MIN}
                                 value={state.residualMin}
                                 onChange={handleChange}
                             >
                                 Min
                             </NumberInput>
                             <NumberInput
-                                name={ActionType.RESIDUAL_MAX}
+                                name={ActionType.RESIDUAL_LENGTH_MAX}
                                 value={state.residualMax}
                                 onChange={handleChange}
                             >
@@ -126,6 +164,28 @@ export default function ActiveImageView({ route }: ActiveImageViewProps) {
                             </NumberInput>
                         </Pill>
                         <Pill>
+                            <Label>
+                                Residual Angle
+                            </Label>
+                            <NumberInput
+                                name={ActionType.RESIDUAL_ANGLE_MIN}
+                                value={state.residualAngleMin}
+                                onChange={handleChange}
+                            >
+                                Min
+                            </NumberInput>
+                            <NumberInput
+                                name={ActionType.RESIDUAL_ANGLE_MAX}
+                                value={state.residualAngleMax}
+                                onChange={handleChange}
+                            >
+                                Max
+                            </NumberInput>
+                        </Pill>
+                        <Pill>
+                            <Label>
+                                Residual Scale
+                            </Label>
                             <NumberInput
                                 name={ActionType.RESIDUAL_SCALE}
                                 value={state.residualScale}
