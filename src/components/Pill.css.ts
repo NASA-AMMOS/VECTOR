@@ -3,6 +3,7 @@ import { vars } from '../utils/theme.css';
 
 export const container = style({
     display: 'flex',
+    alignItems: 'center',
     height: '100%',
     padding: '1rem',
     backgroundColor: vars.color.white,

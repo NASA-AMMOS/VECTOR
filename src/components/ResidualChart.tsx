@@ -47,7 +47,7 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
     }, [tiepoints, imageTiepoints, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
-        if ((state.isInitial || state.isFinal) && activeTiepoints.length > 0 && element) {
+        if (activeTiepoints.length > 0 && element) {
             let initialResiduals = [];
             let finalResiduals = [];
 
@@ -103,7 +103,7 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
             }
 
             if (state.isFinal) {
-                residuals.push(...finalResiduals);   
+                residuals.push(...finalResiduals);
             }
 
             if (residuals.length === 0) {

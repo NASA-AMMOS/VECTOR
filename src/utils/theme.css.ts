@@ -16,6 +16,9 @@ export const theme = {
         increase: 'rgba(255, 194, 14, 1)',
         decrease: 'rgb(52, 94, 145)',
     },
+    size: {
+        toolbar: '7vh',
+    },
 };
 
 export const vars = createGlobalTheme(':root', theme);

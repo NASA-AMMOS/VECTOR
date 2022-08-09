@@ -1,12 +1,10 @@
 import { style } from '@vanilla-extract/css';
 import { vars } from '../utils/theme.css';
 
-export const TOOLBAR_HEIGHT = '7vh';
-
 export const container = style({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    height: TOOLBAR_HEIGHT,
+    height: vars.size.toolbar,
     padding: '1rem',
 });

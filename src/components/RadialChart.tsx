@@ -40,7 +40,7 @@ export default function RadialChart({ state, activeImage, activeTrack }: RadialC
     }, [tiepoints, imageTiepoints, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
-        if ((state.isInitial || state.isFinal) && activeTiepoints.length > 0 && element) {
+        if (activeTiepoints.length > 0 && element) {
             let residuals = activeTiepoints.map((t) => [
                 {
                     ...Polar(t.initialResidual),
@@ -96,12 +96,15 @@ export default function RadialChart({ state, activeImage, activeTrack }: RadialC
 
             const parent = svg.append('g')
                     .attr('transform', `translate(${(width + padding) / 2 } ${(height + padding) / 2})`)
-            
+
+            let residualCount = 0;
             parent.selectAll('point')
                 .data(residuals.filter((r) => {
                     if (r.isInitial && state.isInitial) {
+                        residualCount++;
                         return true;
                     } else if (!r.isInitial && state.isFinal) {
+                        residualCount++;
                         return true;
                     }
                     return false;
@@ -112,6 +115,16 @@ export default function RadialChart({ state, activeImage, activeTrack }: RadialC
                         .attr('cy', (d) => d.radius * Math.sin(d.angle))
                         .attr('r', radius)
                         .attr('fill', (d) => d.isInitial ? vars.color.initial : vars.color.final);
+
+            if (residualCount === 0) {
+                element.classList.add(styles.empty);
+                while (element.lastElementChild) {
+                    element.removeChild(element.lastElementChild);
+                }
+                return;
+            } else {
+                element.classList.remove(styles.empty);
+            }
 
             if (state.isInitial) {
                 parent.append('circle')
