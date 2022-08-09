@@ -119,7 +119,7 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall }:
                         y: 'residual',
                         z: 'tiepoint',
                         stroke: (d: Residual) => d.decreased ? vars.color.decrease : vars.color.increase,
-                        strokeWidth: 3,
+                        strokeWidth: 10,
                         strokeOpacity: (d: Residual) => d.decreased ? 0.3 : 1,
                     }),
                     Plot.text(residuals, Plot.selectFirst({

@@ -21,9 +21,16 @@ export default function NavBar({ route, dispatchRoute }: NavBarProps) {
     return (
         <>
             <nav className={styles.container}>
-                <h1 className={styles.header}>
-                    VECTOR
-                </h1>
+                <div>
+                    <h1 className={cn(styles.item, styles.header)}>
+                        VECTOR
+                    </h1>
+                    {editHistory.length > 0 && (
+                        <p className={cn(styles.item, styles.edited)}>
+                            Edited
+                        </p>
+                    )}
+                </div>
                 <div>
                     <button
                         className={cn(styles.item, styles.button, { [styles.active]: route === 1 })}

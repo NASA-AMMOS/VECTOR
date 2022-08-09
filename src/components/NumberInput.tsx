@@ -14,7 +14,7 @@ export default function NumberInput({ name, value, onChange, children }: NumberI
                 className={styles.input}
                 id={name}
                 type="number"
-                step="0.01"
+                step="0.1"
                 name={name}
                 value={value}
                 onChange={onChange}

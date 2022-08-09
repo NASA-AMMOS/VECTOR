@@ -15,6 +15,16 @@ export const header = style({
     fontWeight: 500,
 });
 
+export const edited = style({
+    padding: '0.4rem 1rem',
+    border: `0.1rem solid ${vars.color.green}`,
+    borderRadius: '2rem',
+    fontStyle: 'italic',
+    fontWeight: 500,
+    textTransform: 'uppercase',
+    color: vars.color.green,
+});
+
 export const item = style({
     display: 'inline-flex',
     alignItems: 'center',
