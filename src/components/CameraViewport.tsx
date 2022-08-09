@@ -28,12 +28,6 @@ interface Action {
     data: string | null;
 };
 
-interface LineProps {
-    points: THREE.Vector3[];
-    color: string;
-    visible: boolean;
-};
-
 interface SelectToZoomProps {
     children: React.ReactNode[];
 };
@@ -60,22 +54,6 @@ function reducer(state: State, action: Action): State {
         default:
             return state;
     }
-}
-
-function Line({ points, color, visible }: LineProps) {
-    const ref = useRef<THREE.Line>(null);
-
-    useLayoutEffect(() => {
-        ref.current?.geometry.setFromPoints(points);
-    }, [points]);
-
-    return (
-        // @ts-ignore: https://github.com/pmndrs/react-three-fiber/discussions/1387
-        <line ref={ref} visible={visible}>
-            <bufferGeometry />
-            <lineBasicMaterial color={color} />
-        </line>
-    );
 }
 
 function ViewCube() {
@@ -151,6 +129,8 @@ function SelectToZoom({ children }: SelectToZoomProps) {
 function Scene({ state }: SceneProps) {
     const { tiepoints, cameras, vicar, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
 
+    const { scene } = useThree();
+
     const mesh = state.mesh && useLoader(OBJLoader, state.mesh);
 
     const controls = useRef(null);
@@ -182,6 +162,10 @@ function Scene({ state }: SceneProps) {
     }, [activeTiepoints]);
 
     async function initData() {
+        if (meshes.current?.children.length > 0) {
+            meshes.current.clear();
+        }
+
         for (const cameraId of Object.keys(activeCameras)) {
             const camera = activeCameras[cameraId];
 
@@ -198,25 +182,27 @@ function Scene({ state }: SceneProps) {
             );
 
             // Apply coordinate transformation to SITE frame.
-            renderCamera(
-                cameraId,
-                meshes,
-                camera.initial,
-                originOffset,
-                originRotation,
-                theme.color.initialHex,
-                state.initial
-            );
+            if (state.initial) {
+                renderCamera(
+                    cameraId,
+                    meshes,
+                    camera.initial,
+                    originOffset,
+                    originRotation,
+                    theme.color.initialHex,
+                );
+            }
 
-            renderCamera(
-                cameraId,
-                meshes,
-                camera.final,
-                originOffset,
-                originRotation,
-                theme.color.finalHex,
-                state.final
-            );
+            if (state.final) {
+                renderCamera(
+                    cameraId,
+                    meshes,
+                    camera.final,
+                    originOffset,
+                    originRotation,
+                    theme.color.finalHex,
+                );
+            }
         }
     }
 
@@ -227,7 +213,6 @@ function Scene({ state }: SceneProps) {
         originOffset: THREE.Vector3,
         originRotation: THREE.Quaternion,
         color: string,
-        visible: boolean,
     ) {
         const C = new THREE.Vector3(...model.C).applyQuaternion(originRotation).add(originOffset);
         const A = new THREE.Vector3(...model.A);
@@ -242,7 +227,6 @@ function Scene({ state }: SceneProps) {
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.position.copy(C);
         plane.rotation.setFromVector3(HxA);
-        plane.visible = visible;
         group.current.add(plane);
 
         const lineMaterial = new THREE.LineBasicMaterial({ color });
@@ -250,7 +234,6 @@ function Scene({ state }: SceneProps) {
         const points = [C, C.clone().add(A)];
         const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
         const line = new THREE.Line(lineGeometry, lineMaterial);
-        line.visible = visible;
         group.current.add(line);
     }
 
