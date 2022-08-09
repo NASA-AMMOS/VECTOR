@@ -106,6 +106,16 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
                 residuals.push(...finalResiduals);   
             }
 
+            if (residuals.length === 0) {
+                element.classList.add(styles.empty);
+                while (element.lastElementChild) {
+                    element.removeChild(element.lastElementChild);
+                }
+                return;
+            } else {
+                element.classList.remove(styles.empty);
+            }
+
             const svg = Plot.plot({
                 style: {
                     height: '100%',

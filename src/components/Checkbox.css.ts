@@ -9,7 +9,7 @@ export const container = style({
 
     selectors: {
         '&:not(:last-of-type)': {
-            marginBottom: '1rem',
+            marginRight: '1rem',
         },
     },
 });
@@ -53,6 +53,5 @@ export const inverted = style({
 export const label = style({
     flex: '1',
     display: 'flex',
-    justifyContent: 'space-between',
     cursor: 'pointer',
 });

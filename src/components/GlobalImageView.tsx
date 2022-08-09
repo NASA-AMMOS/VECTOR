@@ -76,7 +76,7 @@ function reducer(state: State, action: Action) {
 }
 
 export default function GlobalImageView({ route }: GlobalImageViewProps) {
-    const { imageTiepoints, initialResidualBounds, finalResidualBounds, getImageURL, setActiveImage } = useData();
+    const { imageTiepoints, getImageURL, setActiveImage } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -120,12 +120,7 @@ export default function GlobalImageView({ route }: GlobalImageViewProps) {
                         checked={state.isInitial}
                         onChange={handleChange}
                     >
-                        <span>
-                            Initial
-                        </span>
-                        <span>
-                            [{initialResidualBounds[0][0]}, {initialResidualBounds[0][1]}]
-                        </span>
+                        Initial
                     </Checkbox>
                     <Checkbox
                         name={ActionType.RESIDUAL_FINAL}
@@ -133,12 +128,7 @@ export default function GlobalImageView({ route }: GlobalImageViewProps) {
                         onChange={handleChange}
                         isInverted
                     >
-                        <span>
-                            Final
-                        </span>
-                        <span>
-                            [{finalResidualBounds[0][0]}, {finalResidualBounds[0][1]}]
-                        </span>
+                        Final
                     </Checkbox>
                 </Pill>
                 <Pill>

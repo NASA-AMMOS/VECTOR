@@ -9,7 +9,7 @@ export const container = style({
 
     selectors: {
         '&:not(:last-of-type)': {
-            marginBottom: '1rem',
+            marginRight: '1rem',
         },
     },
 });

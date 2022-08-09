@@ -78,7 +78,7 @@ function reducer(state: State, action: Action) {
 }
 
 export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
-    const { initialResidualBounds, finalResidualBounds, activeImage, activeTrack } = useData();
+    const { activeImage, activeTrack } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
 
@@ -119,12 +119,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                 checked={state.isInitial}
                                 onChange={handleChange}
                             >
-                                <span>
-                                    Initial
-                                </span>
-                                <span>
-                                    [{initialResidualBounds[0][0]}, {initialResidualBounds[0][1]}]
-                                </span>
+                                Initial
                             </Checkbox>
                             <Checkbox
                                 name={ActionType.RESIDUAL_FINAL}
@@ -132,12 +127,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                 onChange={handleChange}
                                 isInverted
                             >
-                                 <span>
-                                    Final
-                                </span>
-                                <span>
-                                    [{finalResidualBounds[0][0]}, {finalResidualBounds[0][1]}]
-                                </span>
+                                 Final
                             </Checkbox>
                         </Pill>
                         <Pill>

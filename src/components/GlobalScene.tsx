@@ -4,7 +4,6 @@ import Pill from '@/components/Pill';
 import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import CameraViewport from '@/components/CameraViewport';
-import { useData } from '@/DataContext';
 import * as styles from '@/components/GlobalImageView.css';
 
 enum ActionType {
@@ -36,8 +35,6 @@ function reducer(state: State, action: Action) {
 }
 
 export default function GlobalScene() {
-    const { initialResidualBounds, finalResidualBounds } = useData();
-
     const [state, dispatch] = useReducer(reducer, initialState);
 
     function handleChange(event: React.FormEvent<HTMLInputElement>) {
@@ -56,12 +53,7 @@ export default function GlobalScene() {
                         checked={state.isInitial}
                         onChange={handleChange}
                     >
-                        <span>
-                            Initial
-                        </span>
-                        <span>
-                            [{initialResidualBounds[0][0]}, {initialResidualBounds[0][1]}]
-                        </span>
+                        Initial
                     </Checkbox>
                     <Checkbox
                         name={ActionType.RESIDUAL_FINAL}
@@ -69,12 +61,7 @@ export default function GlobalScene() {
                         onChange={handleChange}
                         isInverted
                     >
-                        <span>
-                            Final
-                        </span>
-                        <span>
-                            [{finalResidualBounds[0][0]}, {finalResidualBounds[0][1]}]
-                        </span>
+                        Final
                     </Checkbox>
                 </Pill>
             </Toolbar>

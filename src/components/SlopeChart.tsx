@@ -85,6 +85,16 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall }:
                 maxResidual = residualBounds[0][1];
             }
 
+            if (residuals.length === 0) {
+                element.classList.add(styles.empty);
+                while (element.lastElementChild) {
+                    element.removeChild(element.lastElementChild);
+                }
+                return;
+            } else {
+                element.classList.remove(styles.empty);
+            }
+
             const svg = Plot.plot({
                 style: {
                     height: '100%',

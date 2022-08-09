@@ -6,7 +6,6 @@ import Checkbox from '@/components/Checkbox';
 import NumberInput from '@/components/NumberInput';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
-import { useData } from '@/DataContext';
 import * as styles from '@/components/GlobalStatistics.css';
 
 enum ActionType {
@@ -61,8 +60,6 @@ function reducer(state: State, action: Action) {
 }
 
 export default function GlobalStatistics() {
-    const { initialResidualBounds, finalResidualBounds } = useData();
-
     const [state, dispatch] = useReducer(reducer, initialState);
 
     function handleChange(event: React.FormEvent<HTMLInputElement>) {
@@ -81,12 +78,7 @@ export default function GlobalStatistics() {
                         checked={state.isInitial}
                         onChange={handleChange}
                     >
-                        <span>
-                            Initial
-                        </span>
-                        <span>
-                            [{initialResidualBounds[0][0]}, {initialResidualBounds[0][1]}]
-                        </span>
+                        Initial
                     </Checkbox>
                     <Checkbox
                         name={ActionType.RESIDUAL_FINAL}
@@ -94,12 +86,7 @@ export default function GlobalStatistics() {
                         onChange={handleChange}
                         isInverted
                     >
-                        <span>
-                            Final
-                        </span>
-                        <span>
-                            [{finalResidualBounds[0][0]}, {finalResidualBounds[0][1]}]
-                        </span>
+                        Final
                     </Checkbox>
                 </Pill>
                 <Pill>
