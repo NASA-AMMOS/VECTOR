@@ -54,6 +54,7 @@ export interface IDataContext {
     cameras: Cameras;
     images: Image[];
     vicar: VICAR;
+    mesh: string | null;
 
     activeImage: string | null;
     activeTrack: number | null;
@@ -71,6 +72,7 @@ export interface IDataContext {
     setCameras: Dispatch<SetStateAction<Cameras>>;
     setImages: Dispatch<SetStateAction<Image[]>>;
     setVICAR: Dispatch<SetStateAction<VICAR>>;
+    setMesh: Dispatch<SetStateAction<string | null>>;
 
     setActiveImage: Dispatch<SetStateAction<string | null>>;
     setActiveTrack: Dispatch<SetStateAction<number | null>>;
@@ -91,6 +93,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [cameras, setCameras] = useState<Cameras>({});
     const [images, setImages] = useState<Image[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
+    const [mesh, setMesh] = useState<string | null>(null);
 
     const [activeImage, setActiveImage] = useState<string | null>(null);
     const [activeTrack, setActiveTrack] = useState<number | null>(null);
@@ -175,6 +178,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 cameras,
                 images,
                 vicar,
+                mesh,
 
                 activeImage,
                 activeTrack,
@@ -192,6 +196,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 setCameras,
                 setImages,
                 setVICAR,
+                setMesh,
 
                 setActiveImage,
                 setActiveTrack,

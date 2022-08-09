@@ -7,7 +7,7 @@ import * as styles from '@/components/Landing.css';
 const parser = new DOMParser();
 
 export default function Landing() {
-    const { setTiepoints, setCameras, setImages, setVICAR } = useData();
+    const { setTiepoints, setCameras, setImages, setVICAR, setMesh } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
 
@@ -22,7 +22,9 @@ export default function Landing() {
                     handleNavigation(xml);
                 }
             } else if (file.type === 'image/png' || file.type === 'image/jpeg') {
-                await handleImage(file);
+                handleImage(file);
+            } else if (file.name.endsWith('.obj')) {
+                handleMesh(file);
             } else {
                 await handleVICAR(file);
             }
@@ -160,9 +162,14 @@ export default function Landing() {
         setCameras(newCameras);
     }
 
-    async function handleImage(file: File) {
+    function handleImage(file: File) {
         const url = URL.createObjectURL(file);
         setImages((oldImages) => [...oldImages, { name: file.name, url }]);
+    }
+
+    function handleMesh(file: File) {
+        const url = URL.createObjectURL(file);
+        setMesh(url);
     }
 
     async function handleVICAR(file: File) {

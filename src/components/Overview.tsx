@@ -1,24 +1,24 @@
 import GlobalStatistics from '@/components/GlobalStatistics';
-import CameraViewport from '@/components/CameraViewport';
+import GlobalScene from '@/components/GlobalScene';
 import GlobalImageView from '@/components/GlobalImageView';
 import { PageAction } from '@/App';
 import { useData } from '@/DataContext';
 
 interface OverviewProps {
-    state: number;
-    dispatch: React.Dispatch<PageAction>;
+    activeRoute: number;
+    route: React.Dispatch<PageAction>;
 };
 
-export default function Overview({ state, dispatch }: OverviewProps) {
+export default function Overview({ activeRoute, route }: OverviewProps) {
     const { activeImage } = useData();
 
     return (
         <>
             {!activeImage && (
                 <>
-                    {state === 0 && <GlobalStatistics /> }
-                    {state === 1 && <CameraViewport /> }
-                    {state === 2 && <GlobalImageView route={dispatch} />}
+                    {activeRoute === 0 && <GlobalStatistics /> }
+                    {activeRoute === 1 && <GlobalScene /> }
+                    {activeRoute === 2 && <GlobalImageView route={route} />}
                 </>
             )}
         </>

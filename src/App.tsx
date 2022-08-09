@@ -61,7 +61,7 @@ export default function App() {
                 <>
                     <NavBar state={state} dispatch={dispatch} />
                     <main className={styles.container}>
-                        <Overview state={state} dispatch={dispatch} />
+                        <Overview activeRoute={state} route={dispatch} />
                         <ActiveImageView route={dispatch} />
                         <ActiveTrackView route={dispatch} />
                     </main>

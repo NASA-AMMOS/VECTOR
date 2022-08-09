@@ -192,7 +192,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                     activeTrack={activeTrack}
                                 />
                             </div>
-                            <CameraViewport />
+                            <CameraViewport state={state} />
                         </div>
                         <div className={styles.column}>
                             <div className={styles.item}>

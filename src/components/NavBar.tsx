@@ -21,20 +21,20 @@ export default function NavBar({ state, dispatch }: NavBarProps) {
                     className={cn(styles.item, styles.button, { [styles.active]: state === 1 })}
                     onClick={() => dispatch({ type: PageType.CAMERAS })}
                 >
-                    Camera Viewport
+                    Scene
                 </button>
                 <button
                     className={cn(styles.item, styles.button, { [styles.active]: state === 0 })}
                     onClick={() => dispatch({ type: PageType.STATISTICS })}
                 >
-                    Global Statistics
+                    Overview
                 </button>
                 <div className={styles.item}>
                     <button
                         className={cn(styles.button, { [styles.active]: state >= 2 })}
                         onClick={() => dispatch({ type: PageType.IMAGES })}
                     >
-                        Image Grid
+                        Images
                     </button>
                     {activeImage && (
                         <button

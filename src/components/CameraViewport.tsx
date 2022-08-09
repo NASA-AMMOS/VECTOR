@@ -11,21 +11,9 @@ import * as styles from '@/components/CameraViewport.css';
 const matrix = new THREE.Matrix4();
 const planeGeometry = new THREE.PlaneGeometry();
 
-enum ToolType {
-    INITIAL = 'INITIAL',
-    FINAL = 'FINAL',
-    MESH = 'MESH',
-};
-
-interface State {
-    initial: boolean;
-    final: boolean;
-    mesh: string | null;
-};
-
-interface Action {
-    type: ToolType;
-    data: string | null;
+interface CameraViewportState {
+    isInitial: boolean;
+    isFinal: boolean;
 };
 
 interface SelectToZoomProps {
@@ -33,28 +21,12 @@ interface SelectToZoomProps {
 };
 
 interface SceneProps {
-    state: State;
+    state: CameraViewportState;
 };
 
-interface TooltipProps {
-    state: State;
-    dispatch: React.Dispatch<Action>;
+interface CameraViewportProps {
+    state: CameraViewportState;
 };
-
-const initialState: State = { initial: false, final: true, mesh: null };
-
-function reducer(state: State, action: Action): State {
-    switch (action.type) {
-        case ToolType.INITIAL:
-            return { ...state, initial: !state.initial };
-        case ToolType.FINAL:
-            return { ...state, final: !state.final };
-        case ToolType.MESH:
-            return { ...state, mesh: action.data };
-        default:
-            return state;
-    }
-}
 
 function ViewCube() {
     const { gl, scene, camera, size } = useThree();
@@ -127,11 +99,11 @@ function SelectToZoom({ children }: SelectToZoomProps) {
 }
 
 function Scene({ state }: SceneProps) {
-    const { tiepoints, cameras, vicar, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
+    const { tiepoints, cameras, vicar, mesh, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
 
     const { scene } = useThree();
 
-    const mesh = state.mesh && useLoader(OBJLoader, state.mesh);
+    const obj = mesh && useLoader(OBJLoader, mesh);
 
     const controls = useRef(null);
     const meshes = useRef<THREE.Group>(null!);
@@ -182,7 +154,7 @@ function Scene({ state }: SceneProps) {
             );
 
             // Apply coordinate transformation to SITE frame.
-            if (state.initial) {
+            if (state.isInitial) {
                 renderCamera(
                     cameraId,
                     meshes,
@@ -193,7 +165,7 @@ function Scene({ state }: SceneProps) {
                 );
             }
 
-            if (state.final) {
+            if (state.isFinal) {
                 renderCamera(
                     cameraId,
                     meshes,
@@ -251,18 +223,18 @@ function Scene({ state }: SceneProps) {
                 <SelectToZoom>
                     <group ref={meshes} />
                     {activeTrack && initialXYZ && (
-                        <mesh position={initialXYZ} visible={state.initial}>
+                        <mesh position={initialXYZ} visible={state.isInitial}>
                             <sphereGeometry args={[0.05]} />
                             <meshLambertMaterial color={theme.color.initialHex} />
                         </mesh>
                     )}
                     {activeTrack && finalXYZ && (
-                        <mesh position={finalXYZ} visible={state.final}>
+                        <mesh position={finalXYZ} visible={state.isFinal}>
                             <sphereGeometry args={[0.05]} />
                             <meshLambertMaterial color={theme.color.finalHex} />
                         </mesh>
                     )}
-                    {state.mesh && <primitive object={mesh} />}
+                    {mesh && <primitive object={obj} />}
                 </SelectToZoom>
             </Bounds>
             <gridHelper args={[1000, 1000]} position={[0, 0, finalXYZ[2]]} rotation={[Math.PI / 2, 0, 0]} />
@@ -279,78 +251,18 @@ function Scene({ state }: SceneProps) {
     )
 }
 
-function Tooltip({ state, dispatch }: TooltipProps) {
-    async function handleFileInput(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-        const file = await fileOpen({ extensions: ['.obj'] });
-        dispatch({ type: ToolType.MESH, data: URL.createObjectURL(file) });
-    }
-
-    return (
-        <div className={styles.tooltip}>
-            <div className={styles.item}>
-                <button className={styles.input} onClick={handleFileInput}>
-                    Upload Mesh
-                </button>
-            </div>
-            <div className={styles.item}>
-                <input
-                    type="checkbox"
-                    id="initial"
-                    className={styles.checkbox}
-                    checked={state.initial}
-                    onChange={() => dispatch({ type: ToolType.INITIAL, data: null })}
-                />
-                <label htmlFor="initial" className={styles.label}>
-                    Initial Position
-                </label>
-            </div>
-            <div className={styles.item}>
-                <input
-                    type="checkbox"
-                    id="final"
-                    className={styles.checkbox}
-                    checked={state.final}
-                    onChange={() => dispatch({ type: ToolType.FINAL, data: null })}
-                />
-                <label htmlFor="final" className={styles.label}>
-                    Final Position
-                </label>
-            </div>
-            {state.mesh && (
-                <div className={styles.item}>
-                    <input
-                        type="checkbox"
-                        id="mesh"
-                        className={styles.checkbox}
-                        checked={!!(state.mesh)}
-                        onChange={() => dispatch({ type: ToolType.MESH, data: null })}
-                    />
-                    <label htmlFor="mesh" className={styles.label}>
-                        Mesh
-                    </label>
-                </div>
-            )}
-        </div>
-    );
-}
-
-export default function CameraViewport() {
+export default function CameraViewport({ state }: CameraViewportProps) {
     // Need to import entire module instead of named module
     // to set proper axis to match SITE frame.
     THREE.Object3D.DefaultUp.set(0, 0, -1);
 
     const ContextBridge = useContextBridge(DataContext);
 
-    const [state, dispatch] = useReducer(reducer, initialState);
-
     return (
-        <section className={styles.container}>
-            <Tooltip state={state} dispatch={dispatch} />
-            <Canvas className={styles.canvas}>
-                <ContextBridge>
-                    <Scene state={state} />
-                </ContextBridge>
-            </Canvas>
-        </section>
-    )
+        <Canvas className={styles.container}>
+            <ContextBridge>
+                <Scene state={state} />
+            </ContextBridge>
+        </Canvas>
+    );
 }
