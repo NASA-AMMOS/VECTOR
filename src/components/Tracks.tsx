@@ -242,7 +242,7 @@ function Stage({ state, activeTrack }: StageProps) {
 }
 
 export function Track({ state, contextMenu, setContextMenu, dispatchRoute, activeImage, activeTrack, isGrouped }: TrackProps) {
-    const { setActiveTrack } = useData();
+    const { editedTracks, setActiveTrack } = useData();
 
     function handleClick() {
         dispatchRoute({ type: PageType.TRACK });
@@ -264,7 +264,11 @@ export function Track({ state, contextMenu, setContextMenu, dispatchRoute, activ
     return (
         <div
             key={activeTrack}
-            className={cn(styles.track, { [styles.trackSpacing]: isGrouped, [styles.trackWidth]: !isGrouped })}
+            className={cn(styles.track, {
+                [styles.trackSpacing]: isGrouped,
+                [styles.trackWidth]: !isGrouped,
+                [styles.trackEdited]: activeTrack && editedTracks.includes(activeTrack),
+            })}
             onClick={handleClick}
             onContextMenu={handleContextMenu}
         >

@@ -61,7 +61,7 @@ export interface VICAR {
 };
 
 export interface Edit {
-    id: string;
+    id: string | number;
     type: string;
     operation: string;
 };
@@ -84,6 +84,7 @@ export interface IDataContext {
     initialResidualBounds: [[number, number], [number, number]];
     finalResidualBounds: [[number, number], [number, number]];
     residualBounds: [[number, number], [number, number]];
+    editedTracks: number[];
 
     getImageURL: (id: string) => string | null;
     getVICARFile: (id: string) => string[];
@@ -178,6 +179,12 @@ export default function ProvideData({ children }: ProvideDataProps) {
         ];
     }, [initialResidualBounds, finalResidualBounds]);
 
+    const editedTracks = useMemo<number[]>(() => editHistory
+        .filter((e) => e.type === EditType.TRACK)
+        .map((e) => e.id)
+        .map(Number)
+    , [editHistory]);
+
     const getImageURL = useCallback((id: string) => {
         const [_, fileId] = id.split('_');
         const image = images.find((image) => image.name.includes(fileId));
@@ -220,6 +227,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 initialResidualBounds,
                 finalResidualBounds,
                 residualBounds,
+                editedTracks,
 
                 getImageURL,
                 getVICARFile,

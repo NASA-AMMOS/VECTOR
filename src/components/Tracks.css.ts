@@ -17,6 +17,7 @@ export const header = style({
 });
 
 export const track = style({
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
     height: '10rem',
@@ -25,6 +26,7 @@ export const track = style({
     padding: '1rem',
     backgroundColor: vars.color.background,
     borderRadius: '0.4rem',
+    overflow: 'hidden',
 });
 
 export const trackSpacing = style({
@@ -34,6 +36,21 @@ export const trackSpacing = style({
 
 export const trackWidth = style({
     minWidth: '100%',
+});
+
+export const trackEdited = style({
+    selectors: {
+        '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            height: '100%',
+            width: '100%',
+            backgroundColor: vars.color.black,
+            opacity: 0.5,
+        },
+    },
 });
 
 export const subheader = style({
