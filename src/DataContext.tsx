@@ -4,6 +4,17 @@ import { Polar } from '@/utils/helpers';
 
 const baseVector = new Vector2();
 
+export enum EditOperation {
+    EDIT = 'EDIT',
+    DELETE = 'DELETE',
+};
+
+export enum EditType {
+    IMAGE = 'IMAGE',
+    TRACK = 'TRACK',
+    TIEPOINT = 'TIEPOINT',
+};
+
 export interface Tiepoint {
     index: number;
     trackId: number;
@@ -49,6 +60,12 @@ export interface VICAR {
     [key: string]: string[];
 };
 
+export interface Edit {
+    id: string;
+    type: string;
+    operation: string;
+};
+
 export interface IDataContext {
     tiepoints: Tiepoint[];
     cameras: Cameras;
@@ -56,8 +73,12 @@ export interface IDataContext {
     vicar: VICAR;
     mesh: string | null;
 
+    tiepointsFile: string;
+
     activeImage: string | null;
     activeTrack: number | null;
+
+    editHistory: Edit[];
 
     imageTiepoints: Record<string, Tiepoint[]>;
     initialResidualBounds: [[number, number], [number, number]];
@@ -73,6 +94,10 @@ export interface IDataContext {
     setImages: Dispatch<SetStateAction<Image[]>>;
     setVICAR: Dispatch<SetStateAction<VICAR>>;
     setMesh: Dispatch<SetStateAction<string | null>>;
+
+    setTiepointsFile: Dispatch<SetStateAction<string>>;
+
+    setEditHistory: Dispatch<SetStateAction<Edit[]>>;
 
     setActiveImage: Dispatch<SetStateAction<string | null>>;
     setActiveTrack: Dispatch<SetStateAction<number | null>>;
@@ -95,8 +120,12 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [vicar, setVICAR] = useState<VICAR>({});
     const [mesh, setMesh] = useState<string | null>(null);
 
+    const [tiepointsFile, setTiepointsFile] = useState<string>('');
+
     const [activeImage, setActiveImage] = useState<string | null>(null);
     const [activeTrack, setActiveTrack] = useState<number | null>(null);
+
+    const [editHistory, setEditHistory] = useState<Edit[]>([]);
 
     const imageTiepoints = useMemo(() => {
         return tiepoints.reduce<Record<string, Tiepoint[]>>((obj, tiepoint) => {
@@ -180,6 +209,10 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 vicar,
                 mesh,
 
+                tiepointsFile,
+
+                editHistory,
+
                 activeImage,
                 activeTrack,
 
@@ -197,6 +230,10 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 setImages,
                 setVICAR,
                 setMesh,
+
+                setTiepointsFile,
+
+                setEditHistory,
 
                 setActiveImage,
                 setActiveTrack,

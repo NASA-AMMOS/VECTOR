@@ -9,7 +9,7 @@ import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import Radio from '@/components/Radio';
 import NumberInput from '@/components/NumberInput';
-import { PageAction } from '@/App';
+import { ContextMenuState, PageAction } from '@/App';
 import { DataContext, useData } from '@/DataContext';
 import * as styles from '@/components/ActiveImageView.css';
 
@@ -42,7 +42,9 @@ interface Action {
 };
 
 interface ActiveImageViewProps {
-    route: React.Dispatch<PageAction>;
+    contextMenu: ContextMenuState;
+    setContextMenu: React.Dispatch<ContextMenuState>;
+    dispatchRoute: React.Dispatch<PageAction>;
 };
 
 const initialState: State = {
@@ -81,7 +83,7 @@ function reducer(state: State, action: Action) {
     }
 }
 
-export default function ActiveImageView({ route }: ActiveImageViewProps) {
+export default function ActiveImageView({ contextMenu, setContextMenu, dispatchRoute }: ActiveImageViewProps) {
     const { activeImage, activeTrack } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -205,7 +207,9 @@ export default function ActiveImageView({ route }: ActiveImageViewProps) {
                         </div>
                         <Tracks
                             state={state}
-                            route={route}
+                            contextMenu={contextMenu}
+                            setContextMenu={setContextMenu}
+                            dispatchRoute={dispatchRoute}
                         />
                     </section>
                 </>

@@ -1,9 +1,10 @@
-import { useReducer, useEffect } from 'react';
+import { useState, useReducer, useEffect } from 'react';
 import Landing from '@/components/Landing';
 import Overview from '@/components/Overview';
 import ActiveImageView from '@/components/ActiveImageView';
 import ActiveTrackView from '@/components/ActiveTrackView';
 import NavBar from '@/components/NavBar';
+import ContextMenu from '@/components/ContextMenu';
 import { useData } from '@/DataContext';
 import * as styles from '@/App.css';
 
@@ -15,7 +16,16 @@ export enum PageType {
     TRACK = 'TRACK',
 };
 
-export type PageAction = {
+export interface ContextMenuState {
+    isEnabled: boolean;
+    isTrack: boolean;
+    isTiepoint: boolean;
+    x: number;
+    y: number;
+    data: any;
+};
+
+export interface PageAction {
     type: PageType;
 };
 
@@ -41,17 +51,43 @@ function reducer(state: number, action: PageAction): number {
 export default function App() {
     const { tiepoints, cameras, vicar, activeImage, activeTrack, setActiveImage, setActiveTrack } = useData();
 
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+        isEnabled: false,
+        isTrack: false,
+        isTiepoint: false,
+        x: 0,
+        y: 0,
+        data: null,
+    });
+
+    const [route, dispatchRoute] = useReducer(reducer, initialState);
+
+    function disableContextMenu() {
+        setContextMenu((prevState) => ({
+            ...prevState,
+            isEnabled: false,
+            isTrack: false,
+            isTiepoint: false,
+            data: null,
+        }));
+    }
 
     useEffect(() => {
-        if (state < 3) {
+        if (route < 3) {
             // Clear out active selections after returning to global view.
             setActiveImage(null);
             setActiveTrack(null);
-        } else if (state === 3) {
+        } else if (route === 3) {
             setActiveTrack(null);
         }
-    }, [state]);
+    }, [route]);
+
+    useEffect(() => {
+        window.addEventListener('click', disableContextMenu, false);
+        return () => {
+            window.removeEventListener('click', disableContextMenu, false);
+        };
+    }, []);
 
     return (
         <>
@@ -59,14 +95,22 @@ export default function App() {
                 <Landing />
             ) : (
                 <>
-                    <NavBar state={state} dispatch={dispatch} />
+                    <NavBar
+                        route={route}
+                        dispatchRoute={dispatchRoute}
+                    />
                     <main className={styles.container}>
-                        <Overview activeRoute={state} route={dispatch} />
-                        <ActiveImageView route={dispatch} />
-                        <ActiveTrackView route={dispatch} />
+                        <Overview activeRoute={route} route={dispatchRoute} />
+                        <ActiveImageView
+                            contextMenu={contextMenu}
+                            setContextMenu={setContextMenu}
+                            dispatchRoute={dispatchRoute}
+                        />
+                        <ActiveTrackView route={dispatchRoute} />
                     </main>
+                    {contextMenu.isEnabled && <ContextMenu state={contextMenu} />}
                 </>
-            )}    
+            )}
         </>
     );
 }

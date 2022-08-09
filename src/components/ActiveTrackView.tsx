@@ -177,7 +177,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                             <div className={styles.bar}>
                                 <Track
                                     state={state}
-                                    route={route}
+                                    dispatchRoute={route}
                                     activeImage={activeImage}
                                     activeTrack={activeTrack}
                                 />

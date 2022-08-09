@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vector2 } from 'three';
 import cn from 'classnames';
 import SlopeChart from '@/components/SlopeChart';
-import { PageAction, PageType } from '@/App';
+import { ContextMenuState, PageAction, PageType } from '@/App';
 import { Tiepoint, useData } from '@/DataContext';
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
@@ -24,7 +24,9 @@ interface StageProps {
 
 interface TrackProps {
     state: TrackState;
-    route: React.Dispatch<PageAction>;
+    contextMenu?: ContextMenuState;
+    setContextMenu?: React.Dispatch<ContextMenuState>;
+    dispatchRoute: React.Dispatch<PageAction>;
     activeImage: string | null;
     activeTrack: number | null;
     isGrouped?: boolean;
@@ -32,7 +34,9 @@ interface TrackProps {
 
 interface TracksProps {
     state: TrackState;
-    route: React.Dispatch<PageAction>;
+    contextMenu: ContextMenuState;
+    setContextMenu: React.Dispatch<ContextMenuState>;
+    dispatchRoute: React.Dispatch<PageAction>;
 };
 
 function Stage({ state, activeTrack }: StageProps) {
@@ -237,12 +241,24 @@ function Stage({ state, activeTrack }: StageProps) {
     );
 }
 
-export function Track({ state, route, activeImage, activeTrack, isGrouped }: TrackProps) {
+export function Track({ state, contextMenu, setContextMenu, dispatchRoute, activeImage, activeTrack, isGrouped }: TrackProps) {
     const { setActiveTrack } = useData();
 
     function handleClick() {
-        route({ type: PageType.TRACK });
+        dispatchRoute({ type: PageType.TRACK });
         setActiveTrack(activeTrack);
+    }
+
+    function handleContextMenu(event: React.MouseEvent<HTMLDivElement>) {
+        if (setContextMenu) {
+            event.preventDefault();
+            const newState = { isTiepoint: false, x: event.pageX, y: event.pageY, data: activeTrack };
+            if (contextMenu?.isEnabled) {
+                setContextMenu({ ...newState, isEnabled: false, isTrack: false });
+            } else {
+                setContextMenu({ ...newState, isEnabled: true, isTrack: true });
+            }
+        }
     }
 
     return (
@@ -250,6 +266,7 @@ export function Track({ state, route, activeImage, activeTrack, isGrouped }: Tra
             key={activeTrack}
             className={cn(styles.track, { [styles.trackSpacing]: isGrouped, [styles.trackWidth]: !isGrouped })}
             onClick={handleClick}
+            onContextMenu={handleContextMenu}
         >
             {isGrouped && activeImage && activeTrack && (
                 <>
@@ -274,7 +291,7 @@ export function Track({ state, route, activeImage, activeTrack, isGrouped }: Tra
     )
 }
 
-export default function Tracks({ state, route }: TracksProps) {
+export default function Tracks({ state, contextMenu, setContextMenu, dispatchRoute }: TracksProps) {
     const { imageTiepoints, activeImage } = useData();
 
     const activeTracks = useMemo<number[]>(() => {
@@ -294,7 +311,9 @@ export default function Tracks({ state, route }: TracksProps) {
                 <Track
                     key={trackId}
                     state={state}
-                    route={route}
+                    contextMenu={contextMenu}
+                    setContextMenu={setContextMenu}
+                    dispatchRoute={dispatchRoute}
                     activeImage={activeImage}
                     activeTrack={trackId}
                     isGrouped

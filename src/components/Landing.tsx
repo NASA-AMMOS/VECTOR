@@ -7,7 +7,7 @@ import * as styles from '@/components/Landing.css';
 const parser = new DOMParser();
 
 export default function Landing() {
-    const { setTiepoints, setCameras, setImages, setVICAR, setMesh } = useData();
+    const { setTiepoints, setCameras, setImages, setVICAR, setMesh, setTiepointsFile } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
 
@@ -17,6 +17,7 @@ export default function Landing() {
                 const xmlString = await file.text();
                 const xml = parser.parseFromString(xmlString, 'application/xml');
                 if (xml.querySelector('tiepoint_file')) {
+                    setTiepointsFile(xmlString);
                     handleTiepoints(xml);
                 } else {
                     handleNavigation(xml);
