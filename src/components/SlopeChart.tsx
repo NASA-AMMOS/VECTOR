@@ -19,6 +19,7 @@ interface SlopeChartProps {
     activeImage?: string;
     activeTrack?: number;
     isSmall?: boolean;
+    isEdited?: boolean;
 };
 
 interface Residual {
@@ -28,18 +29,25 @@ interface Residual {
     decreased: boolean;
 };
 
-export default function SlopeChart({ state, activeImage, activeTrack, isSmall }: SlopeChartProps) {
-    const { tiepoints, imageTiepoints, residualBounds } = useData();
+export default function SlopeChart({ state, activeImage, activeTrack, isSmall, isEdited }: SlopeChartProps) {
+    const { tiepoints, imageTiepoints, residualBounds, editedTracks } = useData();
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
+        let result = [];
+
         if (activeImage && !activeTrack) {
-            return imageTiepoints[activeImage];
+            result = imageTiepoints[activeImage];
         } else if (activeTrack) {
-            return tiepoints.filter((t) => t.trackId === Number(activeTrack));
+            result = tiepoints.filter((t) => t.trackId === Number(activeTrack));
         } else {
             return [];
         }
-    }, [tiepoints, imageTiepoints, activeImage]);
+
+        if (isEdited) {
+            return result;
+        }
+        return result.filter((t) => !editedTracks.includes(t.trackId));
+    }, [tiepoints, imageTiepoints, editedTracks, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
         if (activeTiepoints.length > 0 && element) {

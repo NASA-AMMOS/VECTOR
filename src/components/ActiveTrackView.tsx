@@ -10,7 +10,7 @@ import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import Radio from '@/components/Radio';
 import NumberInput from '@/components/NumberInput';
-import { PageAction } from '@/App';
+import { ContextMenuState, PageAction } from '@/App';
 import { useData } from '@/DataContext';
 import * as styles from '@/components/ActiveTrackView.css';
 
@@ -41,7 +41,9 @@ interface Action {
 };
 
 interface ActiveTrackViewProps {
-    route: React.Dispatch<PageAction>;
+    contextMenu: ContextMenuState;
+    setContextMenu: React.Dispatch<ContextMenuState>;
+    dispatchRoute: React.Dispatch<PageAction>;
 };
 
 const initialState: State = {
@@ -77,7 +79,7 @@ function reducer(state: State, action: Action) {
     }
 }
 
-export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
+export default function ActiveTrackView({ contextMenu, setContextMenu, dispatchRoute }: ActiveTrackViewProps) {
     const { activeImage, activeTrack } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -177,7 +179,9 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                             <div className={styles.bar}>
                                 <Track
                                     state={state}
-                                    dispatchRoute={route}
+                                    contextMenu={contextMenu}
+                                    setContextMenu={setContextMenu}
+                                    dispatchRoute={dispatchRoute}
                                     activeImage={activeImage}
                                     activeTrack={activeTrack}
                                 />
@@ -190,6 +194,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                     state={state}
                                     activeImage={activeImage}
                                     activeTrack={activeTrack}
+                                    isEdited
                                 />
                             </div>
                             <div className={styles.item}>
@@ -197,6 +202,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                     state={state}
                                     activeImage={activeImage}
                                     activeTrack={activeTrack}
+                                    isEdited
                                 />
                             </div>
                             <div className={styles.item}>
@@ -204,6 +210,7 @@ export default function ActiveTrackView({ route }: ActiveTrackViewProps) {
                                     state={state}
                                     activeImage={activeImage}
                                     activeTrack={activeTrack}
+                                    isEdited
                                 />
                             </div>
                         </div>

@@ -29,22 +29,30 @@ interface ResidualChartProps {
     state: ResidualChartState;
     activeImage?: string;
     activeTrack?: number;
+    isEdited?: boolean;
 };
 
-export default function ResidualChart({ state, activeImage, activeTrack }: ResidualChartProps) {
-    const { tiepoints, imageTiepoints, residualBounds } = useData();
+export default function ResidualChart({ state, activeImage, activeTrack, isEdited }: ResidualChartProps) {
+    const { tiepoints, imageTiepoints, residualBounds, editedTracks } = useData();
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
+        let result = [];
+
         if (!activeImage && !activeTrack) {
-            return tiepoints;
+            result = tiepoints;
         } else if (activeImage && !activeTrack) {
-            return imageTiepoints[activeImage];
+            result = imageTiepoints[activeImage];
         } else if (activeTrack) {
-            return tiepoints.filter((t) => t.trackId === Number(activeTrack));
+            result = tiepoints.filter((t) => t.trackId === Number(activeTrack));
         } else {
             return [];
         }
-    }, [tiepoints, imageTiepoints, activeImage]);
+
+        if (isEdited) {
+            return result;
+        }
+        return result.filter((t) => !editedTracks.includes(t.trackId));
+    }, [tiepoints, imageTiepoints, editedTracks, activeImage]);
 
     const plot = useCallback((element: HTMLDivElement) => {
         if (activeTiepoints.length > 0 && element) {

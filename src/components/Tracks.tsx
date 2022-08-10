@@ -24,8 +24,8 @@ interface StageProps {
 
 interface TrackProps {
     state: TrackState;
-    contextMenu?: ContextMenuState;
-    setContextMenu?: React.Dispatch<ContextMenuState>;
+    contextMenu: ContextMenuState;
+    setContextMenu: React.Dispatch<ContextMenuState>;
     dispatchRoute: React.Dispatch<PageAction>;
     activeImage: string | null;
     activeTrack: number | null;
@@ -283,6 +283,7 @@ export function Track({ state, contextMenu, setContextMenu, dispatchRoute, activ
                             activeImage={activeImage}
                             activeTrack={activeTrack}
                             isSmall
+                            isEdited
                         />
                     </div>
                 </>

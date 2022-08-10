@@ -106,7 +106,11 @@ export default function App() {
                             setContextMenu={setContextMenu}
                             dispatchRoute={dispatchRoute}
                         />
-                        <ActiveTrackView route={dispatchRoute} />
+                        <ActiveTrackView
+                            contextMenu={contextMenu}
+                            setContextMenu={setContextMenu}
+                            dispatchRoute={dispatchRoute}
+                        />
                     </main>
                     {contextMenu.isEnabled && <ContextMenu state={contextMenu} />}
                 </>
