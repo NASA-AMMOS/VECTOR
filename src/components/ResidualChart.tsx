@@ -131,7 +131,8 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
                     backgroundColor: 'transparent',
                 },
                 x: {
-                    label: null,
+                    label: 'Pixels (px)',
+                    labelOffset: Pixel(5),
                     ticks: 5,
                     domain: [0, maxResidual],
                     nice: true,
@@ -147,8 +148,8 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
                         {
                             x: 'distance',
                             domain: [0, maxResidual],
-                            fill: (d: Residual) => d.isInitial ? vars.color.initial : vars.color.final,
                             thresholds: 15,
+                            fill: (d: Residual) => d.isInitial ? vars.color.initial : vars.color.final,
                         },
                     )),
                     Plot.ruleY([0]),
