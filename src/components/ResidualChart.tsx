@@ -147,12 +147,30 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
                         },
                         {
                             x: 'distance',
+                            fill: vars.color.initial,
                             domain: [0, maxResidual],
                             thresholds: 15,
-                            fill: (d: Residual) => d.isInitial ? vars.color.initial : vars.color.final,
+                            filter: (d: Residual) => d.isInitial,
+                        }
+                    )),
+                    Plot.rectY(residuals, Plot.binX(
+                        {
+                            y: 'count'
                         },
+                        {
+                            x: 'distance',
+                            fill: vars.color.final,
+                            domain: [0, maxResidual],
+                            thresholds: 15,
+                            filter: (d: Residual) => !d.isInitial,
+                        }
                     )),
                     Plot.ruleY([0]),
+                    Plot.text(residuals, {
+                        x: 'distance',
+                        y: 'count',
+                        text: (d: Residual) => d.distance,
+                    }),
                 ],
             });
 
