@@ -4,6 +4,7 @@ import cn from 'classnames';
 import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import NumberInput from '@/components/NumberInput';
+import Radio from '@/components/Radio';
 
 import { Route, useRouter } from '@/stores/RouterContext';
 import { Filter, useTools } from '@/stores/ToolsContext';
@@ -36,122 +37,152 @@ export default function SideBar() {
                             Edited
                         </p>
                     )}
-                    <button
-                        className={cn(styles.button, {
-                            [styles.active]: router.pathname === Route.CAMERAS
-                        })}
-                        onClick={() => router.push(Route.CAMERAS)}
-                    >
-                        Scene
-                    </button>
-                    <button
-                        className={cn(styles.button, {
-                            [styles.active]: router.pathname === Route.STATISTICS
-                        })}
-                        onClick={() => router.push(Route.STATISTICS)}
-                    >
-                        Overview
-                    </button>
-                    <button
-                        className={cn(styles.button, {
-                            [styles.active]: router.pathname === Route.IMAGES
-                        })}
-                        onClick={() => router.push(Route.IMAGES)}
-                    >
-                        Images
-                    </button>
-                    {activeImage && (
+                    <div className={styles.section}>
                         <button
                             className={cn(styles.button, {
-                                [styles.active]: router.pathname === Route.IMAGE
+                                [styles.active]: router.pathname === Route.CAMERAS
                             })}
-                            onClick={() => router.push(Route.IMAGE)}
+                            onClick={() => router.push(Route.CAMERAS)}
                         >
-                            Active Image
+                            Scene
                         </button>
-                    )}
-                    {activeImage && activeTrack && (
                         <button
                             className={cn(styles.button, {
-                                [styles.active]: router.pathname === Route.TRACK
+                                [styles.active]: router.pathname === Route.STATISTICS
                             })}
-                            onClick={() => router.push(Route.TRACK)}
+                            onClick={() => router.push(Route.STATISTICS)}
                         >
-                            Active Track
+                            Overview
                         </button>
+                        <button
+                            className={cn(styles.button, {
+                                [styles.active]: router.pathname === Route.IMAGES
+                            })}
+                            onClick={() => router.push(Route.IMAGES)}
+                        >
+                            Images
+                        </button>
+                        {activeImage && (
+                            <button
+                                className={cn(styles.button, {
+                                    [styles.active]: router.pathname === Route.IMAGE
+                                })}
+                                onClick={() => router.push(Route.IMAGE)}
+                            >
+                                Active Image
+                            </button>
+                        )}
+                        {activeImage && activeTrack && (
+                            <button
+                                className={cn(styles.button, {
+                                    [styles.active]: router.pathname === Route.TRACK
+                                })}
+                                onClick={() => router.push(Route.TRACK)}
+                            >
+                                Active Track
+                            </button>
+                        )}
+                    </div>
+                    <div className={styles.section}>
+                        <h2 className={styles.subheader}>
+                            Residuals
+                        </h2>
+                        <div className={styles.item}>
+                            <Label>
+                                Type
+                            </Label>
+                            <Checkbox
+                                name={Filter.INITIAL_RESIDUAL}
+                                checked={state.isInitial}
+                                onChange={handleChange}
+                            >
+                                Initial
+                            </Checkbox>
+                            <Checkbox
+                                name={Filter.FINAL_RESIDUAL}
+                                checked={state.isFinal}
+                                onChange={handleChange}
+                                isInverted
+                            >
+                                Final
+                            </Checkbox>
+                        </div>
+                        <div className={styles.item}>
+                            <Label>
+                                Length
+                            </Label>
+                            <NumberInput
+                                name={Filter.RESIDUAL_LENGTH_MIN}
+                                value={state.residualMin}
+                                onChange={handleChange}
+                            >
+                                Min
+                            </NumberInput>
+                            <NumberInput
+                                name={Filter.RESIDUAL_LENGTH_MAX}
+                                value={state.residualMax}
+                                onChange={handleChange}
+                            >
+                                Max
+                            </NumberInput>
+                        </div>
+                        <div className={styles.item}>
+                            <Label>
+                                Angle
+                            </Label>
+                            <NumberInput
+                                name={Filter.RESIDUAL_ANGLE_MIN}
+                                value={state.residualAngleMin}
+                                onChange={handleChange}
+                            >
+                                Min
+                            </NumberInput>
+                            <NumberInput
+                                name={Filter.RESIDUAL_ANGLE_MAX}
+                                value={state.residualAngleMax}
+                                onChange={handleChange}
+                            >
+                                Max
+                            </NumberInput>
+                        </div>
+                    </div>
+                    {router.pathname === Route.IMAGES && (
+                        <div className={styles.section}>
+                            <h2 className={styles.subheader}>
+                                Axes
+                            </h2>
+                            <div className={styles.item}>
+                                <Label>
+                                    Scale
+                                </Label>
+                                <Radio
+                                    name={Filter.RELATIVE_AXIS}
+                                    checked={state.isRelative}
+                                    onChange={handleChange}
+                                >
+                                    Relative
+                                </Radio>
+                                <Radio
+                                    name={Filter.ABSOLUTE_AXIS}
+                                    checked={!state.isRelative}
+                                    onChange={handleChange}
+                                >
+                                    Absolute
+                                </Radio>
+                            </div>
+                        </div>
                     )}
-                    <h2 className={styles.subheader}>
-                        Residuals
-                    </h2>
-                    <div className={styles.item}>
-                        <Label>
-                            Type
-                        </Label>
-                        <Checkbox
-                            name={Filter.INITIAL_RESIDUAL}
-                            checked={state.isInitial}
-                            onChange={handleChange}
-                        >
-                            Initial
-                        </Checkbox>
-                        <Checkbox
-                            name={Filter.FINAL_RESIDUAL}
-                            checked={state.isFinal}
-                            onChange={handleChange}
-                            isInverted
-                        >
-                            Final
-                        </Checkbox>
-                    </div>
-                    <div className={styles.item}>
-                        <Label>
-                            Length
-                        </Label>
-                        <NumberInput
-                            name={Filter.RESIDUAL_LENGTH_MIN}
-                            value={state.residualMin}
-                            onChange={handleChange}
-                        >
-                            Min
-                        </NumberInput>
-                        <NumberInput
-                            name={Filter.RESIDUAL_LENGTH_MAX}
-                            value={state.residualMax}
-                            onChange={handleChange}
-                        >
-                            Max
-                        </NumberInput>
-                    </div>
-                    <div className={styles.item}>
-                        <Label>
-                            Angle
-                        </Label>
-                        <NumberInput
-                            name={Filter.RESIDUAL_ANGLE_MIN}
-                            value={state.residualAngleMin}
-                            onChange={handleChange}
-                        >
-                            Min
-                        </NumberInput>
-                        <NumberInput
-                            name={Filter.RESIDUAL_ANGLE_MAX}
-                            value={state.residualAngleMax}
-                            onChange={handleChange}
-                        >
-                            Max
-                        </NumberInput>
-                    </div>
                 </div>
-                <div>
+                <div className={styles.section}>
                     {editHistory.length > 0 && (
                         <button
-                            className={cn(styles.item, styles.button, styles.active)}
+                            className={cn(styles.button, styles.active)}
                             onClick={handleHistoryClick}
                         >
                             Edit History
                         </button>
                     )}
-                    <button className={cn(styles.item, styles.button, styles.active)}>
+                    <button className={cn(styles.button, styles.active)}>
                         Files
                     </button>
                 </div>

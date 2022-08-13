@@ -3,6 +3,8 @@ import { createContext, useContext, useReducer } from 'react';
 export enum Filter {
     INITIAL_RESIDUAL = 'INITIAL_RESIDUAL',
     FINAL_RESIDUAL = 'FINAL_RESIDUAL',
+    RELATIVE_AXIS = 'RELATIVE_AXIS',
+    ABSOLUTE_AXIS = 'ABSOLUTE_AXIS',
     RESIDUAL_LENGTH_MIN = 'RESIDUAL_LENGTH_MIN',
     RESIDUAL_LENGTH_MAX = 'RESIDUAL_LENGTH_MAX',
     RESIDUAL_ANGLE_MIN = 'RESIDUAL_ANGLE_MIN',
@@ -12,6 +14,7 @@ export enum Filter {
 interface State {
     isInitial: boolean;
     isFinal: boolean;
+    isRelative: boolean;
     residualMin: number | null;
     residualMax: number | null;
     residualAngleMin: number | null;
@@ -35,6 +38,7 @@ interface ProvideToolsProps {
 const initialState: State = {
     isInitial: true,
     isFinal: true,
+    isRelative: true,
     residualMin: null,
     residualMax: null,
     residualAngleMin: null,
@@ -47,6 +51,10 @@ function reducer(state: State, action: Action) {
             return { ...state, isInitial: !state.isInitial };
         case Filter.FINAL_RESIDUAL:
             return { ...state, isFinal: !state.isFinal };
+        case Filter.RELATIVE_AXIS:
+            return { ...state, isRelative: true };
+        case Filter.ABSOLUTE_AXIS:
+            return { ...state, isRelative: false };
         case Filter.RESIDUAL_LENGTH_MIN:
             return { ...state, residualMin: Number(action.data) };
         case Filter.RESIDUAL_LENGTH_MAX:

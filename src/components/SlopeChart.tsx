@@ -12,8 +12,8 @@ const baseVector = new Vector2();
 
 interface SlopeChartState {
     isRelative: boolean;
-    residualMin: number;
-    residualMax: number;
+    residualMin: number | null;
+    residualMax: number | null;
 };
 
 interface SlopeChartProps {

@@ -5,26 +5,40 @@ export const container = style({
     display: 'inline-flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     height: '100vh',
     width: vars.size.sidebar,
-    padding: '2rem',
     fontSize: '1.6rem',
     backgroundColor: vars.color.white,
+    borderRight: `0.1rem solid ${vars.color.background}`,
+});
+
+export const section = style({
+    padding: '2rem',
+    borderBottom: `0.1rem solid ${vars.color.background}`,
 });
 
 export const header = style({
-    marginBottom: '2rem',
-    paddingLeft: '1rem',
+    padding: '2rem 2rem 2rem 3rem',
+    borderBottom: `0.1rem solid ${vars.color.background}`,
     fontWeight: 500,
     fontSize: '2.5rem',
 });
 
 export const subheader = style({
-    margin: '4rem 0 2rem',
-    paddingLeft: '1rem',
+    padding: '0 0 2rem 1rem',
     fontWeight: 500,
     fontSize: '1.8rem',
+});
+
+export const item = style({
+    display: 'block',
+    padding: '0 0 2rem 1rem',
+
+    selectors: {
+        '&:last-child': {
+            paddingBottom: 0,
+        },
+    },
 });
 
 export const edited = style({
@@ -35,11 +49,6 @@ export const edited = style({
     fontWeight: 500,
     textTransform: 'uppercase',
     color: vars.color.green,
-});
-
-export const item = style({
-    display: 'block',
-    padding: '0 0 1rem 1rem'
 });
 
 export const button = style({
