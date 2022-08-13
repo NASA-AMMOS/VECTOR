@@ -1,17 +1,14 @@
 import { useReducer } from 'react';
+
 import { Track } from '@/components/Tracks';
 import CameraViewport from '@/components/CameraViewport';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
-import Toolbar from '@/components/Toolbar';
-import Pill from '@/components/Pill';
-import Label from '@/components/Label';
-import Checkbox from '@/components/Checkbox';
-import Radio from '@/components/Radio';
-import NumberInput from '@/components/NumberInput';
-import { ContextMenuState, PageAction } from '@/App';
-import { useData } from '@/DataContext';
+
+import { ContextMenuState } from '@/App';
+import { useData } from '@/stores/DataContext';
+
 import * as styles from '@/components/ActiveTrackView.css';
 
 enum ActionType {
@@ -43,7 +40,6 @@ interface Action {
 interface ActiveTrackViewProps {
     contextMenu: ContextMenuState;
     setContextMenu: React.Dispatch<ContextMenuState>;
-    dispatchRoute: React.Dispatch<PageAction>;
 };
 
 const initialState: State = {
@@ -79,7 +75,7 @@ function reducer(state: State, action: Action) {
     }
 }
 
-export default function ActiveTrackView({ contextMenu, setContextMenu, dispatchRoute }: ActiveTrackViewProps) {
+export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveTrackViewProps) {
     const { activeImage, activeTrack } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -91,131 +87,49 @@ export default function ActiveTrackView({ contextMenu, setContextMenu, dispatchR
     return (
         <>
             {activeImage && activeTrack && (
-                <>
-                    <Toolbar>
-                        <Pill>
-                            <Label>
-                                Axes Scale
-                            </Label>
-                            <Radio
-                                name={ActionType.RELATIVE_AXIS}
-                                checked={state.isRelative}
-                                onChange={handleChange}
-                            >
-                                Relative
-                            </Radio>
-                            <Radio
-                                name={ActionType.ABSOLUTE_AXIS}
-                                checked={!state.isRelative}
-                                onChange={handleChange}
-                            >
-                                Absolute
-                            </Radio>
-                        </Pill>
-                        <Pill>
-                            <Label>
-                                Residual Type
-                            </Label>
-                            <Checkbox
-                                name={ActionType.RESIDUAL_INITIAL}
-                                checked={state.isInitial}
-                                onChange={handleChange}
-                            >
-                                Initial
-                            </Checkbox>
-                            <Checkbox
-                                name={ActionType.RESIDUAL_FINAL}
-                                checked={state.isFinal}
-                                onChange={handleChange}
-                                isInverted
-                            >
-                                 Final
-                            </Checkbox>
-                        </Pill>
-                        <Pill>
-                             <Label>
-                                Residual Length
-                            </Label>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_LENGTH_MIN}
-                                value={state.residualMin}
-                                onChange={handleChange}
-                            >
-                                Min
-                            </NumberInput>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_LENGTH_MAX}
-                                value={state.residualMax}
-                                onChange={handleChange}
-                            >
-                                Max
-                            </NumberInput>
-                        </Pill>
-                        <Pill>
-                            <Label>
-                                Residual Angle
-                            </Label>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_ANGLE_MIN}
-                                value={state.residualAngleMin}
-                                onChange={handleChange}
-                            >
-                                Min
-                            </NumberInput>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_ANGLE_MAX}
-                                value={state.residualAngleMax}
-                                onChange={handleChange}
-                            >
-                                Max
-                            </NumberInput>
-                        </Pill>
-                    </Toolbar>
-                    <section className={styles.grid}>
-                        <div className={styles.panel}>
-                            <h3 className={styles.header}>
-                                Track ID: {activeTrack}
-                            </h3>
-                            <div className={styles.bar}>
-                                <Track
-                                    state={state}
-                                    contextMenu={contextMenu}
-                                    setContextMenu={setContextMenu}
-                                    dispatchRoute={dispatchRoute}
-                                    activeImage={activeImage}
-                                    activeTrack={activeTrack}
-                                />
-                            </div>
-                            <CameraViewport state={state} />
+                <section className={styles.container}>
+                    <div className={styles.panel}>
+                        <h3 className={styles.header}>
+                            Track ID: {activeTrack}
+                        </h3>
+                        <div className={styles.bar}>
+                            <Track
+                                state={state}
+                                contextMenu={contextMenu}
+                                setContextMenu={setContextMenu}
+                                activeImage={activeImage}
+                                activeTrack={activeTrack}
+                            />
                         </div>
-                        <div className={styles.column}>
-                            <div className={styles.item}>
-                                <RadialChart
-                                    state={state}
-                                    activeImage={activeImage}
-                                    activeTrack={activeTrack}
-                                    isEdited
-                                />
-                            </div>
-                            <div className={styles.item}>
-                                <ResidualChart
-                                    state={state}
-                                    activeImage={activeImage}
-                                    activeTrack={activeTrack}
-                                    isEdited
-                                />
-                            </div>
-                            <div className={styles.item}>
-                                <SlopeChart
-                                    state={state}
-                                    activeImage={activeImage}
-                                    activeTrack={activeTrack}
-                                    isEdited
-                                />
-                            </div>
+                        <CameraViewport state={state} />
+                    </div>
+                    <div className={styles.column}>
+                        <div className={styles.item}>
+                            <RadialChart
+                                state={state}
+                                activeImage={activeImage}
+                                activeTrack={activeTrack}
+                                isEdited
+                            />
                         </div>
-                    </section>
-                </>
+                        <div className={styles.item}>
+                            <ResidualChart
+                                state={state}
+                                activeImage={activeImage}
+                                activeTrack={activeTrack}
+                                isEdited
+                            />
+                        </div>
+                        <div className={styles.item}>
+                            <SlopeChart
+                                state={state}
+                                activeImage={activeImage}
+                                activeTrack={activeTrack}
+                                isEdited
+                            />
+                        </div>
+                    </div>
+                </section>
             )}
         </>
     );

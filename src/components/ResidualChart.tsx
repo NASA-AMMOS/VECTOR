@@ -2,7 +2,9 @@ import { useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
 // @ts-ignore: https://github.com/observablehq/plot/issues/401
 import * as Plot from '@observablehq/plot';
-import { Tiepoint, useData } from '@/DataContext';
+
+import { Tiepoint, useData } from '@/stores/DataContext';
+
 import { vars } from '@/utils/theme.css';
 import { Pixel, Polar } from '@/utils/helpers';
 import * as styles from '@/components/ResidualChart.css';
@@ -19,10 +21,10 @@ interface ResidualChartState {
     isInitial: boolean;
     isFinal: boolean;
     isRelative?: boolean;
-    residualMin?: number;
-    residualMax?: number;
-    residualAngleMin?: number;
-    residualAngleMax?: number;
+    residualMin?: number | null;
+    residualMax?: number | null;
+    residualAngleMin?: number | null;
+    residualAngleMax?: number | null;
 };
 
 interface ResidualChartProps {

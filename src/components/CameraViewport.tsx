@@ -4,7 +4,9 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { ThreeEvent, Canvas, createPortal, useLoader, useFrame, useThree, extend } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, Bounds, useContextBridge, useCamera, useBounds } from '@react-three/drei';
-import { Tiepoint, Camera, CameraModel, DataContext, useData } from '@/DataContext';
+
+import { Tiepoint, Camera, CameraModel, DataContext, useData } from '@/stores/DataContext';
+
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
@@ -57,7 +59,7 @@ function ViewCube() {
                 position={[size.width / 2 - 30, size.height / 2 - 30, 0]}
             >
                 <meshLambertMaterial color="white" />
-                <boxBufferGeometry args={[20, 20, 20]} />
+                <boxBufferGeometry args={[10, 10, 10]} />
             </mesh>
             <axesHelper
                 ref={axes}

@@ -1,6 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vector2 } from 'three';
-import { Tiepoint, useData } from '@/DataContext';
+
+import { Tiepoint, useData } from '@/stores/DataContext';
+
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/TiepointImage.css';
 

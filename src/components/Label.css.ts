@@ -3,7 +3,7 @@ import { vars } from '../utils/theme.css';
 
 export const container = style({
     fontSize: '1.6rem',
-    marginRight: '1rem',
+    marginBottom: '1rem',
 
     '@media': {
         'screen and (max-width: 1200px)': {

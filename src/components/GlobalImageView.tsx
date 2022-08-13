@@ -1,15 +1,12 @@
 import { useReducer } from 'react';
-import Toolbar from '@/components/Toolbar';
-import Pill from '@/components/Pill';
-import Label from '@/components/Label';
-import Checkbox from '@/components/Checkbox';
-import Radio from '@/components/Radio';
-import NumberInput from '@/components/NumberInput';
+
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
-import { PageAction, PageType } from '@/App';
-import { useData } from '@/DataContext';
+
+import { Route, useRouter } from '@/stores/RouterContext';
+import { useData } from '@/stores/DataContext';
+
 import * as styles from '@/components/GlobalImageView.css';
 
 enum ActionType {
@@ -36,10 +33,6 @@ interface State {
 interface Action {
     type: string;
     data: string;
-};
-
-interface GlobalImageViewProps {
-    route: React.Dispatch<PageAction>;
 };
 
 const initialState: State = {
@@ -75,7 +68,9 @@ function reducer(state: State, action: Action) {
     }
 }
 
-export default function GlobalImageView({ route }: GlobalImageViewProps) {
+export default function GlobalImageView() {
+    const router = useRouter();
+
     const { imageTiepoints, getImageURL, setActiveImage } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -85,119 +80,38 @@ export default function GlobalImageView({ route }: GlobalImageViewProps) {
     }
 
     function handleClick(id: string) {
-        route({ type: PageType.IMAGE });
+        router.push(Route.IMAGE);
         setActiveImage(id);
     }
 
     return (
-        <>
-            <Toolbar>
-                <Pill>
-                    <Label>
-                        Axes Scale
-                    </Label>
-                    <Radio
-                        name={ActionType.RELATIVE_AXIS}
-                        checked={state.isRelative}
-                        onChange={handleChange}
-                    >
-                        Relative
-                    </Radio>
-                    <Radio
-                        name={ActionType.ABSOLUTE_AXIS}
-                        checked={!state.isRelative}
-                        onChange={handleChange}
-                    >
-                        Absolute
-                    </Radio>
-                </Pill>
-                <Pill>
-                    <Label>
-                        Residual Type
-                    </Label>
-                    <Checkbox
-                        name={ActionType.RESIDUAL_INITIAL}
-                        checked={state.isInitial}
-                        onChange={handleChange}
-                    >
-                        Initial
-                    </Checkbox>
-                    <Checkbox
-                        name={ActionType.RESIDUAL_FINAL}
-                        checked={state.isFinal}
-                        onChange={handleChange}
-                        isInverted
-                    >
-                        Final
-                    </Checkbox>
-                </Pill>
-                <Pill>
-                    <Label>
-                        Residual Length
-                    </Label>
-                    <NumberInput
-                        name={ActionType.RESIDUAL_LENGTH_MIN}
-                        value={state.residualMin}
-                        onChange={handleChange}
-                    >
-                        Min
-                    </NumberInput>
-                    <NumberInput
-                        name={ActionType.RESIDUAL_LENGTH_MAX}
-                        value={state.residualMax}
-                        onChange={handleChange}
-                    >
-                        Max
-                    </NumberInput>
-                </Pill>
-                <Pill>
-                    <Label>
-                        Residual Angle
-                    </Label>
-                    <NumberInput
-                        name={ActionType.RESIDUAL_ANGLE_MIN}
-                        value={state.residualAngleMin}
-                        onChange={handleChange}
-                    >
-                        Min
-                    </NumberInput>
-                    <NumberInput
-                        name={ActionType.RESIDUAL_ANGLE_MAX}
-                        value={state.residualAngleMax}
-                        onChange={handleChange}
-                    >
-                        Max
-                    </NumberInput>
-                </Pill>
-            </Toolbar>
-            <section className={styles.container}>
-                {Object.keys(imageTiepoints).map((id) => (
-                    <div key={id} className={styles.item} onClick={() => handleClick(id)}>
-                        <div>
-                            <h2 className={styles.header}>
-                                Image ID: {id}
-                            </h2>
-                            <img
-                                className={styles.image}
-                                src={getImageURL(id)!}
-                                alt={`Image with ID: ${id}`}
-                            />
-                        </div>
-                        <RadialChart
-                            state={state}
-                            activeImage={id}
-                        />
-                        <ResidualChart
-                            state={state}
-                            activeImage={id}
-                        />
-                        <SlopeChart
-                            state={state}
-                            activeImage={id}
+        <section className={styles.container}>
+            {Object.keys(imageTiepoints).map((id) => (
+                <div key={id} className={styles.item} onClick={() => handleClick(id)}>
+                    <div>
+                        <h2 className={styles.header}>
+                            Image ID: {id}
+                        </h2>
+                        <img
+                            className={styles.image}
+                            src={getImageURL(id)!}
+                            alt={`Image with ID: ${id}`}
                         />
                     </div>
-                ))}
-            </section>
-        </>
+                    <RadialChart
+                        state={state}
+                        activeImage={id}
+                    />
+                    <ResidualChart
+                        state={state}
+                        activeImage={id}
+                    />
+                    <SlopeChart
+                        state={state}
+                        activeImage={id}
+                    />
+                </div>
+            ))}
+        </section>
     );
 }

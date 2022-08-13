@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
-import { Tiepoint, Cameras, useData } from '@/DataContext';
+
+import { Tiepoint, Cameras, useData } from '@/stores/DataContext';
+
 import * as styles from '@/components/Landing.css';
 
 const parser = new DOMParser();

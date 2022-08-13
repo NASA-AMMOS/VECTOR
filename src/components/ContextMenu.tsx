@@ -1,7 +1,9 @@
 import { useRef, useEffect } from 'react';
 import { fileSave } from 'browser-fs-access';
+
 import { ContextMenuState } from '@/App';
-import { EditType, EditOperation, useData } from '@/DataContext';
+import { EditType, EditOperation, useData } from '@/stores/DataContext';
+
 import * as styles from '@/components/ContextMenu.css';
 
 interface ContextMenuProps {

@@ -1,7 +1,9 @@
 import { useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
 import * as d3 from 'd3';
-import { Tiepoint, useData } from '@/DataContext';
+
+import { Tiepoint, useData } from '@/stores/DataContext';
+
 import { vars } from '@/utils/theme.css';
 import { Polar } from '@/utils/helpers';
 import * as styles from '@/components/RadialChart.css';
@@ -12,10 +14,10 @@ interface RadialChartState {
     isInitial: boolean;
     isFinal: boolean;
     isRelative?: boolean;
-    residualMin?: number;
-    residualMax?: number;
-    residualAngleMin?: number;
-    residualAngleMax?: number;
+    residualMin?: number | null;
+    residualMax?: number | null;
+    residualAngleMin?: number | null;
+    residualAngleMax?: number | null;
 };
 
 interface RadialChartProps {

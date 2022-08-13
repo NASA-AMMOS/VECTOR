@@ -3,8 +3,8 @@ import { vars } from '../utils/theme.css';
 
 export const container = style({
     display: 'flex',
-    height: `calc(92vh - ${vars.size.toolbar})`,
-    width: '100vw',
+    height: '100vh',
+    width: `calc(100vw - ${vars.size.sidebar})`,
     overflowX: 'auto',
 });
 

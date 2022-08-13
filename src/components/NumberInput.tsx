@@ -2,7 +2,7 @@ import * as styles from '@/components/NumberInput.css';
 
 interface NumberInputProps {
     name: string;
-    value: number;
+    value: number | null;
     onChange: (event: React.FormEvent<HTMLInputElement>) => void;
     children: React.ReactNode;
 };
@@ -16,10 +16,10 @@ export default function NumberInput({ name, value, onChange, children }: NumberI
                 type="number"
                 step="0.1"
                 name={name}
-                value={value}
+                value={value ? value : undefined}
                 onChange={onChange}
             />
-            <label className={styles.label} htmlFor={name}>
+            <label htmlFor={name}>
                 {children}
             </label>
         </div>

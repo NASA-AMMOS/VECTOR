@@ -2,6 +2,9 @@ import { style } from '@vanilla-extract/css';
 import { vars } from './utils/theme.css';
 
 export const container = style({
-    height: '92vh',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(12, 1fr)',
+    height: '100vh',
+    width: '100vw',
     backgroundColor: vars.color.background,
 });

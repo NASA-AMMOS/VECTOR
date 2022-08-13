@@ -18,6 +18,7 @@ export const theme = {
         decrease: 'rgb(52, 94, 145)',
     },
     size: {
+        sidebar: '15vw',
         toolbar: '7vh',
     },
 };

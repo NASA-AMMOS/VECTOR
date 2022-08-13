@@ -2,7 +2,9 @@ import { useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
 // @ts-ignore: https://github.com/observablehq/plot/issues/401
 import * as Plot from '@observablehq/plot';
-import { Tiepoint, useData } from '@/DataContext';
+
+import { Tiepoint, useData } from '@/stores/DataContext';
+
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/SlopeChart.css';
 
@@ -142,8 +144,8 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall, i
                         z: 'tiepoint',
                         text: '',
                     })),
-                    Plot.ruleX(['Initial'], { stroke: vars.color.initialHex, strokeWidth: 10 }),
-                    Plot.ruleX(['Final'], { stroke: vars.color.finalHex, strokeWidth: 10 }),
+                    Plot.ruleX(['Initial'], { stroke: vars.color.initial, strokeWidth: 10 }),
+                    Plot.ruleX(['Final'], { stroke: vars.color.final, strokeWidth: 10 }),
                 ],
             });
 

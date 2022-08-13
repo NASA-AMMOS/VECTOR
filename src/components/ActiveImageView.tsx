@@ -1,16 +1,13 @@
 import { useReducer } from 'react';
+
 import Tracks from '@/components/Tracks';
 import TiepointImage from '@/components/TiepointImage';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
-import Toolbar from '@/components/Toolbar';
-import Pill from '@/components/Pill';
-import Label from '@/components/Label';
-import Checkbox from '@/components/Checkbox';
-import Radio from '@/components/Radio';
-import NumberInput from '@/components/NumberInput';
-import { ContextMenuState, PageAction } from '@/App';
-import { DataContext, useData } from '@/DataContext';
+
+import { ContextMenuState } from '@/App';
+import { DataContext, useData } from '@/stores/DataContext';
+
 import * as styles from '@/components/ActiveImageView.css';
 
 enum ActionType {
@@ -44,7 +41,6 @@ interface Action {
 interface ActiveImageViewProps {
     contextMenu: ContextMenuState;
     setContextMenu: React.Dispatch<ContextMenuState>;
-    dispatchRoute: React.Dispatch<PageAction>;
 };
 
 const initialState: State = {
@@ -83,7 +79,7 @@ function reducer(state: State, action: Action) {
     }
 }
 
-export default function ActiveImageView({ contextMenu, setContextMenu, dispatchRoute }: ActiveImageViewProps) {
+export default function ActiveImageView({ contextMenu, setContextMenu }: ActiveImageViewProps) {
     const { activeImage, activeTrack } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -95,124 +91,30 @@ export default function ActiveImageView({ contextMenu, setContextMenu, dispatchR
     return (
         <>
             {activeImage && !activeTrack && (
-                <>
-                    <Toolbar>
-                        <Pill>
-                            <Label>
-                                Axes Scale
-                            </Label>
-                            <Radio
-                                name={ActionType.RELATIVE_AXIS}
-                                checked={state.isRelative}
-                                onChange={handleChange}
-                            >
-                                Relative
-                            </Radio>
-                            <Radio
-                                name={ActionType.ABSOLUTE_AXIS}
-                                checked={!state.isRelative}
-                                onChange={handleChange}
-                            >
-                                Absolute
-                            </Radio>
-                        </Pill>
-                        <Pill>
-                            <Label>
-                                Residual Type
-                            </Label>
-                            <Checkbox
-                                name={ActionType.RESIDUAL_INITIAL}
-                                checked={state.isInitial}
-                                onChange={handleChange}
-                            >
-                                Initial
-                            </Checkbox>
-                            <Checkbox
-                                name={ActionType.RESIDUAL_FINAL}
-                                checked={state.isFinal}
-                                onChange={handleChange}
-                                isInverted
-                            >
-                                Final
-                            </Checkbox>
-                        </Pill>
-                        <Pill>
-                            <Label>
-                                Residual Length
-                            </Label>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_LENGTH_MIN}
-                                value={state.residualMin}
-                                onChange={handleChange}
-                            >
-                                Min
-                            </NumberInput>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_LENGTH_MAX}
-                                value={state.residualMax}
-                                onChange={handleChange}
-                            >
-                                Max
-                            </NumberInput>
-                        </Pill>
-                        <Pill>
-                            <Label>
-                                Residual Angle
-                            </Label>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_ANGLE_MIN}
-                                value={state.residualAngleMin}
-                                onChange={handleChange}
-                            >
-                                Min
-                            </NumberInput>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_ANGLE_MAX}
-                                value={state.residualAngleMax}
-                                onChange={handleChange}
-                            >
-                                Max
-                            </NumberInput>
-                        </Pill>
-                        <Pill>
-                            <Label>
-                                Residual Scale
-                            </Label>
-                            <NumberInput
-                                name={ActionType.RESIDUAL_SCALE}
-                                value={state.residualScale}
-                                onChange={handleChange}
-                            >
-                                Scale
-                            </NumberInput>
-                        </Pill>
-                    </Toolbar>
-                    <section className={styles.grid}>
-                        <div className={styles.column}>
-                            <TiepointImage state={state} />
-                            <div className={styles.block}>
-                                <div className={styles.item}>
-                                    <RadialChart
-                                        state={state}
-                                        activeImage={activeImage}
-                                    />
-                                </div>
-                                <div className={styles.item}>
-                                    <ResidualChart
-                                        state={state}
-                                        activeImage={activeImage}
-                                    />
-                                </div>
+                <section className={styles.container}>
+                    <div className={styles.column}>
+                        <TiepointImage state={state} />
+                        <div className={styles.block}>
+                            <div className={styles.item}>
+                                <RadialChart
+                                    state={state}
+                                    activeImage={activeImage}
+                                />
+                            </div>
+                            <div className={styles.item}>
+                                <ResidualChart
+                                    state={state}
+                                    activeImage={activeImage}
+                                />
                             </div>
                         </div>
-                        <Tracks
-                            state={state}
-                            contextMenu={contextMenu}
-                            setContextMenu={setContextMenu}
-                            dispatchRoute={dispatchRoute}
-                        />
-                    </section>
-                </>
+                    </div>
+                    <Tracks
+                        state={state}
+                        contextMenu={contextMenu}
+                        setContextMenu={setContextMenu}
+                    />
+                </section>
             )}
         </>
     );

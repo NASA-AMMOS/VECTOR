@@ -1,4 +1,4 @@
-import { ReactNode, Dispatch, SetStateAction, createContext, useContext, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
 import { Polar } from '@/utils/helpers';
 
@@ -66,7 +66,7 @@ export interface Edit {
     operation: string;
 };
 
-export interface IDataContext {
+interface DataStore {
     tiepoints: Tiepoint[];
     cameras: Cameras;
     images: Image[];
@@ -90,25 +90,25 @@ export interface IDataContext {
     getVICARFile: (id: string) => string[];
     parseVICARField: (metadata: string[], fieldName: string) => number[];
 
-    setTiepoints: Dispatch<SetStateAction<Tiepoint[]>>;
-    setCameras: Dispatch<SetStateAction<Cameras>>;
-    setImages: Dispatch<SetStateAction<Image[]>>;
-    setVICAR: Dispatch<SetStateAction<VICAR>>;
-    setMesh: Dispatch<SetStateAction<string | null>>;
+    setTiepoints: React.Dispatch<React.SetStateAction<Tiepoint[]>>;
+    setCameras: React.Dispatch<React.SetStateAction<Cameras>>;
+    setImages: React.Dispatch<React.SetStateAction<Image[]>>;
+    setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
+    setMesh: React.Dispatch<React.SetStateAction<string | null>>;
 
-    setTiepointsFile: Dispatch<SetStateAction<string>>;
+    setTiepointsFile: React.Dispatch<React.SetStateAction<string>>;
 
-    setEditHistory: Dispatch<SetStateAction<Edit[]>>;
+    setEditHistory: React.Dispatch<React.SetStateAction<Edit[]>>;
 
-    setActiveImage: Dispatch<SetStateAction<string | null>>;
-    setActiveTrack: Dispatch<SetStateAction<number | null>>;
+    setActiveImage: React.Dispatch<React.SetStateAction<string | null>>;
+    setActiveTrack: React.Dispatch<React.SetStateAction<number | null>>;
 };
 
-export interface ProvideDataProps {
-    children: ReactNode;
+interface ProvideDataProps {
+    children: React.ReactNode;
 };
 
-export const DataContext = createContext<IDataContext>({} as IDataContext);
+export const DataContext = createContext<DataStore>({} as DataStore);
 
 export function useData() {
     return useContext(DataContext);

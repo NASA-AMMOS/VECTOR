@@ -1,24 +1,22 @@
 import GlobalStatistics from '@/components/GlobalStatistics';
 import GlobalScene from '@/components/GlobalScene';
 import GlobalImageView from '@/components/GlobalImageView';
-import { PageAction } from '@/App';
-import { useData } from '@/DataContext';
 
-interface OverviewProps {
-    activeRoute: number;
-    route: React.Dispatch<PageAction>;
-};
+import { Route, useRouter } from '@/stores/RouterContext';
+import { useData } from '@/stores/DataContext';
 
-export default function Overview({ activeRoute, route }: OverviewProps) {
+export default function Overview() {
+    const router = useRouter();
+
     const { activeImage } = useData();
 
     return (
         <>
             {!activeImage && (
                 <>
-                    {activeRoute === 0 && <GlobalStatistics /> }
-                    {activeRoute === 1 && <GlobalScene /> }
-                    {activeRoute === 2 && <GlobalImageView route={route} />}
+                    {router.pathname === Route.STATISTICS && <GlobalStatistics /> }
+                    {router.pathname === Route.CAMERAS && <GlobalScene /> }
+                    {router.pathname === Route.IMAGES && <GlobalImageView />}
                 </>
             )}
         </>

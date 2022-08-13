@@ -1,9 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Vector2 } from 'three';
 import cn from 'classnames';
+
 import SlopeChart from '@/components/SlopeChart';
-import { ContextMenuState, PageAction, PageType } from '@/App';
-import { Tiepoint, useData } from '@/DataContext';
+
+import { ContextMenuState } from '@/App';
+import { Route, useRouter } from '@/stores/RouterContext';
+import { Tiepoint, useData } from '@/stores/DataContext';
+
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
 
@@ -26,7 +30,6 @@ interface TrackProps {
     state: TrackState;
     contextMenu: ContextMenuState;
     setContextMenu: React.Dispatch<ContextMenuState>;
-    dispatchRoute: React.Dispatch<PageAction>;
     activeImage: string | null;
     activeTrack: number | null;
     isGrouped?: boolean;
@@ -36,7 +39,6 @@ interface TracksProps {
     state: TrackState;
     contextMenu: ContextMenuState;
     setContextMenu: React.Dispatch<ContextMenuState>;
-    dispatchRoute: React.Dispatch<PageAction>;
 };
 
 function Stage({ state, activeTrack }: StageProps) {
@@ -241,11 +243,13 @@ function Stage({ state, activeTrack }: StageProps) {
     );
 }
 
-export function Track({ state, contextMenu, setContextMenu, dispatchRoute, activeImage, activeTrack, isGrouped }: TrackProps) {
+export function Track({ state, contextMenu, setContextMenu, activeImage, activeTrack, isGrouped }: TrackProps) {
+    const router = useRouter();
+
     const { editedTracks, setActiveTrack } = useData();
 
     function handleClick() {
-        dispatchRoute({ type: PageType.TRACK });
+        router.push(Route.TRACK);
         setActiveTrack(activeTrack);
     }
 
@@ -296,7 +300,7 @@ export function Track({ state, contextMenu, setContextMenu, dispatchRoute, activ
     )
 }
 
-export default function Tracks({ state, contextMenu, setContextMenu, dispatchRoute }: TracksProps) {
+export default function Tracks({ state, contextMenu, setContextMenu }: TracksProps) {
     const { imageTiepoints, activeImage } = useData();
 
     const activeTracks = useMemo<number[]>(() => {
@@ -318,7 +322,6 @@ export default function Tracks({ state, contextMenu, setContextMenu, dispatchRou
                     state={state}
                     contextMenu={contextMenu}
                     setContextMenu={setContextMenu}
-                    dispatchRoute={dispatchRoute}
                     activeImage={activeImage}
                     activeTrack={trackId}
                     isGrouped

@@ -2,17 +2,29 @@ import { style } from '@vanilla-extract/css';
 import { vars } from '../utils/theme.css';
 
 export const container = style({
-    display: 'flex',
+    display: 'inline-flex',
+    flexDirection: 'column',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    height: '8vh',
+    alignItems: 'flex-start',
+    height: '100vh',
+    width: vars.size.sidebar,
     padding: '2rem',
-    fontSize: '1.5rem',
+    fontSize: '1.6rem',
     backgroundColor: vars.color.white,
 });
 
 export const header = style({
+    marginBottom: '2rem',
+    paddingLeft: '1rem',
     fontWeight: 500,
+    fontSize: '2.5rem',
+});
+
+export const subheader = style({
+    margin: '4rem 0 2rem',
+    paddingLeft: '1rem',
+    fontWeight: 500,
+    fontSize: '1.8rem',
 });
 
 export const edited = style({
@@ -26,17 +38,12 @@ export const edited = style({
 });
 
 export const item = style({
-    display: 'inline-flex',
-    alignItems: 'center',
-
-    selectors: {
-        '&:not(:last-child)': {
-            marginRight: '1rem',
-        },
-    },
+    display: 'block',
+    padding: '0 0 1rem 1rem'
 });
 
 export const button = style({
+    display: 'block',
     padding: '1rem',
     color: vars.color.black,
     borderRadius: '0.4rem',
@@ -51,18 +58,6 @@ export const button = style({
 
 export const active = style({
     backgroundColor: vars.color.background,
-});
-
-export const small = style({
-    fontSize: '0.8rem',
-    borderLeft: `0.1rem solid ${vars.color.white}`,
-    borderRadius: 0,
-
-    selectors: {
-        '&:last-child': {
-            borderRadius: '0 0.4rem 0.4rem 0',
-        },
-    },
 });
 
 export const shadow = style({
