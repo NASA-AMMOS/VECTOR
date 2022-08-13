@@ -107,44 +107,48 @@ export default function SideBar() {
                                 Final
                             </Checkbox>
                         </div>
-                        <div className={styles.item}>
-                            <Label>
-                                Length
-                            </Label>
-                            <NumberInput
-                                name={Filter.RESIDUAL_LENGTH_MIN}
-                                value={state.residualMin}
-                                onChange={handleChange}
-                            >
-                                Min
-                            </NumberInput>
-                            <NumberInput
-                                name={Filter.RESIDUAL_LENGTH_MAX}
-                                value={state.residualMax}
-                                onChange={handleChange}
-                            >
-                                Max
-                            </NumberInput>
-                        </div>
-                        <div className={styles.item}>
-                            <Label>
-                                Angle
-                            </Label>
-                            <NumberInput
-                                name={Filter.RESIDUAL_ANGLE_MIN}
-                                value={state.residualAngleMin}
-                                onChange={handleChange}
-                            >
-                                Min
-                            </NumberInput>
-                            <NumberInput
-                                name={Filter.RESIDUAL_ANGLE_MAX}
-                                value={state.residualAngleMax}
-                                onChange={handleChange}
-                            >
-                                Max
-                            </NumberInput>
-                        </div>
+                        {router.pathname !== Route.CAMERAS && (
+                            <>
+                                <div className={styles.item}>
+                                    <Label>
+                                        Length
+                                    </Label>
+                                    <NumberInput
+                                        name={Filter.RESIDUAL_LENGTH_MIN}
+                                        value={state.residualMin}
+                                        onChange={handleChange}
+                                    >
+                                        Min
+                                    </NumberInput>
+                                    <NumberInput
+                                        name={Filter.RESIDUAL_LENGTH_MAX}
+                                        value={state.residualMax}
+                                        onChange={handleChange}
+                                    >
+                                        Max
+                                    </NumberInput>
+                                </div>
+                                <div className={styles.item}>
+                                    <Label>
+                                        Angle
+                                    </Label>
+                                    <NumberInput
+                                        name={Filter.RESIDUAL_ANGLE_MIN}
+                                        value={state.residualAngleMin}
+                                        onChange={handleChange}
+                                    >
+                                        Min
+                                    </NumberInput>
+                                    <NumberInput
+                                        name={Filter.RESIDUAL_ANGLE_MAX}
+                                        value={state.residualAngleMax}
+                                        onChange={handleChange}
+                                    >
+                                        Max
+                                    </NumberInput>
+                                </div>
+                            </>
+                        )}
                     </div>
                     {router.pathname === Route.IMAGES && (
                         <div className={styles.section}>
