@@ -147,10 +147,22 @@ export default function SideBar() {
                                         Max
                                     </NumberInput>
                                 </div>
+                                {router.pathname === Route.IMAGE && (
+                                    <div className={styles.item}>
+                                        <Label>
+                                            Scale
+                                        </Label>
+                                        <NumberInput
+                                            name={Filter.RESIDUAL_ANGLE_MIN}
+                                            value={state.residualAngleMin}
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
-                    {router.pathname === Route.IMAGES && (
+                    {[Route.IMAGES, Route.IMAGE, Route.TRACK].includes(router.pathname) && (
                         <div className={styles.section}>
                             <h2 className={styles.subheader}>
                                 Axes

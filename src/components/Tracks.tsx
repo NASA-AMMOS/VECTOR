@@ -17,8 +17,8 @@ interface TrackState {
     isInitial: boolean;
     isFinal: boolean;
     isRelative: boolean;
-    residualMin: number;
-    residualMax: number;
+    residualMin: number | null;
+    residualMax: number | null;
 };
 
 interface StageProps {

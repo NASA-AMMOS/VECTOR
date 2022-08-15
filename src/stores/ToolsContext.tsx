@@ -9,6 +9,7 @@ export enum Filter {
     RESIDUAL_LENGTH_MAX = 'RESIDUAL_LENGTH_MAX',
     RESIDUAL_ANGLE_MIN = 'RESIDUAL_ANGLE_MIN',
     RESIDUAL_ANGLE_MAX = 'RESIDUAL_ANGLE_MAX',
+    RESIDUAL_SCALE = 'RESIDUAL_SCALE',
 };
 
 interface State {
@@ -19,6 +20,7 @@ interface State {
     residualMax: number | null;
     residualAngleMin: number | null;
     residualAngleMax: number | null;
+    residualScale: number;
 };
 
 interface Action {
@@ -43,6 +45,7 @@ const initialState: State = {
     residualMax: null,
     residualAngleMin: null,
     residualAngleMax: null,
+    residualScale: 1,
 };
 
 function reducer(state: State, action: Action) {
@@ -63,6 +66,8 @@ function reducer(state: State, action: Action) {
             return { ...state, residualAngleMin: Number(action.data) };
         case Filter.RESIDUAL_ANGLE_MAX:
             return { ...state, residualAngleMax: Number(action.data) };
+        case Filter.RESIDUAL_SCALE:
+            return { ...state, residualScale: action.data ? Number(action.data) : 1 };
         default:
             return state;
     }

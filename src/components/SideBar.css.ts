@@ -10,6 +10,7 @@ export const container = style({
     fontSize: '1.6rem',
     backgroundColor: vars.color.white,
     borderRight: `0.1rem solid ${vars.color.background}`,
+    overflowY: 'auto',
 });
 
 export const section = style({

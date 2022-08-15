@@ -4,7 +4,7 @@ interface NumberInputProps {
     name: string;
     value: number | null;
     onChange: (event: React.FormEvent<HTMLInputElement>) => void;
-    children: React.ReactNode;
+    children?: React.ReactNode;
 };
 
 export default function NumberInput({ name, value, onChange, children }: NumberInputProps) {

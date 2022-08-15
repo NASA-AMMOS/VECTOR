@@ -11,8 +11,8 @@ const baseVector = new Vector2();
 interface TiepointImageState {
     isInitial: boolean;
     isFinal: boolean;
-    residualMin: number;
-    residualMax: number;
+    residualMin: number | null;
+    residualMax: number | null;
     residualScale: number;
 };
 
