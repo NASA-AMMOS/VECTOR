@@ -2,33 +2,17 @@ import { useRef, useState, useMemo, useEffect, useLayoutEffect, useReducer } fro
 import { fileOpen } from 'browser-fs-access';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { ThreeEvent, Canvas, createPortal, useLoader, useFrame, useThree, extend } from '@react-three/fiber';
-import { OrbitControls, OrthographicCamera, Bounds, useContextBridge, useCamera, useBounds } from '@react-three/drei';
+import { Canvas, createPortal, useLoader, useFrame, useThree, extend } from '@react-three/fiber';
+import { OrbitControls, OrthographicCamera, Instances, Instance, useContextBridge, useCamera, useBounds } from '@react-three/drei';
 
+import { ToolsContext, useTools } from '@/stores/ToolsContext';
 import { Tiepoint, Camera, CameraModel, DataContext, useData } from '@/stores/DataContext';
 
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
 const matrix = new THREE.Matrix4();
-const planeGeometry = new THREE.PlaneGeometry();
-
-interface CameraViewportState {
-    isInitial: boolean;
-    isFinal: boolean;
-};
-
-interface SelectToZoomProps {
-    children: React.ReactNode[];
-};
-
-interface SceneProps {
-    state: CameraViewportState;
-};
-
-interface CameraViewportProps {
-    state: CameraViewportState;
-};
+const planeGeometry = new THREE.PlaneGeometry(0.25, 0.25);
 
 function ViewCube() {
     const { gl, scene, camera, size } = useThree();
@@ -72,42 +56,15 @@ function ViewCube() {
     , virtualScene);
 }
 
-// This component will wrap children in a group with a click handler.
-// Clicking any object will refresh and fit bounds.
-function SelectToZoom({ children }: SelectToZoomProps) {
-    const api = useBounds();
+function Scene() {
+    const { state } = useTools();
 
-    function handleClick(event: ThreeEvent<MouseEvent>) {
-        event.stopPropagation();
-        if (event.delta <= 2) {
-            api.refresh(event.object).fit();
-        }
-    }
-
-    function handlePointerMissed(event: MouseEvent) {
-        if (event.button === 0) {
-            api.refresh().fit();
-        }
-    }
-
-    return (
-        <group
-            onClick={handleClick}
-            onPointerMissed={handlePointerMissed}
-        >
-            {children}
-        </group>
-    );
-}
-
-function Scene({ state }: SceneProps) {
     const { tiepoints, cameras, vicar, mesh, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
 
     const { scene } = useThree();
 
     const obj = mesh && useLoader(OBJLoader, mesh);
 
-    const controls = useRef(null);
     const meshes = useRef<THREE.Group>(null!);
 
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
@@ -127,12 +84,24 @@ function Scene({ state }: SceneProps) {
             }, {});
     }, [activeTiepoints, cameras]);
 
-    const [initialXYZ, finalXYZ] = useMemo<[number, number, number][]>(() => {
+    const initialPoints = useMemo<[number, number, number][]>(() => {
         if (activeTiepoints.length === 0) {
-            return [[0, 0, 0], [0, 0, 0]];
+            return [];
         }
-        const tiepoint = activeTiepoints[0];
-        return [tiepoint.initialXYZ, tiepoint.finalXYZ];
+        if (activeTrack) {
+            return [activeTiepoints[0].initialXYZ];
+        }
+        return activeTiepoints.map((t) => t.initialXYZ);
+    }, [activeTiepoints]);
+
+    const finalPoints = useMemo<[number, number, number][]>(() => {
+        if (activeTiepoints.length === 0) {
+            return [];
+        }
+        if (activeTrack) {
+            return [activeTiepoints[0].finalXYZ];
+        }
+        return activeTiepoints.map((t) => t.finalXYZ);
     }, [activeTiepoints]);
 
     async function initData() {
@@ -221,50 +190,45 @@ function Scene({ state }: SceneProps) {
         <>
             <ambientLight />
             <color attach="background" args={[theme.color.white]} />
-            <Bounds fit clip observe margin={1.2}>
-                <SelectToZoom>
-                    <group ref={meshes} />
-                    {activeTrack && initialXYZ && (
-                        <mesh position={initialXYZ} visible={state.isInitial}>
-                            <sphereGeometry args={[0.05]} />
-                            <meshLambertMaterial color={theme.color.initialHex} />
-                        </mesh>
-                    )}
-                    {activeTrack && finalXYZ && (
-                        <mesh position={finalXYZ} visible={state.isFinal}>
-                            <sphereGeometry args={[0.05]} />
-                            <meshLambertMaterial color={theme.color.finalHex} />
-                        </mesh>
-                    )}
-                    {mesh && <primitive object={obj} />}
-                </SelectToZoom>
-            </Bounds>
-            <gridHelper args={[1000, 1000]} position={[0, 0, finalXYZ[2]]} rotation={[Math.PI / 2, 0, 0]} />
-            <OrbitControls
-                ref={controls}
-                minPolarAngle={0}
-                maxPolarAngle={Math.PI / 1.75}
-                makeDefault
-                screenSpacePanning
-            />
+            <group ref={meshes} />
+            <Instances>
+                <sphereGeometry args={[0.01]} />
+                <meshLambertMaterial color={theme.color.initialHex} />
+                {state.isInitial && initialPoints.map((p) => (
+                    <Instance position={p} />
+                ))}
+            </Instances>
+            <Instances>
+                <sphereGeometry args={[0.01]} />
+                <meshLambertMaterial color={theme.color.finalHex} />
+                {state.isFinal && finalPoints.map((p) => (
+                    <Instance position={p} />
+                ))}
+            </Instances>
+            {mesh && <primitive object={obj} />}
+            <gridHelper args={[1000, 1000]} position={finalPoints[0]} rotation={[Math.PI / 2, 0, 0]} />
+            <OrbitControls makeDefault target={initialPoints[0]} />
             {/* @ts-ignore: https://github.com/pmndrs/react-three-fiber/issues/925 */}
             <ViewCube />
         </>
     )
 }
 
-export default function CameraViewport({ state }: CameraViewportProps) {
+export default function CameraViewport() {
     // Need to import entire module instead of named module
     // to set proper axis to match SITE frame.
     THREE.Object3D.DefaultUp.set(0, 0, -1);
 
-    const ContextBridge = useContextBridge(DataContext);
+    const DataContextBridge = useContextBridge(DataContext);
+    const ToolsContextBridge = useContextBridge(ToolsContext);
 
     return (
         <Canvas className={styles.container}>
-            <ContextBridge>
-                <Scene state={state} />
-            </ContextBridge>
+            <DataContextBridge>
+                <ToolsContextBridge>
+                    <Scene />
+                </ToolsContextBridge>
+            </DataContextBridge>
         </Canvas>
     );
 }

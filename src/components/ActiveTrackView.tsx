@@ -39,7 +39,7 @@ export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveT
                                 activeTrack={activeTrack}
                             />
                         </div>
-                        <CameraViewport state={state} />
+                        <CameraViewport />
                     </div>
                     <div className={styles.column}>
                         <div className={styles.item}>

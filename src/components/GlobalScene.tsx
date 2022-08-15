@@ -11,7 +11,7 @@ export default function GlobalScene() {
 
     return (
         <section className={styles.container}>
-            <CameraViewport state={state} />
+            <CameraViewport />
         </section>
     );
 }
