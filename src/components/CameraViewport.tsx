@@ -160,7 +160,9 @@ function Scene() {
         const C = new THREE.Vector3(...model.C).applyQuaternion(originRotation).add(originOffset);
         const A = new THREE.Vector3(...model.A);
         const H = new THREE.Vector3(...model.H);
-        const HxA = H.clone().cross(A).applyQuaternion(originRotation).normalize();
+
+        // For future reference: https://jpl.slack.com/archives/C03LP87K0LC/p1660602191939569
+        // const HxA = H.clone().cross(A).applyQuaternion(originRotation).normalize();
 
         A.applyQuaternion(originRotation);
 
@@ -169,7 +171,8 @@ function Scene() {
 
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.position.copy(C);
-        plane.rotation.setFromVector3(HxA);
+        plane.lookAt(C.clone().add(A));
+        // plane.rotation.setFromVector3(HxA);
         group.current.add(plane);
 
         const lineMaterial = new THREE.LineBasicMaterial({ color });
