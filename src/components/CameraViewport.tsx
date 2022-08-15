@@ -167,7 +167,7 @@ function Scene() {
         A.applyQuaternion(originRotation);
 
         const planeMaterial = new THREE.MeshLambertMaterial({ color });
-        planeMaterial.wireframe = true;
+        planeMaterial.side = THREE.DoubleSide;
 
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.position.copy(C);
