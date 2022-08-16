@@ -79,8 +79,8 @@ export default function RadialChart({ state, activeImage, activeTrack, isEdited 
             width *= 2;
 
             const height = width;
-            const padding = width * 0.25;
-            const radius = width * 0.005;
+            const padding = width * 0.1;
+            const radius = width * 0.01;
 
             // Filter residuals after calculating circular bounds
             if (state.residualMin) {

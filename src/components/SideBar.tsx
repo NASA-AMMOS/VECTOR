@@ -64,7 +64,7 @@ export default function SideBar() {
                         </button>
                         {activeImage && (
                             <button
-                                className={cn(styles.button, {
+                                className={cn(styles.button, styles.middleLevel, {
                                     [styles.active]: router.pathname === Route.IMAGE
                                 })}
                                 onClick={() => router.push(Route.IMAGE)}
@@ -74,7 +74,7 @@ export default function SideBar() {
                         )}
                         {activeImage && activeTrack && (
                             <button
-                                className={cn(styles.button, {
+                                className={cn(styles.button, styles.lastLevel, {
                                     [styles.active]: router.pathname === Route.TRACK
                                 })}
                                 onClick={() => router.push(Route.TRACK)}
@@ -153,8 +153,8 @@ export default function SideBar() {
                                             Scale
                                         </Label>
                                         <NumberInput
-                                            name={Filter.RESIDUAL_ANGLE_MIN}
-                                            value={state.residualAngleMin}
+                                            name={Filter.RESIDUAL_SCALE}
+                                            value={state.residualScale}
                                             onChange={handleChange}
                                         />
                                     </div>

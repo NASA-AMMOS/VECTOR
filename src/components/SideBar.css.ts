@@ -66,6 +66,14 @@ export const button = style({
     },
 });
 
+export const middleLevel = style({
+    marginLeft: '2rem',
+});
+
+export const lastLevel = style({
+    marginLeft: '4rem',
+});
+
 export const active = style({
     backgroundColor: vars.color.background,
 });

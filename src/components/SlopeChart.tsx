@@ -6,6 +6,7 @@ import * as Plot from '@observablehq/plot';
 import { Tiepoint, useData } from '@/stores/DataContext';
 
 import { vars } from '@/utils/theme.css';
+import { Pixel } from '@/utils/helpers';
 import * as styles from '@/components/SlopeChart.css';
 
 const baseVector = new Vector2();
@@ -108,6 +109,7 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall, i
             const svg = Plot.plot({
                 style: {
                     height: '100%',
+                    fontSize: Pixel(1.8),
                     backgroundColor: 'transparent',
                 },
                 x: {
@@ -132,18 +134,6 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall, i
                         strokeWidth: 5,
                         strokeOpacity: (d: Residual) => d.decreased ? 0.3 : 1,
                     }),
-                    Plot.text(residuals, Plot.selectFirst({
-                        x: 'group',
-                        y: 'residual',
-                        z: 'tiepoint',
-                        text: '',
-                    })),
-                    Plot.text(residuals, Plot.selectLast({
-                        x: 'group',
-                        y: 'residual',
-                        z: 'tiepoint',
-                        text: '',
-                    })),
                     Plot.ruleX(['Initial'], { stroke: vars.color.initial, strokeWidth: 5 }),
                     Plot.ruleX(['Final'], { stroke: vars.color.final, strokeWidth: 5 }),
                 ],
