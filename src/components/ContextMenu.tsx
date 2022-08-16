@@ -14,31 +14,37 @@ const parser = new DOMParser();
 const serializer = new XMLSerializer();
 
 export default function ContextMenu({ state }: ContextMenuProps) {
-    const { tiepointsFile, setEditHistory } = useData();
+    const { tiepointsFile, editHistory, setEditHistory } = useData();
 
     const container = useRef<HTMLDivElement>(null);
 
     async function handleTrackDelete() {
         if (tiepointsFile && state.data && typeof state.data === 'number') {
+            const trackIds = [...editHistory.map((e) => e.id), state.data];
+
             const xml = parser.parseFromString(tiepointsFile, 'application/xml');
             const tiepoints = xml.querySelectorAll('tie');
+
             for (const tiepoint of tiepoints) {
                 const track = tiepoint.querySelector('track');
                 if (track) {
                     const trackId = track.getAttribute('id');
-                    if (trackId && Number(trackId) === state.data) {
+                    if (trackId && trackIds.includes(Number(trackId))) {
                         tiepoint.remove();
                     }
                 }
             }
+
             const xmlString = serializer.serializeToString(xml);
             const blob = new Blob([xmlString], { type: 'application/xml' });
+
             try {
                 await fileSave(blob, { fileName: `tiepoints_${Date.now()}.xml`, extensions: ['.xml'] });
             } catch (err) {
                 console.error(err);
                 return;
             }
+
             setEditHistory((prevState) => [...prevState, {
                 id: state.data,
                 type: EditType.TRACK,

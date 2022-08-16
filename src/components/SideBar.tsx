@@ -5,6 +5,7 @@ import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import NumberInput from '@/components/NumberInput';
 import Radio from '@/components/Radio';
+import EditModal from '@/components/EditModal';
 
 import { Route, useRouter } from '@/stores/RouterContext';
 import { Filter, useTools } from '@/stores/ToolsContext';
@@ -32,11 +33,6 @@ export default function SideBar() {
                     <h1 className={styles.header}>
                         VECTOR
                     </h1>
-                    {editHistory.length > 0 && (
-                        <p className={cn(styles.item, styles.edited)}>
-                            Edited
-                        </p>
-                    )}
                     <div className={styles.section}>
                         <button
                             className={cn(styles.button, {
@@ -198,36 +194,9 @@ export default function SideBar() {
                             Edit History
                         </button>
                     )}
-                    <button className={cn(styles.button, styles.active)}>
-                        Files
-                    </button>
                 </div>
             </nav>
-            {activeHistoryModal && (
-                <>
-                    <div className={styles.shadow} />
-                    <div className={styles.modal}>
-                        <div className={styles.top}>
-                            <h2 className={styles.header}>
-                                Edit History
-                            </h2>
-                            <div className={styles.close} onClick={handleHistoryClick}>
-                                +
-                            </div>
-                        </div>
-                        <div className={styles.edits}>
-                            {editHistory.map(({ id, type, operation }) => (
-                                <p
-                                    key={`${type}_${id}_${operation}`}
-                                    className={styles.edit}
-                                >
-                                    &gt; {type} {operation} {id}
-                                </p>
-                            ))}
-                        </div>
-                    </div>
-                </>
-            )}
+            {activeHistoryModal && <EditModal handeClose={handleHistoryClick} />}
         </>
     );
 }

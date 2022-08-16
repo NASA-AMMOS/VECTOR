@@ -6,6 +6,7 @@ import ActiveImageView from '@/components/ActiveImageView';
 import ActiveTrackView from '@/components/ActiveTrackView';
 import SideBar from '@/components/SideBar';
 import ContextMenu from '@/components/ContextMenu';
+import EditBanner from '@/components/EditBanner';
 
 import { Route, useRouter } from '@/stores/RouterContext';
 import { useData } from '@/stores/DataContext';
@@ -24,7 +25,7 @@ export interface ContextMenuState {
 export default function App() {
     const router = useRouter();
 
-    const { tiepoints, cameras, vicar, activeImage, activeTrack } = useData();
+    const { tiepoints, cameras, vicar, activeImage, activeTrack, editHistory } = useData();
 
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
         isEnabled: false,
@@ -63,6 +64,7 @@ export default function App() {
                     <ActiveImageView contextMenu={contextMenu} setContextMenu={setContextMenu} />
                     <ActiveTrackView contextMenu={contextMenu} setContextMenu={setContextMenu} />
                     {contextMenu.isEnabled && <ContextMenu state={contextMenu} />}
+                    {editHistory.length > 0 && <EditBanner />}
                 </main>
             )}
         </>
