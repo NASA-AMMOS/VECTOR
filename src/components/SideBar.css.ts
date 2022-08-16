@@ -4,7 +4,6 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     display: 'inline-flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
     height: '100vh',
     width: vars.size.sidebar,
     fontSize: '1.6rem',
@@ -79,6 +78,16 @@ export const middleLevel = style({
 
 export const lastLevel = style({
     marginLeft: '4rem',
+});
+
+export const text = style({
+    fontSize: '1.2rem',
+
+    selectors: {
+        '&:not(:last-child)': {
+            paddingBottom: '1rem',
+        },
+    },
 });
 
 export const active = style({
