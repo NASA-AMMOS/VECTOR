@@ -14,7 +14,7 @@ export default function Checkbox({ name, checked, onChange, isInverted, children
     return (
         <div className={styles.container}>
             <input
-                className={cn(styles.input, { [styles.inverted]: isInverted })}
+                className={styles.input}
                 id={name}
                 type="checkbox"
                 name={name}
@@ -28,6 +28,7 @@ export default function Checkbox({ name, checked, onChange, isInverted, children
             >
                 {children}
             </label>
+            <span className={cn(styles.circle, { [styles.inverted]: isInverted })} />
         </div>
     );
 }

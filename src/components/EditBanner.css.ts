@@ -10,5 +10,5 @@ export const container = style({
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     color: vars.color.white,
     fontSize: '1.2rem',
-    fontStyle: 'italic',
+    textAlign: 'center',
 });

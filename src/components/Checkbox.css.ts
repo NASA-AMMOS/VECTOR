@@ -9,49 +9,58 @@ export const container = style({
 
     selectors: {
         '&:not(:last-of-type)': {
-            marginRight: '1rem',
+            marginBottom: '0.4rem',
         },
     },
 });
 
 export const input = style({
     appearance: 'none',
-    height: '1.4rem',
-    width: '1.4rem',
+    position: 'relative',
+    height: '1.6rem',
+    width: '1.6rem',
     marginRight: '0.4rem',
     transition: 'all 0.3s',
-    backgroundColor: vars.color.white,
     borderRadius: '0.2rem',
-    border: `0.1rem solid ${vars.color.initial}`,
+    border: `0.1rem solid ${vars.color.gray}`,
     cursor: 'pointer',
 
     selectors: {
-        '&::before': {
+        '&::after': {
             content: '""',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             display: 'inline-block',
-            height: 'inherit',
-            width: 'inherit',
-            backgroundColor: 'transparent',
-            borderRadius: '0.2rem',
+            height: '1rem',
+            width: '1rem',
+            transition: 'all 0.3s',
         },
-        '&:checked': {
-            backgroundColor: vars.color.initial,
-        },
-    },
-});
-
-export const inverted = style({
-    border: `0.1rem solid ${vars.color.final}`,
-
-    selectors: {
-        '&:checked': {
-            backgroundColor: vars.color.final,
+        '&:checked::after': {
+            backgroundColor: vars.color.gray,
         },
     },
 });
 
 export const label = style({
-    flex: '1',
-    display: 'flex',
     cursor: 'pointer',
+});
+
+export const circle = style({
+    display: 'inline-block',
+    height: '0.8rem',
+    width: '0.8rem',
+    borderRadius: '50%',
+    backgroundColor: vars.color.initial,
+
+    selectors: {
+        '&:last-child': {
+            marginLeft: '0.4rem',
+        },
+    },
+})
+
+export const inverted = style({
+    backgroundColor: vars.color.final,
 });

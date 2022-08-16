@@ -60,11 +60,12 @@ export const button = style({
 export const link = style({
     display: 'block',
     color: vars.color.black,
+    opacity: 0.3,
     transition: 'opacity 0.1s',
 
     selectors: {
         '&:hover': {
-            opacity: 0.7,
+            opacity: 1,
         },
         '&:not(:last-child)': {
             marginBottom: '2rem',
@@ -81,5 +82,5 @@ export const lastLevel = style({
 });
 
 export const active = style({
-    borderBottom: `0.3rem solid ${vars.color.background}`,
+    opacity: 1,
 });

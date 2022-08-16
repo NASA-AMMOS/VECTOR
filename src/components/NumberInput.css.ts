@@ -18,9 +18,8 @@ export const input = style({
     outline: 'none',
     height: '2rem',
     width: '6rem',
-    padding: '0 0.5rem',
-    marginRight: '0.6rem',
-    backgroundColor: vars.color.offWhite,
-    border: 'none',
+    marginRight: '0.5rem',
+    padding: '1rem 0.5rem',
+    border: `0.2rem solid ${vars.color.offWhite}`,
     borderRadius: '0.4rem',
 });
