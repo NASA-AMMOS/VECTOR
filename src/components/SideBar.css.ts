@@ -19,21 +19,21 @@ export const section = style({
 });
 
 export const header = style({
-    padding: '2rem 2rem 2rem 3rem',
+    padding: '2rem',
     borderBottom: `0.1rem solid ${vars.color.background}`,
     fontWeight: 500,
     fontSize: '2.5rem',
 });
 
 export const subheader = style({
-    padding: '0 0 2rem 1rem',
+    paddingBottom: '2rem',
     fontWeight: 500,
     fontSize: '1.8rem',
 });
 
 export const item = style({
     display: 'block',
-    padding: '0 0 2rem 1rem',
+    paddingBottom: '2rem',
 
     selectors: {
         '&:last-child': {
@@ -45,6 +45,7 @@ export const item = style({
 export const button = style({
     display: 'block',
     padding: '1rem',
+    backgroundColor: vars.color.background,
     color: vars.color.black,
     borderRadius: '0.4rem',
     transition: 'opacity 0.1s',
@@ -52,6 +53,21 @@ export const button = style({
     selectors: {
         '&:hover': {
             opacity: 0.7,
+        },
+    },
+});
+
+export const link = style({
+    display: 'block',
+    color: vars.color.black,
+    transition: 'opacity 0.1s',
+
+    selectors: {
+        '&:hover': {
+            opacity: 0.7,
+        },
+        '&:not(:last-child)': {
+            marginBottom: '2rem',
         },
     },
 });
@@ -65,5 +81,5 @@ export const lastLevel = style({
 });
 
 export const active = style({
-    backgroundColor: vars.color.background,
+    borderBottom: `0.3rem solid ${vars.color.background}`,
 });

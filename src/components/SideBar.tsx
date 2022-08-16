@@ -35,7 +35,7 @@ export default function SideBar() {
                     </h1>
                     <div className={styles.section}>
                         <button
-                            className={cn(styles.button, {
+                            className={cn(styles.link, {
                                 [styles.active]: router.pathname === Route.CAMERAS
                             })}
                             onClick={() => router.push(Route.CAMERAS)}
@@ -43,7 +43,7 @@ export default function SideBar() {
                             Scene
                         </button>
                         <button
-                            className={cn(styles.button, {
+                            className={cn(styles.link, {
                                 [styles.active]: router.pathname === Route.STATISTICS
                             })}
                             onClick={() => router.push(Route.STATISTICS)}
@@ -51,7 +51,7 @@ export default function SideBar() {
                             Overview
                         </button>
                         <button
-                            className={cn(styles.button, {
+                            className={cn(styles.link, {
                                 [styles.active]: router.pathname === Route.IMAGES
                             })}
                             onClick={() => router.push(Route.IMAGES)}
@@ -60,7 +60,7 @@ export default function SideBar() {
                         </button>
                         {activeImage && (
                             <button
-                                className={cn(styles.button, styles.middleLevel, {
+                                className={cn(styles.link, styles.middleLevel, {
                                     [styles.active]: router.pathname === Route.IMAGE
                                 })}
                                 onClick={() => router.push(Route.IMAGE)}
@@ -70,7 +70,7 @@ export default function SideBar() {
                         )}
                         {activeImage && activeTrack && (
                             <button
-                                className={cn(styles.button, styles.lastLevel, {
+                                className={cn(styles.link, styles.lastLevel, {
                                     [styles.active]: router.pathname === Route.TRACK
                                 })}
                                 onClick={() => router.push(Route.TRACK)}
@@ -188,7 +188,7 @@ export default function SideBar() {
                 <div className={styles.section}>
                     {editHistory.length > 0 && (
                         <button
-                            className={cn(styles.button, styles.active)}
+                            className={styles.button}
                             onClick={handleHistoryClick}
                         >
                             Edit History
