@@ -22,6 +22,7 @@ export const panel = style({
 export const column = style({
     gridColumn: '5 / -1',
     display: 'grid',
+    gridTemplateRows: 'minmax(0, 1fr) 2fr 1fr',
     gridGap: '1rem',
     height: 'calc(100vh - 2rem)',
     padding: '1rem',
@@ -40,7 +41,3 @@ export const bar = style({
     marginBottom: '1rem',
     overflow: 'auto',
 });
-
-export const item = style({
-    height: 'calc((100vh - 2rem) / 3 - 2rem)',
-})

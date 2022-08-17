@@ -42,30 +42,24 @@ export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveT
                         <CameraViewport />
                     </div>
                     <div className={styles.column}>
-                        <div className={styles.item}>
-                            <RadialChart
-                                state={state}
-                                activeImage={activeImage}
-                                activeTrack={activeTrack}
-                                isEdited
-                            />
-                        </div>
-                        <div className={styles.item}>
-                            <ResidualChart
-                                state={state}
-                                activeImage={activeImage}
-                                activeTrack={activeTrack}
-                                isEdited
-                            />
-                        </div>
-                        <div className={styles.item}>
-                            <SlopeChart
-                                state={state}
-                                activeImage={activeImage}
-                                activeTrack={activeTrack}
-                                isEdited
-                            />
-                        </div>
+                        <RadialChart
+                            state={state}
+                            activeImage={activeImage}
+                            activeTrack={activeTrack}
+                            isEdited
+                        />
+                        <ResidualChart
+                            state={state}
+                            activeImage={activeImage}
+                            activeTrack={activeTrack}
+                            isEdited
+                        />
+                        <SlopeChart
+                            state={state}
+                            activeImage={activeImage}
+                            activeTrack={activeTrack}
+                            isEdited
+                        />
                     </div>
                 </section>
             )}

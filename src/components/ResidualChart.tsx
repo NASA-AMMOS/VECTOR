@@ -134,13 +134,15 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
                 },
                 x: {
                     label: 'Pixels (px)',
-                    labelOffset: Pixel(6),
+                    labelOffset: Pixel(4),
                     ticks: 5,
                     domain: [0, maxResidual],
                     nice: true,
                 },
                 y: {
-                    axis: null,
+                    label: 'Count',
+                    ticks: 5,
+                    nice: true,
                 },
                 marks: [
                     Plot.rectY(residuals, Plot.binX(
@@ -167,6 +169,7 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
                             filter: (d: Residual) => !d.isInitial,
                         }
                     )),
+                    Plot.ruleX([0]),
                     Plot.ruleY([0]),
                     Plot.text(residuals, {
                         x: 'distance',

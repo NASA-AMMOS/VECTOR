@@ -17,8 +17,8 @@ export const container = style({
 export const input = style({
     appearance: 'none',
     position: 'relative',
-    height: '1.6rem',
-    width: '1.6rem',
+    height: '1.4rem',
+    width: '1.4rem',
     marginRight: '0.4rem',
     transition: 'all 0.3s',
     borderRadius: '0.2rem',
