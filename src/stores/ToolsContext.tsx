@@ -1,6 +1,10 @@
-import { createContext, useContext, useReducer } from 'react';
+import { createContext, useContext, useReducer, useEffect } from 'react';
+
+import { useRouter } from '@/stores/RouterContext';
+import { useData } from '@/stores/DataContext';
 
 export enum Filter {
+    RESET = 'RESET',
     INITIAL_RESIDUAL = 'INITIAL_RESIDUAL',
     FINAL_RESIDUAL = 'FINAL_RESIDUAL',
     RELATIVE_AXIS = 'RELATIVE_AXIS',
@@ -61,8 +65,8 @@ const initialState: State = {
     isRelative: true,
     residualMin: null,
     residualMax: null,
-    residualAngleMin: null,
-    residualAngleMax: null,
+    residualAngleMin: 0,
+    residualAngleMax: 360,
     residualScale: 1,
     residualSort: {
         field: ResidualSortField.FINAL,
@@ -72,6 +76,8 @@ const initialState: State = {
 
 function reducer(state: State, action: Action) {
     switch (action.type) {
+        case Filter.RESET:
+            return { ...initialState };
         case Filter.INITIAL_RESIDUAL:
             return { ...state, isInitial: !state.isInitial };
         case Filter.FINAL_RESIDUAL:
@@ -106,12 +112,34 @@ export function useTools() {
 }
 
 export default function ProvideTools({ children }: ProvideToolsProps) {
+    const router = useRouter();
+
+    const { initialResidualBounds, finalResidualBounds } = useData();
+
     const [state, dispatch] = useReducer(reducer, initialState);
 
     function handleChange(event: React.ChangeEvent) {
         const target = event.currentTarget as (HTMLInputElement | HTMLSelectElement);
         dispatch({ type: target.name, data: target.value });
     }
+
+    // Reset filters when the route changes.
+    useEffect(() => {
+        dispatch({ type: Filter.RESET, data: '' });
+    }, [router.pathname]);
+
+    // Set default values for residual length for filters.
+    useEffect(() => {
+        dispatch({
+            type: Filter.RESIDUAL_LENGTH_MIN,
+            data: Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1)
+        });
+        console.log(Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1))
+        dispatch({
+            type: Filter.RESIDUAL_LENGTH_MAX,
+            data: Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]).toFixed(1)
+        });
+    }, [initialResidualBounds, finalResidualBounds]);
 
     return (
         <ToolsContext.Provider value={{ state, handleChange }}>

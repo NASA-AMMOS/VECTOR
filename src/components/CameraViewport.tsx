@@ -197,15 +197,15 @@ function Scene() {
             <Instances>
                 <sphereGeometry args={[0.01]} />
                 <meshLambertMaterial color={theme.color.initialHex} />
-                {state.isInitial && initialPoints.map((p) => (
-                    <Instance position={p} />
+                {state.isInitial && initialPoints.map((p, i) => (
+                    <Instance key={i} position={p} />
                 ))}
             </Instances>
             <Instances>
                 <sphereGeometry args={[0.01]} />
                 <meshLambertMaterial color={theme.color.finalHex} />
-                {state.isFinal && finalPoints.map((p) => (
-                    <Instance position={p} />
+                {state.isFinal && finalPoints.map((p, i) => (
+                    <Instance key={i} position={p} />
                 ))}
             </Instances>
             {mesh && <primitive object={obj} />}

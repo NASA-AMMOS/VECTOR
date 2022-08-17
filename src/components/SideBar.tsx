@@ -172,6 +172,7 @@ export default function SideBar() {
                                     <NumberInput
                                         name={Filter.RESIDUAL_SCALE}
                                         value={state.residualScale}
+                                        step={0.1}
                                         onChange={handleChange}
                                     />
                                 </div>
