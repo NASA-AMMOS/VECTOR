@@ -46,19 +46,19 @@ export default function SideBar() {
                 <div className={styles.section}>
                     <button
                         className={cn(styles.link, {
-                            [styles.active]: router.pathname === Route.CAMERAS
-                        })}
-                        onClick={() => router.push(Route.CAMERAS)}
-                    >
-                        Scene
-                    </button>
-                    <button
-                        className={cn(styles.link, {
                             [styles.active]: router.pathname === Route.STATISTICS
                         })}
                         onClick={() => router.push(Route.STATISTICS)}
                     >
                         Overview
+                    </button>
+                    <button
+                        className={cn(styles.link, {
+                            [styles.active]: router.pathname === Route.CAMERAS
+                        })}
+                        onClick={() => router.push(Route.CAMERAS)}
+                    >
+                        Scene
                     </button>
                     <button
                         className={cn(styles.link, {
