@@ -3,7 +3,16 @@ import { fileOpen } from 'browser-fs-access';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { Canvas, createPortal, useLoader, useFrame, useThree, extend } from '@react-three/fiber';
-import { OrbitControls, OrthographicCamera, Instances, Instance, useContextBridge, useCamera, useBounds } from '@react-three/drei';
+import {
+    OrbitControls,
+    PerspectiveCamera,
+    OrthographicCamera,
+    Instances,
+    Instance,
+    useContextBridge,
+    useCamera,
+    useBounds,
+} from '@react-three/drei';
 
 import { ToolsContext, useTools } from '@/stores/ToolsContext';
 import { Tiepoint, Camera, CameraModel, DataContext, useData } from '@/stores/DataContext';
@@ -64,6 +73,8 @@ function Scene() {
     const { scene } = useThree();
 
     const obj = mesh && useLoader(OBJLoader, mesh);
+
+    const virtualCamera = useRef<THREE.Camera>(null!);
 
     const meshes = useRef<THREE.Group>(null!);
 
@@ -193,24 +204,25 @@ function Scene() {
         <>
             <ambientLight />
             <color attach="background" args={[theme.color.white]} />
+            <PerspectiveCamera makeDefault ref={virtualCamera} position={[0, 0, initialPoints[0][2] - 10]} />
             <group ref={meshes} />
             <Instances>
-                <sphereGeometry args={[0.01]} />
+                <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.initialHex} />
                 {state.isInitial && initialPoints.map((p, i) => (
                     <Instance key={i} position={p} />
                 ))}
             </Instances>
             <Instances>
-                <sphereGeometry args={[0.01]} />
+                <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.finalHex} />
                 {state.isFinal && finalPoints.map((p, i) => (
                     <Instance key={i} position={p} />
                 ))}
             </Instances>
             {mesh && <primitive object={obj} />}
-            <gridHelper args={[1000, 1000]} position={finalPoints[0]} rotation={[Math.PI / 2, 0, 0]} />
-            <OrbitControls makeDefault target={initialPoints[0]} />
+            <gridHelper args={[1000, 1000]} rotation={[Math.PI / 2, 0, 0]} />
+            <OrbitControls camera={virtualCamera.current} target={initialPoints[0]} />
             {/* @ts-ignore: https://github.com/pmndrs/react-three-fiber/issues/925 */}
             <ViewCube />
         </>
