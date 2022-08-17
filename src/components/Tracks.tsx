@@ -85,7 +85,7 @@ function Stage({ state, activeTrack }: StageProps) {
                 const { leftId, rightId, leftPixel, rightPixel, initialResidual, finalResidual } = tiepoint;
 
                 // Find the correct images for this tiepoint.
-                let leftImage = images.find((image) => image[0] === leftId)![1];
+                const leftImage = images.find((image) => image[0] === leftId)![1];
                 const rightImage = images.find((image) => image[0] === rightId)![1];
 
                 // Get nearest tiepoints based on offset per image.
