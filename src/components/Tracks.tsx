@@ -7,6 +7,7 @@ import SlopeChart from '@/components/SlopeChart';
 import { ContextMenuState } from '@/App';
 import { Route, useRouter } from '@/stores/RouterContext';
 import { Tiepoint, useData } from '@/stores/DataContext';
+import { ResidualSort, ResidualSortField, ResidualSortDirection } from '@/stores/ToolsContext';
 
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
@@ -19,6 +20,7 @@ interface TrackState {
     isRelative: boolean;
     residualMin: number | null;
     residualMax: number | null;
+    residualSort: ResidualSort;
 };
 
 interface StageProps {
@@ -301,15 +303,44 @@ export function Track({ state, contextMenu, setContextMenu, activeImage, activeT
 }
 
 export default function Tracks({ state, contextMenu, setContextMenu }: TracksProps) {
-    const { imageTiepoints, activeImage } = useData();
+    const { tiepoints, imageTiepoints, activeImage } = useData();
 
     const activeTracks = useMemo<number[]>(() => {
         if (Object.keys(imageTiepoints).length === 0 || !activeImage) {
             return [];
-        } else {
-            return [...new Set(imageTiepoints[activeImage].map((t) => t.trackId))];
         }
-    }, [imageTiepoints, activeImage]);
+
+        const trackIds = [...new Set(imageTiepoints[activeImage].map((t) => t.trackId))].sort((a, b) => {
+            const tiepointsA = tiepoints.filter((t) => t.trackId === a);
+            const tiepointsB = tiepoints.filter((t) => t.trackId === b);
+
+            if (state.residualSort.field === ResidualSortField.INITIAL) {
+                const maxResidualA = Math.max(...tiepointsA.map((t) => Number(baseVector.distanceTo(new Vector2(...t.initialResidual)).toFixed(1))));
+                const maxResidualB = Math.max(...tiepointsB.map((t) => Number(baseVector.distanceTo(new Vector2(...t.initialResidual)).toFixed(1))));
+                if (
+                    (state.residualSort.direction === ResidualSortDirection.INCREASING && maxResidualA < maxResidualB) ||
+                    (state.residualSort.direction === ResidualSortDirection.DECREASING && maxResidualA > maxResidualB)
+                ) {
+                    return -1;
+                }
+                return 1;
+            } else if (state.residualSort.field === ResidualSortField.FINAL) {
+                const maxResidualA = Math.max(...tiepointsA.map((t) => Number(baseVector.distanceTo(new Vector2(...t.finalResidual)).toFixed(1))));
+                const maxResidualB = Math.max(...tiepointsB.map((t) => Number(baseVector.distanceTo(new Vector2(...t.finalResidual)).toFixed(1))));
+                if (
+                    (state.residualSort.direction === ResidualSortDirection.INCREASING && maxResidualA < maxResidualB) ||
+                    (state.residualSort.direction === ResidualSortDirection.DECREASING && maxResidualA > maxResidualB)
+                ) {
+                    return -1;
+                }
+                return 1;
+            }
+
+            return 0;
+        });
+
+        return trackIds;
+    }, [state, imageTiepoints, activeImage]);
 
     return (
         <div className={styles.container}>

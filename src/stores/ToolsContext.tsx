@@ -24,7 +24,7 @@ export enum ResidualSortDirection {
     DECREASING = 'DECREASING',
 };
 
-interface ResidualSort {
+export interface ResidualSort {
     field: string;
     direction: string;
 };
