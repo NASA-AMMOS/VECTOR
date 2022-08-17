@@ -10,6 +10,23 @@ export enum Filter {
     RESIDUAL_ANGLE_MIN = 'RESIDUAL_ANGLE_MIN',
     RESIDUAL_ANGLE_MAX = 'RESIDUAL_ANGLE_MAX',
     RESIDUAL_SCALE = 'RESIDUAL_SCALE',
+    RESIDUAL_SORT_FIELD = 'RESIDUAL_SORT_FIELD',
+    RESIDUAL_SORT_DIRECTION = 'RESIDUAL_SORT_DIRECTION',
+};
+
+export enum ResidualSortField {
+    INITIAL = 'INITIAL',
+    FINAL = 'FINAL',
+};
+
+export enum ResidualSortDirection {
+    INCREASING = 'INCREASING',
+    DECREASING = 'DECREASING',
+};
+
+interface ResidualSort {
+    field: string;
+    direction: string;
 };
 
 interface State {
@@ -21,6 +38,7 @@ interface State {
     residualAngleMin: number | null;
     residualAngleMax: number | null;
     residualScale: number;
+    residualSort: ResidualSort;
 };
 
 interface Action {
@@ -30,7 +48,7 @@ interface Action {
 
 interface Tools {
     state: State;
-    handleChange: (event: React.FormEvent<HTMLInputElement>) => void;
+    handleChange: (event: React.ChangeEvent) => void;
 };
 
 interface ProvideToolsProps {
@@ -46,6 +64,10 @@ const initialState: State = {
     residualAngleMin: null,
     residualAngleMax: null,
     residualScale: 1,
+    residualSort: {
+        field: ResidualSortField.FINAL,
+        direction: ResidualSortDirection.DECREASING,
+    },
 };
 
 function reducer(state: State, action: Action) {
@@ -68,6 +90,10 @@ function reducer(state: State, action: Action) {
             return { ...state, residualAngleMax: Number(action.data) };
         case Filter.RESIDUAL_SCALE:
             return { ...state, residualScale: action.data ? Number(action.data) : 1 };
+        case Filter.RESIDUAL_SORT_FIELD:
+            return { ...state, residualSort: { ...state.residualSort, field: action.data } };
+        case Filter.RESIDUAL_SORT_DIRECTION:
+            return { ...state, residualSort: { ...state.residualSort, direction: action.data } };
         default:
             return state;
     }
@@ -82,8 +108,9 @@ export function useTools() {
 export default function ProvideTools({ children }: ProvideToolsProps) {
     const [state, dispatch] = useReducer(reducer, initialState);
 
-    function handleChange(event: React.FormEvent<HTMLInputElement>) {
-        dispatch({ type: event.currentTarget.name, data: event.currentTarget.value });
+    function handleChange(event: React.ChangeEvent) {
+        const target = event.currentTarget as (HTMLInputElement | HTMLSelectElement);
+        dispatch({ type: target.name, data: target.value });
     }
 
     return (

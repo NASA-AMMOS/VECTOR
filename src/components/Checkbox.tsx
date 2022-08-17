@@ -5,7 +5,7 @@ import * as styles from '@/components/Checkbox.css';
 interface CheckboxProps {
     name: string;
     checked: boolean;
-    onChange: (event: React.FormEvent<HTMLInputElement>) => void;
+    onChange: (event: React.ChangeEvent) => void;
     children: React.ReactNode | React.ReactNode[];
     isInverted?: boolean;
 };

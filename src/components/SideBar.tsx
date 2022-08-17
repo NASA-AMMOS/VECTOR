@@ -5,10 +5,11 @@ import Label from '@/components/Label';
 import Checkbox from '@/components/Checkbox';
 import NumberInput from '@/components/NumberInput';
 import Radio from '@/components/Radio';
+import Select from '@/components/Select';
 import EditModal from '@/components/EditModal';
 
 import { Route, useRouter } from '@/stores/RouterContext';
-import { Filter, useTools } from '@/stores/ToolsContext';
+import { Filter, ResidualSortField, ResidualSortDirection, useTools } from '@/stores/ToolsContext';
 import { useData } from '@/stores/DataContext';
 
 import * as styles from '@/components/SideBar.css';
@@ -176,6 +177,39 @@ export default function SideBar() {
                                 </div>
                             )}
                         </>
+                    )}
+                    {[Route.IMAGES, Route.IMAGE].includes(router.pathname) && (
+                        <div className={styles.item}>
+                            <Label>
+                                Sort
+                            </Label>
+                            <Select
+                                name={Filter.RESIDUAL_SORT_FIELD}
+                                label="By"
+                                value={state.residualSort.field}
+                                onChange={handleChange}
+                            >
+                                <option value={ResidualSortField.INITIAL}>
+                                    Initial
+                                </option>
+                                <option value={ResidualSortField.FINAL}>
+                                    Final
+                                </option>
+                            </Select>
+                            <Select
+                                name={Filter.RESIDUAL_SORT_DIRECTION}
+                                label="As"
+                                value={state.residualSort.direction}
+                                onChange={handleChange}
+                            >
+                                <option value={ResidualSortDirection.INCREASING}>
+                                    Increasing
+                                </option>
+                                <option value={ResidualSortDirection.DECREASING}>
+                                    Decreasing
+                                </option>
+                            </Select>
+                        </div>
                     )}
                 </div>
                 {[Route.IMAGES, Route.IMAGE, Route.TRACK].includes(router.pathname) && (

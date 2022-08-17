@@ -3,7 +3,7 @@ import * as styles from '@/components/NumberInput.css';
 interface NumberInputProps {
     name: string;
     value: number | null;
-    onChange: (event: React.FormEvent<HTMLInputElement>) => void;
+    onChange: (event: React.ChangeEvent) => void;
     children?: React.ReactNode;
 };
 
