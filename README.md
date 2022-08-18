@@ -66,3 +66,15 @@ npm install
 ```bash
 npm run dev
 ```
+
+## Major Dependencies
+
+- [React](https://reactjs.org)
+- [Three.js + React Three Fiber](https://github.com/pmndrs/react-three-fiber)
+- [D3.js](https://d3js.org)
+- [Observable Plot](https://github.com/observablehq/plot)
+- [Vanilla Extract](https://vanilla-extract.style)
+
+## Authors
+
+Kazi Jawad, Racquel Fygenson, Isabel Li
