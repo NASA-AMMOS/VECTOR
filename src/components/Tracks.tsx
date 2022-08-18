@@ -100,7 +100,6 @@ function Stage({ state, activeTrack }: StageProps) {
 
             for (const residual of imageResiduals) {
                 const { id, pixel, initialResidual, finalResidual } = residual;
-                console.log(id, pixel, initialResidual, finalResidual)
 
                 // Find the correct image for this tiepoint.
                 const image = images.find((i) => i[0] === id)![1];
@@ -214,6 +213,9 @@ function Stage({ state, activeTrack }: StageProps) {
             ctx.arc(...position, 15, 0, Math.PI * 2, true);
             ctx.fill();
         }
+
+        // Reset alpha.
+        ctx.globalAlpha = 1;
     }
 
     useEffect(() => {
