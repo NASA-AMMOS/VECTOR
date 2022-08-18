@@ -129,12 +129,12 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
             const svg = Plot.plot({
                 style: {
                     height: '100%',
-                    fontSize: Pixel(1.4),
+                    fontSize: Pixel(1),
                     backgroundColor: 'transparent',
                 },
                 x: {
                     label: 'Pixels (px)',
-                    labelOffset: Pixel(4),
+                    labelOffset: Pixel(3),
                     ticks: 5,
                     domain: [0, maxResidual],
                     nice: true,

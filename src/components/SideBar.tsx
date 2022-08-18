@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { fileOpen } from 'browser-fs-access';
 import cn from 'classnames';
 
 import Label from '@/components/Label';
@@ -22,16 +23,28 @@ export default function SideBar() {
     const {
         tiepoints,
         images,
+        mesh,
         activeImage,
         activeTrack,
         initialResidualBounds,
         finalResidualBounds,
-        editHistory
+        editHistory,
+        setMesh,
     } = useData();
 
     const [activeHistoryModal, setActiveHistoryModal] = useState(false);
 
     const tracks = useMemo(() => [...new Set(tiepoints.map((t) => t.trackId))], [tiepoints]);
+
+    async function handleMesh() {
+        try {
+            const file = await fileOpen();
+            const url = URL.createObjectURL(file);
+            setMesh(url);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     function handleHistoryClick() {
         setActiveHistoryModal((prevState) => !prevState);
@@ -89,6 +102,46 @@ export default function SideBar() {
                         </button>
                     )}
                 </div>
+                {[Route.CAMERAS, Route.TRACK].includes(router.pathname) && (
+                    <div className={styles.section}>
+                        <h2 className={styles.subheader}>
+                            Scene
+                        </h2>
+                        <div className={styles.item}>
+                            <button
+                                className={cn(styles.button, styles.small)}
+                                onClick={handleMesh}
+                            >
+                                Upload Mesh
+                            </button>
+                        </div>
+                        <div className={styles.item}>
+                            <Checkbox
+                                name={Filter.SCENE_CAMERA}
+                                checked={state.isCamera}
+                                onChange={handleChange}
+                            >
+                                Camera
+                            </Checkbox>
+                            <Checkbox
+                                name={Filter.SCENE_POINT}
+                                checked={state.isPoint}
+                                onChange={handleChange}
+                            >
+                                Point
+                            </Checkbox>
+                            {mesh && (
+                                <Checkbox
+                                    name={Filter.SCENE_MESH}
+                                    checked={state.isMesh}
+                                    onChange={handleChange}
+                                >
+                                    Mesh
+                                </Checkbox>
+                            )}
+                        </div>
+                    </div>
+                )}
                 <div className={styles.section}>
                     <h2 className={styles.subheader}>
                         Residuals
@@ -112,6 +165,7 @@ export default function SideBar() {
                             name={Filter.INITIAL_RESIDUAL}
                             checked={state.isInitial}
                             onChange={handleChange}
+                            isCircled
                         >
                             Initial
                         </Checkbox>
@@ -119,6 +173,7 @@ export default function SideBar() {
                             name={Filter.FINAL_RESIDUAL}
                             checked={state.isFinal}
                             onChange={handleChange}
+                            isCircled
                             isInverted
                         >
                             Final

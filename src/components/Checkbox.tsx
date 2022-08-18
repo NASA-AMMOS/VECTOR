@@ -7,10 +7,11 @@ interface CheckboxProps {
     checked: boolean;
     onChange: (event: React.ChangeEvent) => void;
     children: React.ReactNode | React.ReactNode[];
+    isCircled?: boolean;
     isInverted?: boolean;
 };
 
-export default function Checkbox({ name, checked, onChange, isInverted, children }: CheckboxProps) {
+export default function Checkbox({ name, checked, onChange, isCircled, isInverted, children }: CheckboxProps) {
     return (
         <div className={styles.container}>
             <input
@@ -28,7 +29,9 @@ export default function Checkbox({ name, checked, onChange, isInverted, children
             >
                 {children}
             </label>
-            <span className={cn(styles.circle, { [styles.inverted]: isInverted })} />
+            {isCircled && (
+                <span className={cn(styles.circle, { [styles.inverted]: isInverted })} />
+            )}
         </div>
     );
 }

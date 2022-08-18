@@ -123,8 +123,13 @@ function Scene() {
             meshes.current.clear();
         }
 
-        const newText: JSX.Element[] = [];
+        // Exit early if camera filter is toggled off.
+        if (!state.isCamera) {
+            setText([]);
+            return;
+        }
 
+        const newText: JSX.Element[] = [];
         for (const [index, cameraId] of Object.keys(activeCameras).entries()) {
             const camera = activeCameras[cameraId];
 
@@ -239,14 +244,14 @@ function Scene() {
             <Instances>
                 <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.initialHex} />
-                {state.isInitial && initialPoints.map((p, i) => (
+                {state.isPoint && state.isInitial && initialPoints.map((p, i) => (
                     <Instance key={i} position={p} />
                 ))}
             </Instances>
             <Instances>
                 <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.finalHex} />
-                {state.isFinal && finalPoints.map((p, i) => (
+                {state.isPoint && state.isFinal && finalPoints.map((p, i) => (
                     <Instance key={i} position={p} />
                 ))}
             </Instances>

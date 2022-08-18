@@ -93,3 +93,7 @@ export const text = style({
 export const active = style({
     opacity: 1,
 });
+
+export const small = style({
+    fontSize: '1.2rem',
+});
