@@ -9,6 +9,7 @@ import {
     OrthographicCamera,
     Instances,
     Instance,
+    Text,
     useContextBridge,
     useCamera,
     useBounds,
@@ -78,6 +79,8 @@ function Scene() {
 
     const meshes = useRef<THREE.Group>(null!);
 
+    const [text, setText] = useState<JSX.Element[]>([]);
+
     const activeTiepoints = useMemo<Tiepoint[]>(() => {
         if (!activeTrack) {
             return tiepoints;
@@ -120,7 +123,9 @@ function Scene() {
             meshes.current.clear();
         }
 
-        for (const cameraId of Object.keys(activeCameras)) {
+        const newText: JSX.Element[] = [];
+
+        for (const [index, cameraId] of Object.keys(activeCameras).entries()) {
             const camera = activeCameras[cameraId];
 
             const metadata = getVICARFile(cameraId);
@@ -138,35 +143,43 @@ function Scene() {
             // Apply coordinate transformation to SITE frame.
             if (state.isInitial) {
                 renderCamera(
-                    cameraId,
+                    index,
                     meshes,
                     camera.initial,
                     originOffset,
                     originRotation,
                     theme.color.initialHex,
+                    newText,
+                    true,
                 );
             }
 
             if (state.isFinal) {
                 renderCamera(
-                    cameraId,
+                    index,
                     meshes,
                     camera.final,
                     originOffset,
                     originRotation,
                     theme.color.finalHex,
+                    newText,
+                    false,
                 );
             }
         }
+
+        setText(newText);
     }
 
     function renderCamera(
-        id: string,
+        index: number,
         group: React.MutableRefObject<THREE.Group>,
         model: CameraModel,
         originOffset: THREE.Vector3,
         originRotation: THREE.Quaternion,
         color: string,
+        newText: JSX.Element[],
+        isInitial: boolean,
     ) {
         const C = new THREE.Vector3(...model.C).applyQuaternion(originRotation).add(originOffset);
         const A = new THREE.Vector3(...model.A);
@@ -177,21 +190,38 @@ function Scene() {
 
         A.applyQuaternion(originRotation);
 
+        // Render camera plane.
         const planeMaterial = new THREE.MeshLambertMaterial({ color });
         planeMaterial.side = THREE.DoubleSide;
 
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
         plane.position.copy(C);
-        plane.lookAt(C.clone().add(A));
+        plane.lookAt(C.clone().add(A.clone().multiplyScalar(-1)));
         // plane.rotation.setFromVector3(HxA);
         group.current.add(plane);
 
+        // Render camera look direction.
         const lineMaterial = new THREE.LineBasicMaterial({ color });
 
         const points = [C, C.clone().add(A)];
         const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
         const line = new THREE.Line(lineGeometry, lineMaterial);
         group.current.add(line);
+
+        // Render camera ID.
+        newText.push(
+            <Text
+                key={`${index}_${isInitial ? 'initial' : 'final'}`}
+                position={C}
+                rotation={plane.rotation}
+                color={theme.color.white}
+                anchorX="center"
+                fontSize={0.2}
+                depthOffset={-1}
+            >
+                {index + 1}
+            </Text>
+        );
     }
 
     useEffect(() => {
@@ -220,6 +250,7 @@ function Scene() {
                     <Instance key={i} position={p} />
                 ))}
             </Instances>
+            {text}
             {mesh && <primitive object={obj} />}
             <gridHelper args={[1000, 1000]} rotation={[Math.PI / 2, 0, 0]} />
             <OrbitControls camera={virtualCamera.current} target={initialPoints[0]} />
