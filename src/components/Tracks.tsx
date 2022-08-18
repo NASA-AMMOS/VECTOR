@@ -69,9 +69,25 @@ function Stage({ state, activeTrack }: StageProps) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
 
+            // Calculate image tiepoints without duplicates.
+            const imageResiduals = activeTiepoints.map((t) => [
+                {
+                    id: t.leftId,
+                    pixel: t.leftPixel,
+                    initialResidual: t.initialResidual,
+                    finalResidual: t.finalResidual,
+                },
+                {
+                    id: t.rightId,
+                    pixel: t.rightPixel,
+                    initialResidual: t.initialResidual,
+                    finalResidual: t.finalResidual,
+                },
+            ]).flat().filter((r, index, self) => index === self.findIndex((v) => r.id === v.id));
+
             // Calculate total height from scalable value.
             // Calculate total width from n tiepoints with padding.
-            const width = height * (activeTiepoints.length * 2) + (activeTiepoints.length * 2 - 1) * padding;
+            const width = height * (imageResiduals.length) + (imageResiduals.length - 1) * padding;
             canvas.height = height;
             canvas.width = width;
 
@@ -81,35 +97,29 @@ function Stage({ state, activeTrack }: StageProps) {
 
             // Go through each tiepoint and draw both images related to each tiepoint.
             let count = 0;
-            for (const tiepoint of activeTiepoints) {
-                const { leftId, rightId, leftPixel, rightPixel, initialResidual, finalResidual } = tiepoint;
 
-                // Find the correct images for this tiepoint.
-                const leftImage = images.find((image) => image[0] === leftId)![1];
-                const rightImage = images.find((image) => image[0] === rightId)![1];
+            for (const residual of imageResiduals) {
+                const { id, pixel, initialResidual, finalResidual } = residual;
+                console.log(id, pixel, initialResidual, finalResidual)
+
+                // Find the correct image for this tiepoint.
+                const image = images.find((i) => i[0] === id)![1];
 
                 // Get nearest tiepoints based on offset per image.
-                const leftImageTiepoints = imageTiepoints[leftId].filter((t) => {
-                    const pixel = tiepoint.leftId === leftId ? tiepoint.leftPixel : tiepoint.rightPixel;
-                    if (pixel[0] - leftPixel[0] > offset || pixel[1] - leftPixel[1] > offset) {
-                        return false;
-                    }
-                    return true;
-                });
-                const rightImageTiepoints = imageTiepoints[rightId].filter((t) => {
-                    const pixel = tiepoint.leftId === rightId ? tiepoint.leftPixel : tiepoint.rightPixel;
-                    if (pixel[0] - rightPixel[0] > offset || pixel[1] - rightPixel[1] > offset) {
+                const nearbyTiepoints = imageTiepoints[id].filter((t) => {
+                    const p = t.leftId === id ? t.leftPixel : t.rightPixel;
+                    if (p[0] - pixel[0] > offset || p[1] - pixel[1] > offset) {
                         return false;
                     }
                     return true;
                 });
 
                 // Crop image correctly to tiepoint location.
-                ctx.drawImage(leftImage,
-                    ...leftPixel.map((p) => p - offset) as [number, number], // Top-Left Corner
-                    offset * 2, offset * 2,                                  // Crop Area
-                    (count * height) + (count * padding), 0,                 // Canvas Location
-                    height, height                                           // Width & Height
+                ctx.drawImage(image,
+                    ...pixel.map((p) => p - offset) as [number, number], // Top-Left Corner
+                    offset * 2, offset * 2,                              // Crop Area
+                    (count * height) + (count * padding), 0,             // Canvas Location
+                    height, height                                       // Width & Height
                 );
 
                 // Draw main tiepoint.
@@ -117,32 +127,13 @@ function Stage({ state, activeTrack }: StageProps) {
                 drawTiepoint(ctx, imageCenter, count, initialResidual, finalResidual);
 
                 // Draw relevant tiepoints
-                for (const leftTiepoint of leftImageTiepoints) {
-                    const pixel = leftTiepoint.leftId === leftId ? leftTiepoint.leftPixel : leftTiepoint.rightPixel;
-                    const xOffset = leftPixel[0] - pixel[0];
-                    const yOffset = leftPixel[1] - pixel[1];
+                for (const t of nearbyTiepoints) {
+                    const p = t.leftId === id ? t.leftPixel : t.rightPixel;
+                    const xOffset = pixel[0] - p[0];
+                    const yOffset = pixel[1] - p[1];
                     imageCenter[0] -= xOffset;
                     imageCenter[1] -= yOffset;
-                    drawTiepoint(ctx, imageCenter, count, leftTiepoint.initialResidual, leftTiepoint.finalResidual);
-                }
-                count++;
-
-                // Draw sibling image.
-                ctx.drawImage(rightImage,
-                    ...rightPixel.map((p) => p - offset) as [number, number], // Top-Left Corner
-                    offset * 2, offset * 2,                                   // Crop Area
-                    (count * height) + (count * padding), 0,                  // Canvas Location
-                    height, height                                            // Width & Height
-                );
-                imageCenter = [(count * height) + (count * padding) + (height / 2), height / 2];
-                drawTiepoint(ctx, imageCenter, count, initialResidual, finalResidual);
-                for (const rightTiepoint of rightImageTiepoints) {
-                    const pixel = rightTiepoint.rightId === rightId ? rightTiepoint.leftPixel : rightTiepoint.rightPixel;
-                    const xOffset = rightPixel[0] - pixel[0];
-                    const yOffset = rightPixel[1] - pixel[1];
-                    imageCenter[0] -= xOffset;
-                    imageCenter[1] -= yOffset;
-                    drawTiepoint(ctx, imageCenter, count, rightTiepoint.initialResidual, rightTiepoint.finalResidual);
+                    drawTiepoint(ctx, imageCenter, count, t.initialResidual, t.finalResidual, true);
                 }
                 count++;
             }
@@ -154,12 +145,20 @@ function Stage({ state, activeTrack }: StageProps) {
         position: [number, number],
         count: number,
         initialResidual: [number, number],
-        finalResidual: [number, number]
+        finalResidual: [number, number],
+        isSibling?: boolean,
     ) {
         if (
             position[0] < (count * height) + (count * padding) ||
             position[0] > (count * height) + (count * padding) + height
         ) return;
+
+        // Set opacity lower for sibling tiepoints in the image.
+        if (isSibling) {
+            ctx.globalAlpha = 0.3;
+        } else {
+            ctx.globalAlpha = 1;
+        }
 
         // Calculate residual distance for filtering.
         const initialDistance = Number(baseVector.distanceTo(new Vector2(...initialResidual)).toFixed(1));
