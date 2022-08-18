@@ -5,7 +5,6 @@ export const theme = {
         white: '#FFFFFF',
         black: '#2D3436',
         gray: 'rgb(91, 79, 80)',
-        green: '#2ECC71',
         offWhite: 'rgba(161, 113, 147, 0.1)',
         background: 'rgb(236, 231, 236)',
         initial: 'rgba(104, 40, 40, 0.5)',
@@ -17,7 +16,6 @@ export const theme = {
     },
     size: {
         sidebar: '15vw',
-        toolbar: '7vh',
     },
 };
 
