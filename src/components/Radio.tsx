@@ -5,7 +5,7 @@ interface RadioProps {
     checked: boolean;
     onChange: (event: React.ChangeEvent) => void;
     children: React.ReactNode | React.ReactNode[];
-};
+}
 
 export default function Radio({ name, checked, onChange, children }: RadioProps) {
     return (
@@ -19,10 +19,7 @@ export default function Radio({ name, checked, onChange, children }: RadioProps)
                 checked={checked}
                 onChange={onChange}
             />
-            <label
-                className={styles.label}
-                htmlFor={name}
-            >
+            <label className={styles.label} htmlFor={name}>
                 {children}
             </label>
         </div>

@@ -8,7 +8,7 @@ import * as styles from '@/components/ContextMenu.css';
 
 interface ContextMenuProps {
     state: ContextMenuState;
-};
+}
 
 const parser = new DOMParser();
 const serializer = new XMLSerializer();
@@ -45,11 +45,14 @@ export default function ContextMenu({ state }: ContextMenuProps) {
                 return;
             }
 
-            setEditHistory((prevState) => [...prevState, {
-                id: state.data,
-                type: EditType.TRACK,
-                operation: EditOperation.DELETE,
-            }]);
+            setEditHistory((prevState) => [
+                ...prevState,
+                {
+                    id: state.data,
+                    type: EditType.TRACK,
+                    operation: EditOperation.DELETE,
+                },
+            ]);
         }
     }
 
@@ -62,19 +65,9 @@ export default function ContextMenu({ state }: ContextMenuProps) {
 
     return (
         <div ref={container} className={styles.container}>
-            <button
-                className={styles.button}
-                disabled={!state.isTrack}
-                onClick={handleTrackDelete}
-            >
+            <button className={styles.button} disabled={!state.isTrack} onClick={handleTrackDelete}>
                 Delete Track
             </button>
-            <button
-                className={styles.button}
-                disabled={!state.isTiepoint}
-            >
-                Delete Tiepoint
-            </button>
         </div>
-    )
+    );
 }

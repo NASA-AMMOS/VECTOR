@@ -1,8 +1,7 @@
-import { useRef, useState, useMemo, useEffect, useLayoutEffect, useReducer } from 'react';
-import { fileOpen } from 'browser-fs-access';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { Canvas, createPortal, useLoader, useFrame, useThree, extend } from '@react-three/fiber';
+import { Canvas, createPortal, useLoader, useFrame, useThree } from '@react-three/fiber';
 import {
     OrbitControls,
     PerspectiveCamera,
@@ -12,11 +11,10 @@ import {
     Text,
     useContextBridge,
     useCamera,
-    useBounds,
 } from '@react-three/drei';
 
 import { ToolsContext, useTools } from '@/stores/ToolsContext';
-import { Tiepoint, Camera, CameraModel, DataContext, useData } from '@/stores/DataContext';
+import { Track, CameraModel, DataContext, useData, Cameras } from '@/stores/DataContext';
 
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
@@ -55,23 +53,18 @@ function ViewCube() {
                 <meshLambertMaterial color="white" />
                 <boxBufferGeometry args={[10, 10, 10]} />
             </mesh>
-            <axesHelper
-                ref={axes}
-                args={[25]}
-                position={[size.width / 2 - 30, size.height / 2 - 30, 0]}
-            />
+            <axesHelper ref={axes} args={[25]} position={[size.width / 2 - 30, size.height / 2 - 30, 0]} />
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} intensity={0.5} />
-        </>
-    , virtualScene);
+        </>,
+        virtualScene,
+    );
 }
 
 function Scene() {
     const { state } = useTools();
 
-    const { tiepoints, cameras, vicar, mesh, activeImage, activeTrack, getVICARFile, parseVICARField } = useData();
-
-    const { scene } = useThree();
+    const { tracks, cameras, mesh, activeTrack, getVICARFile, parseVICARField } = useData();
 
     const obj = mesh && useLoader(OBJLoader, mesh);
 
@@ -81,42 +74,54 @@ function Scene() {
 
     const [text, setText] = useState<JSX.Element[]>([]);
 
-    const activeTiepoints = useMemo<Tiepoint[]>(() => {
+    const activeTracks = useMemo<Track[]>(() => {
         if (!activeTrack) {
-            return tiepoints;
+            return tracks;
         }
-        return tiepoints.filter((t) => t.trackId === activeTrack);
-    }, [tiepoints, activeTrack]);
+        return tracks.filter((track) => track.trackId === activeTrack);
+    }, [tracks, activeTrack]);
 
     const activeCameras = useMemo(() => {
-        const newCameras = [...new Set(activeTiepoints.map((t) => [t.leftId, t.rightId]).flat())];
-        return Object.keys(cameras)
-            .filter((k) => newCameras.includes(k))
-            .reduce<Record<string, Camera>>((obj, key) => {
-                obj[key] = cameras[key];
-                return obj;
-            }, {});
-    }, [activeTiepoints, cameras]);
+        const cameraIds = Object.keys(cameras);
+        const newCameraIds: string[] = [];
+        const newCameras: Cameras = {};
+
+        for (const track of activeTracks) {
+            for (const point of track.points) {
+                if (!newCameraIds.includes(point.id)) {
+                    newCameraIds.push(point.id);
+                }
+            }
+        }
+
+        for (const id of newCameraIds) {
+            if (cameraIds.includes(id)) {
+                newCameras[id] = cameras[id];
+            }
+        }
+
+        return newCameras;
+    }, [activeTracks, cameras]);
 
     const initialPoints = useMemo<[number, number, number][]>(() => {
-        if (activeTiepoints.length === 0) {
+        if (activeTracks.length === 0) {
             return [];
         }
         if (activeTrack) {
-            return [activeTiepoints[0].initialXYZ];
+            return [activeTracks[0].initialXYZ];
         }
-        return activeTiepoints.map((t) => t.initialXYZ);
-    }, [activeTiepoints]);
+        return activeTracks.map((track) => track.initialXYZ);
+    }, [activeTracks]);
 
     const finalPoints = useMemo<[number, number, number][]>(() => {
-        if (activeTiepoints.length === 0) {
+        if (activeTracks.length === 0) {
             return [];
         }
         if (activeTrack) {
-            return [activeTiepoints[0].finalXYZ];
+            return [activeTracks[0].finalXYZ];
         }
-        return activeTiepoints.map((t) => t.finalXYZ);
-    }, [activeTiepoints]);
+        return activeTracks.map((track) => track.finalXYZ);
+    }, [activeTracks]);
 
     async function initData() {
         if (meshes.current?.children.length > 0) {
@@ -136,8 +141,8 @@ function Scene() {
             const metadata = getVICARFile(cameraId);
 
             // Get coordinate system transformation group.
-            const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
-            const group = metadata.slice(frameIndex - 10, frameIndex + 1);
+            // const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
+            // const group = metadata.slice(frameIndex - 10, frameIndex + 1);
 
             const originOffset = new THREE.Vector3(...parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR'));
             const originRotation = new THREE.Quaternion(
@@ -225,15 +230,15 @@ function Scene() {
                 depthOffset={-1}
             >
                 {index + 1}
-            </Text>
+            </Text>,
         );
     }
 
     useEffect(() => {
-        if (state && activeTiepoints && activeCameras) {
+        if (state && activeTracks && activeCameras) {
             initData();
         }
-    }, [state, activeTiepoints, activeCameras]);
+    }, [state, activeTracks, activeCameras]);
 
     return (
         <>
@@ -244,16 +249,12 @@ function Scene() {
             <Instances>
                 <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.initialHex} />
-                {state.isPoint && state.isInitial && initialPoints.map((p, i) => (
-                    <Instance key={i} position={p} />
-                ))}
+                {state.isPoint && state.isInitial && initialPoints.map((p, i) => <Instance key={i} position={p} />)}
             </Instances>
             <Instances>
                 <sphereGeometry args={[0.05]} />
                 <meshLambertMaterial color={theme.color.finalHex} />
-                {state.isPoint && state.isFinal && finalPoints.map((p, i) => (
-                    <Instance key={i} position={p} />
-                ))}
+                {state.isPoint && state.isFinal && finalPoints.map((p, i) => <Instance key={i} position={p} />)}
             </Instances>
             {text}
             {mesh && <primitive object={obj} />}
@@ -262,7 +263,7 @@ function Scene() {
             {/* @ts-ignore: https://github.com/pmndrs/react-three-fiber/issues/925 */}
             <ViewCube />
         </>
-    )
+    );
 }
 
 export default function CameraViewport() {

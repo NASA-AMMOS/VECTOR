@@ -59,7 +59,7 @@ export const circle = style({
             marginLeft: '0.4rem',
         },
     },
-})
+});
 
 export const inverted = style({
     backgroundColor: vars.color.final,

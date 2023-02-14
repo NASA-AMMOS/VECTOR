@@ -3,19 +3,20 @@ import { Vector2 } from 'three';
 // @ts-ignore: https://github.com/observablehq/plot/issues/401
 import * as Plot from '@observablehq/plot';
 
-import { Tiepoint, useData } from '@/stores/DataContext';
+import { Track, useData } from '@/stores/DataContext';
+import { Pixel } from '@/utils/helpers';
 
 import { vars } from '@/utils/theme.css';
-import { Pixel } from '@/utils/helpers';
 import * as styles from '@/components/SlopeChart.css';
 
 const baseVector = new Vector2();
+const tempVector = new Vector2();
 
 interface SlopeChartState {
     isRelative: boolean;
     residualMin: number | null;
     residualMax: number | null;
-};
+}
 
 interface SlopeChartProps {
     state: SlopeChartState;
@@ -23,127 +24,135 @@ interface SlopeChartProps {
     activeTrack?: number;
     isSmall?: boolean;
     isEdited?: boolean;
-};
+}
 
 interface Residual {
     group: string;
     residual: number;
     tiepoint: number;
     decreased: boolean;
-};
+}
 
 export default function SlopeChart({ state, activeImage, activeTrack, isSmall, isEdited }: SlopeChartProps) {
-    const { tiepoints, imageTiepoints, residualBounds, editedTracks } = useData();
+    const { tracks, imageTracks, residualBounds, editedTracks } = useData();
 
-    const activeTiepoints = useMemo<Tiepoint[]>(() => {
-        let result = [];
+    const activeTracks = useMemo<Track[]>(() => {
+        let newTracks: Track[] = [];
 
         if (activeImage && !activeTrack) {
-            result = imageTiepoints[activeImage];
+            newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            result = tiepoints.filter((t) => t.trackId === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.trackId === Number(activeTrack));
         } else {
             return [];
         }
 
         if (isEdited) {
-            return result;
+            return newTracks;
         }
-        return result.filter((t) => !editedTracks.includes(t.trackId));
-    }, [tiepoints, imageTiepoints, editedTracks, activeImage]);
+        return newTracks.filter((track) => !editedTracks.includes(track.trackId));
+    }, [tracks, imageTracks, editedTracks, activeImage]);
 
-    const plot = useCallback((element: HTMLDivElement) => {
-        if (activeTiepoints.length > 0 && element) {
-            let initialResiduals = activeTiepoints.map((tiepoint) => {
-                const initialResidual = new Vector2(...tiepoint.initialResidual);
-                const initialDistance = Math.trunc(baseVector.clone().distanceTo(initialResidual));
+    const plot = useCallback(
+        (element: HTMLDivElement) => {
+            if (activeTracks.length > 0 && element) {
+                let initialResiduals = [];
+                let finalResiduals = [];
 
-                const finalResidual = new Vector2(...tiepoint.finalResidual);
-                const finalDistance = Math.trunc(baseVector.clone().distanceTo(finalResidual));
+                for (const track of activeTracks) {
+                    for (const point of track.points) {
+                        const initialResidual = point.initialResidual;
+                        const initialDistance = Math.trunc(
+                            baseVector.distanceTo(tempVector.set(initialResidual[0], initialResidual[1])),
+                        );
 
-                return {
-                    group: 'Initial',
-                    residual: initialDistance,
-                    tiepoint: tiepoint.index,
-                    decreased: finalDistance <= initialDistance,
-                };
-            });
+                        const finalResidual = point.finalResidual;
+                        const finalDistance = Math.trunc(
+                            baseVector.distanceTo(tempVector.set(finalResidual[0], finalResidual[1])),
+                        );
 
-            let finalResiduals = activeTiepoints.map((tiepoint) => {
-                const finalResidual = new Vector2(...tiepoint.finalResidual);
-                return {
-                    group: 'Final',
-                    residual: Math.trunc(baseVector.clone().distanceTo(finalResidual)),
-                    tiepoint: tiepoint.index,
-                };
-            });
+                        initialResiduals.push({
+                            group: 'Initial',
+                            residual: initialDistance,
+                            decreased: finalDistance <= initialDistance,
+                            // Note: Need unique id per pixel for plot to work
+                            tiepoint: point.index,
+                        });
 
-            if (state.residualMin) {
-                initialResiduals = initialResiduals.filter((r) => r.residual >= state.residualMin!);
-                finalResiduals = finalResiduals.filter((r) => r.residual >= state.residualMin!);
-            }
-
-            if (state.residualMax) {
-                initialResiduals = initialResiduals.filter((r) => r.residual <= state.residualMax!);
-                finalResiduals = finalResiduals.filter((r) => r.residual <= state.residualMax!);
-            }
-
-            const residuals = [...initialResiduals, ...finalResiduals];
-            let maxResidual;
-            if (state.isRelative) {
-                maxResidual = Math.max(...residuals.map((r) => r.residual));
-            } else {
-                maxResidual = residualBounds[0][1];
-            }
-
-            if (residuals.length === 0) {
-                element.classList.add(styles.empty);
-                while (element.lastElementChild) {
-                    element.removeChild(element.lastElementChild);
+                        finalResiduals.push({
+                            group: 'Final',
+                            residual: finalDistance,
+                            tiepoint: point.index,
+                        });
+                    }
                 }
-                return;
-            } else {
-                element.classList.remove(styles.empty);
+
+                if (state.residualMin) {
+                    initialResiduals = initialResiduals.filter((r) => r.residual >= state.residualMin!);
+                    finalResiduals = finalResiduals.filter((r) => r.residual >= state.residualMin!);
+                }
+
+                if (state.residualMax) {
+                    initialResiduals = initialResiduals.filter((r) => r.residual <= state.residualMax!);
+                    finalResiduals = finalResiduals.filter((r) => r.residual <= state.residualMax!);
+                }
+
+                const residuals = [...initialResiduals, ...finalResiduals];
+                let maxResidual;
+                if (state.isRelative) {
+                    maxResidual = Math.max(...residuals.map((r) => r.residual));
+                } else {
+                    maxResidual = residualBounds[0][1];
+                }
+
+                if (residuals.length === 0) {
+                    element.classList.add(styles.empty);
+                    while (element.lastElementChild) {
+                        element.removeChild(element.lastElementChild);
+                    }
+                    return;
+                } else {
+                    element.classList.remove(styles.empty);
+                }
+
+                const svg = Plot.plot({
+                    style: {
+                        height: '100%',
+                        fontSize: Pixel(1.8),
+                        backgroundColor: 'transparent',
+                    },
+                    x: {
+                        type: 'point',
+                        axis: isSmall ? null : 'top',
+                        label: null,
+                        domain: ['Initial', 'Final'],
+                        clamp: true,
+                        inset: -300,
+                    },
+                    y: {
+                        axis: null,
+                        domain: [0, maxResidual],
+                        inset: 20,
+                    },
+                    marks: [
+                        Plot.line(residuals, {
+                            x: 'group',
+                            y: 'residual',
+                            z: 'tiepoint',
+                            stroke: (d: Residual) => (d.decreased ? vars.color.decrease : vars.color.increase),
+                            strokeWidth: 5,
+                            strokeOpacity: (d: Residual) => (d.decreased ? 0.3 : 1),
+                        }),
+                        Plot.ruleX(['Initial'], { stroke: vars.color.initial, strokeWidth: 5 }),
+                        Plot.ruleX(['Final'], { stroke: vars.color.final, strokeWidth: 5 }),
+                    ],
+                });
+
+                element.replaceChildren(svg);
             }
-
-            const svg = Plot.plot({
-                style: {
-                    height: '100%',
-                    fontSize: Pixel(1.8),
-                    backgroundColor: 'transparent',
-                },
-                x: {
-                    type: 'point',
-                    axis: isSmall ? null : 'top',
-                    label: null,
-                    domain: ['Initial', 'Final'],
-                    clamp: true,
-                    inset: -300,
-                },
-                y: {
-                    axis: null,
-                    domain: [0, maxResidual],
-                    inset: 20,
-                },
-                marks: [
-                    Plot.line(residuals, {
-                        x: 'group',
-                        y: 'residual',
-                        z: 'tiepoint',
-                        stroke: (d: Residual) => d.decreased ? vars.color.decrease : vars.color.increase,
-                        strokeWidth: 5,
-                        strokeOpacity: (d: Residual) => d.decreased ? 0.3 : 1,
-                    }),
-                    Plot.ruleX(['Initial'], { stroke: vars.color.initial, strokeWidth: 5 }),
-                    Plot.ruleX(['Final'], { stroke: vars.color.final, strokeWidth: 5 }),
-                ],
-            });
-
-            element.replaceChildren(svg);
-        }
-    }, [state, activeTiepoints]);
-
-    return (
-        <div ref={plot} className={styles.container}></div>
+        },
+        [state, activeTracks],
     );
+
+    return <div ref={plot} className={styles.container}></div>;
 }

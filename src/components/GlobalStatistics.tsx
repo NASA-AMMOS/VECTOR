@@ -13,16 +13,10 @@ export default function GlobalStatistics() {
     return (
         <section className={styles.container}>
             <div className={styles.item}>
-                <h2 className={styles.title}>
-                    Distribution of Residual Lengths & Angles
-                </h2>
+                <h2 className={styles.title}>Distribution of Residual Lengths & Angles</h2>
                 <RadialChart state={state} />
                 <div className={styles.legend}>
-                    <img
-                        className={styles.axis}
-                        src="/src/assets/radial.svg"
-                        alt="Radial Chart Legend w/ Degrees"
-                    />
+                    <img className={styles.axis} src="/src/assets/radial.svg" alt="Radial Chart Legend w/ Degrees" />
                     <div className={styles.colors}>
                         <div className={styles.color}>
                             <span className={styles.circle} /> Initial
@@ -34,9 +28,7 @@ export default function GlobalStatistics() {
                 </div>
             </div>
             <div className={styles.item}>
-                <h2 className={styles.title}>
-                    Distribution of Residual Lengths
-                </h2>
+                <h2 className={styles.title}>Distribution of Residual Lengths</h2>
                 <ResidualChart state={state} />
                 <div className={styles.legend}>
                     {/* Empty div for styling . */}

@@ -1,4 +1,4 @@
-export function Pixel(REM: number) {    
+export function Pixel(REM: number) {
     return REM * Number.parseFloat(window.getComputedStyle(document.documentElement).fontSize);
 }
 

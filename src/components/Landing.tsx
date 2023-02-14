@@ -2,14 +2,14 @@ import { useState, useEffect } from 'react';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
 
-import { Tiepoint, Cameras, useData } from '@/stores/DataContext';
+import { Track, Point, Tiepoint, Cameras, useData } from '@/stores/DataContext';
 
 import * as styles from '@/components/Landing.css';
 
 const parser = new DOMParser();
 
 export default function Landing() {
-    const { setTiepoints, setCameras, setImages, setVICAR, setMesh, setTiepointsFile } = useData();
+    const { setTracks, setTiepoints, setCameras, setImages, setVICAR, setMesh, setTiepointsFile } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
 
@@ -20,6 +20,7 @@ export default function Landing() {
                 const xml = parser.parseFromString(xmlString, 'application/xml');
                 if (xml.querySelector('tiepoint_file')) {
                     setTiepointsFile(xmlString);
+                    handleTracks(xml);
                     handleTiepoints(xml);
                 } else {
                     handleNavigation(xml);
@@ -32,6 +33,143 @@ export default function Landing() {
                 await handleVICAR(file);
             }
         }
+    }
+
+    function handleTracks(xml: XMLDocument) {
+        const tiepoints = xml.querySelectorAll('tie');
+        const newTracks: Track[] = [];
+
+        let trackIndex = 0;
+        let pointIndex = 0;
+
+        for (const tiepoint of tiepoints.values()) {
+            const trackId = Number(tiepoint.querySelector('track')!.getAttribute('id'));
+            const currentTrack = newTracks.find((track) => track.trackId === trackId);
+
+            if (!currentTrack) {
+                const leftKey = Number(tiepoint.getAttribute('left_key'));
+                const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id');
+                const leftPixel = tiepoint.querySelector('left');
+
+                const leftInitialResidual = tiepoint.querySelector('left_init_residual');
+                const leftFinalResidual = tiepoint.querySelector('left_final_residual');
+
+                const pointLeft: Point = {
+                    index: pointIndex,
+                    id: leftId,
+                    key: leftKey,
+                    pixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
+                    initialResidual: [
+                        Number(leftInitialResidual!.getAttribute('samp')),
+                        Number(leftInitialResidual!.getAttribute('line')),
+                    ],
+                    finalResidual: [
+                        Number(leftFinalResidual!.getAttribute('samp')),
+                        Number(leftFinalResidual!.getAttribute('line')),
+                    ],
+                } as Point;
+                pointIndex++;
+
+                const rightKey = Number(tiepoint.getAttribute('right_key'));
+                const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id');
+                const rightPixel = tiepoint.querySelector('right');
+
+                const rightInitialResidual = tiepoint.querySelector('right_init_residual');
+                const rightFinalResidual = tiepoint.querySelector('right_final_residual');
+
+                const pointRight: Point = {
+                    index: pointIndex,
+                    id: rightId,
+                    key: rightKey,
+                    pixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
+                    initialResidual: [
+                        Number(rightInitialResidual!.getAttribute('samp')),
+                        Number(rightInitialResidual!.getAttribute('line')),
+                    ],
+                    finalResidual: [
+                        Number(rightFinalResidual!.getAttribute('samp')),
+                        Number(rightFinalResidual!.getAttribute('line')),
+                    ],
+                } as Point;
+                pointIndex++;
+
+                const initialXYZ = tiepoint.querySelector('init_xyz');
+                const initialX = Number(initialXYZ!.getAttribute('x'));
+                const initialY = Number(initialXYZ!.getAttribute('y'));
+                const initialZ = Number(initialXYZ!.getAttribute('z'));
+
+                const finalXYZ = tiepoint.querySelector('final_xyz');
+                const finalX = Number(finalXYZ!.getAttribute('x'));
+                const finalY = Number(finalXYZ!.getAttribute('y'));
+                const finalZ = Number(finalXYZ!.getAttribute('z'));
+
+                newTracks.push({
+                    trackId,
+                    index: trackIndex,
+                    initialXYZ: [initialX, initialY, initialZ],
+                    finalXYZ: [finalX, finalY, finalZ],
+                    points: [pointLeft, pointRight],
+                } as Track);
+                trackIndex++;
+            } else {
+                const leftKey = Number(tiepoint.getAttribute('left_key'));
+                const rightKey = Number(tiepoint.getAttribute('right_key'));
+
+                if (!currentTrack.points.some((point) => point.key == leftKey)) {
+                    const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id');
+                    const leftPixel = tiepoint.querySelector('left');
+
+                    const leftInitialResidual = tiepoint.querySelector('left_init_residual');
+                    const leftFinalResidual = tiepoint.querySelector('left_final_residual');
+
+                    const pointLeft: Point = {
+                        index: pointIndex,
+                        id: leftId,
+                        key: leftKey,
+                        pixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
+                        initialResidual: [
+                            Number(leftInitialResidual!.getAttribute('samp')),
+                            Number(leftInitialResidual!.getAttribute('line')),
+                        ],
+                        finalResidual: [
+                            Number(leftFinalResidual!.getAttribute('samp')),
+                            Number(leftFinalResidual!.getAttribute('line')),
+                        ],
+                    } as Point;
+                    pointIndex++;
+
+                    currentTrack.points.push(pointLeft);
+                }
+
+                if (!currentTrack.points.some((point) => point.key == rightKey)) {
+                    const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id');
+                    const rightPixel = tiepoint.querySelector('right');
+
+                    const rightInitialResidual = tiepoint.querySelector('right_init_residual');
+                    const rightFinalResidual = tiepoint.querySelector('right_final_residual');
+
+                    const pointRight: Point = {
+                        index: pointIndex,
+                        id: rightId,
+                        key: rightKey,
+                        pixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
+                        initialResidual: [
+                            Number(rightInitialResidual!.getAttribute('samp')),
+                            Number(rightInitialResidual!.getAttribute('line')),
+                        ],
+                        finalResidual: [
+                            Number(rightFinalResidual!.getAttribute('samp')),
+                            Number(rightFinalResidual!.getAttribute('line')),
+                        ],
+                    } as Point;
+                    pointIndex++;
+
+                    currentTrack.points.push(pointRight);
+                }
+            }
+        }
+
+        setTracks(newTracks);
     }
 
     function handleTiepoints(xml: XMLDocument) {
@@ -75,17 +213,13 @@ export default function Landing() {
                 rightKey,
                 initialXYZ: [initialX, initialY, initialZ],
                 finalXYZ: [finalX, finalY, finalZ],
-                leftPixel: [
-                    Number(leftPixel!.getAttribute('samp')),
-                    Number(leftPixel!.getAttribute('line')),
-                ],
-                rightPixel: [
-                    Number(rightPixel!.getAttribute('samp')),
-                    Number(rightPixel!.getAttribute('line')),
-                ],
+                leftPixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
+                rightPixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
                 initialResidual: [
-                    Number(leftInitialResidual!.getAttribute('samp')) + Number(rightInitialResidual!.getAttribute('samp')),
-                    Number(leftInitialResidual!.getAttribute('line')) + Number(rightInitialResidual!.getAttribute('line')),
+                    Number(leftInitialResidual!.getAttribute('samp')) +
+                        Number(rightInitialResidual!.getAttribute('samp')),
+                    Number(leftInitialResidual!.getAttribute('line')) +
+                        Number(rightInitialResidual!.getAttribute('line')),
                 ],
                 finalResidual: [
                     Number(leftFinalResidual!.getAttribute('samp')) + Number(rightFinalResidual!.getAttribute('samp')),
@@ -177,11 +311,14 @@ export default function Landing() {
 
     async function handleVICAR(file: File) {
         const text = await file.text();
-        const metadata = text.split(/(\s+)/).map((t) => t.trim()).filter(Boolean);
+        const metadata = text
+            .split(/(\s+)/)
+            .map((t) => t.trim())
+            .filter(Boolean);
         setVICAR((v) => ({ ...v, [file.name]: metadata }));
     }
 
-    async function handleClick(event: React.MouseEvent) {
+    async function handleClick() {
         const file = await fileOpen();
         setFiles((oldFiles) => oldFiles.filter((f) => f.name !== file.name).concat([file]));
     }
@@ -212,14 +349,10 @@ export default function Landing() {
                 onDragOver={disableEvent}
                 onDragEnter={disableEvent}
             >
-                <p>
-                    Please upload the tie-point file, navigation file, VICAR folder, and image folder.
-                </p>
+                <p>Please upload the tie-point file, navigation file, VICAR folder, and image folder.</p>
             </div>
             <section className={styles.header}>
-                <h1 className={styles.title}>
-                    VECTOR
-                </h1>
+                <h1 className={styles.title}>VECTOR</h1>
                 <p className={styles.body}>
                     Visualization and Editing of Camera Tiepoints, Orientations, and Residuals
                 </p>

@@ -6,7 +6,7 @@ interface NumberInputProps {
     step?: number;
     onChange: (event: React.ChangeEvent) => void;
     children?: React.ReactNode;
-};
+}
 
 export default function NumberInput({ name, value, step, onChange, children }: NumberInputProps) {
     return (
@@ -20,9 +20,7 @@ export default function NumberInput({ name, value, step, onChange, children }: N
                 value={value === null ? 0 : value}
                 onChange={onChange}
             />
-            <label htmlFor={name}>
-                {children}
-            </label>
+            <label htmlFor={name}>{children}</label>
         </div>
     );
 }

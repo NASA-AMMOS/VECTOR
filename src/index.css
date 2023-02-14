@@ -1,6 +1,8 @@
 @import url('https://rsms.me/inter/inter.css');
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: inherit;
@@ -19,7 +21,8 @@ body {
     width: 100%;
 }
 
-a, button {
+a,
+button {
     font-size: inherit;
     font-weight: inherit;
     background-color: inherit;

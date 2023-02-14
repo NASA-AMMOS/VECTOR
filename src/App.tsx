@@ -20,7 +20,7 @@ export interface ContextMenuState {
     x: number;
     y: number;
     data: any;
-};
+}
 
 export default function App() {
     const router = useRouter();

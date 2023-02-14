@@ -1,21 +1,19 @@
-import { useReducer } from 'react';
+import { ContextMenuState } from '@/App';
+import { useTools } from '@/stores/ToolsContext';
+import { useData } from '@/stores/DataContext';
 
-import { Track } from '@/components/Tracks';
+import Track from '@/components/Track';
 import CameraViewport from '@/components/CameraViewport';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
-
-import { ContextMenuState } from '@/App';
-import { useTools } from '@/stores/ToolsContext';
-import { useData } from '@/stores/DataContext';
 
 import * as styles from '@/components/ActiveTrackView.css';
 
 interface ActiveTrackViewProps {
     contextMenu: ContextMenuState;
     setContextMenu: React.Dispatch<ContextMenuState>;
-};
+}
 
 export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveTrackViewProps) {
     const { state } = useTools();
@@ -27,9 +25,7 @@ export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveT
             {activeImage && activeTrack && (
                 <section className={styles.container}>
                     <div className={styles.panel}>
-                        <h3 className={styles.header}>
-                            Track ID: {activeTrack}
-                        </h3>
+                        <h3 className={styles.header}>Track ID: {activeTrack}</h3>
                         <div className={styles.bar}>
                             <Track
                                 state={state}
@@ -42,24 +38,9 @@ export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveT
                         <CameraViewport />
                     </div>
                     <div className={styles.column}>
-                        <RadialChart
-                            state={state}
-                            activeImage={activeImage}
-                            activeTrack={activeTrack}
-                            isEdited
-                        />
-                        <ResidualChart
-                            state={state}
-                            activeImage={activeImage}
-                            activeTrack={activeTrack}
-                            isEdited
-                        />
-                        <SlopeChart
-                            state={state}
-                            activeImage={activeImage}
-                            activeTrack={activeTrack}
-                            isEdited
-                        />
+                        <RadialChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />
+                        <ResidualChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />
+                        <SlopeChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />
                     </div>
                 </section>
             )}

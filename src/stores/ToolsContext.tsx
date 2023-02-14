@@ -19,22 +19,23 @@ export enum Filter {
     SCENE_CAMERA = 'SCENE_CAMERA',
     SCENE_POINT = 'SCENE_POINT',
     SCENE_MESH = 'SCENE_MESH',
-};
+}
 
 export enum ResidualSortField {
     INITIAL = 'INITIAL',
     FINAL = 'FINAL',
-};
+    SCLK = 'SCLK',
+}
 
 export enum ResidualSortDirection {
     INCREASING = 'INCREASING',
     DECREASING = 'DECREASING',
-};
+}
 
 export interface ResidualSort {
     field: string;
     direction: string;
-};
+}
 
 interface State {
     isInitial: boolean;
@@ -49,21 +50,21 @@ interface State {
     isCamera: boolean;
     isPoint: boolean;
     isMesh: boolean;
-};
+}
 
 interface Action {
     type: string;
     data: string;
-};
+}
 
 interface Tools {
     state: State;
     handleChange: (event: React.ChangeEvent) => void;
-};
+}
 
 interface ProvideToolsProps {
     children: React.ReactNode;
-};
+}
 
 const initialState: State = {
     isInitial: true,
@@ -134,7 +135,7 @@ export default function ProvideTools({ children }: ProvideToolsProps) {
     const [state, dispatch] = useReducer(reducer, initialState);
 
     function handleChange(event: React.ChangeEvent) {
-        const target = event.currentTarget as (HTMLInputElement | HTMLSelectElement);
+        const target = event.currentTarget as HTMLInputElement | HTMLSelectElement;
         dispatch({ type: target.name, data: target.value });
     }
 
@@ -143,11 +144,11 @@ export default function ProvideTools({ children }: ProvideToolsProps) {
         dispatch({ type: Filter.RESET, data: '' });
         dispatch({
             type: Filter.RESIDUAL_LENGTH_MIN,
-            data: Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1)
+            data: Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1),
         });
         dispatch({
             type: Filter.RESIDUAL_LENGTH_MAX,
-            data: Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]).toFixed(1)
+            data: Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]).toFixed(1),
         });
     }, [router.pathname]);
 
@@ -155,17 +156,13 @@ export default function ProvideTools({ children }: ProvideToolsProps) {
     useEffect(() => {
         dispatch({
             type: Filter.RESIDUAL_LENGTH_MIN,
-            data: Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1)
+            data: Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1),
         });
         dispatch({
             type: Filter.RESIDUAL_LENGTH_MAX,
-            data: Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]).toFixed(1)
+            data: Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]).toFixed(1),
         });
     }, [initialResidualBounds, finalResidualBounds]);
 
-    return (
-        <ToolsContext.Provider value={{ state, handleChange }}>
-            {children}
-        </ToolsContext.Provider>
-    );
+    return <ToolsContext.Provider value={{ state, handleChange }}>{children}</ToolsContext.Provider>;
 }

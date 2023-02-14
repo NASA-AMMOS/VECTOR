@@ -62,4 +62,4 @@ export const circle = style({
 
 export const inverted = style({
     backgroundColor: vars.color.final,
-})
+});

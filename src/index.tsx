@@ -15,5 +15,5 @@ root.render(
                 <App />
             </ProvideTools>
         </ProvideRouter>
-    </ProvideData>
+    </ProvideData>,
 );

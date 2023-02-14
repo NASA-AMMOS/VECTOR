@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-4. Load the input images as PNG files, the original images in VICAR (.VIC) or .IMG format, as well as the tiepoints and navigation files. One or more directories containing these files can be dragged and dropped directly into the tool. 
+4. Load the input images as PNG files, the original images in VICAR (.VIC) or .IMG format, as well as the tiepoints and navigation files. One or more directories containing these files can be dragged and dropped directly into the tool.
 
 Note 1: Note that the PNG images must have a .png extension to be recognized by the tool. If they don't explicitly have a .png extension, simply select all images to be loaded, right-click, and rename all to .png.
 
@@ -75,11 +75,11 @@ Note 2: Currently, the input tiepoints and navigation files MUST have a .xml fil
 
 ## Major Dependencies
 
-- [React](https://reactjs.org)
-- [Three.js + React Three Fiber](https://github.com/pmndrs/react-three-fiber)
-- [D3.js](https://d3js.org)
-- [Observable Plot](https://github.com/observablehq/plot)
-- [Vanilla Extract](https://vanilla-extract.style)
+-   [React](https://reactjs.org)
+-   [Three.js + React Three Fiber](https://github.com/pmndrs/react-three-fiber)
+-   [D3.js](https://d3js.org)
+-   [Observable Plot](https://github.com/observablehq/plot)
+-   [Vanilla Extract](https://vanilla-extract.style)
 
 ## Authors
 

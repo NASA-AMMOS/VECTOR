@@ -2,13 +2,14 @@ import { useMemo, useCallback } from 'react';
 import { Vector2 } from 'three';
 import * as d3 from 'd3';
 
-import { Tiepoint, useData } from '@/stores/DataContext';
+import { Track, useData } from '@/stores/DataContext';
+import { Polar } from '@/utils/helpers';
 
 import { vars } from '@/utils/theme.css';
-import { Polar } from '@/utils/helpers';
 import * as styles from '@/components/RadialChart.css';
 
 const baseVector = new Vector2();
+const tempVector = new Vector2();
 
 interface RadialChartState {
     isInitial: boolean;
@@ -18,164 +19,201 @@ interface RadialChartState {
     residualMax?: number | null;
     residualAngleMin?: number | null;
     residualAngleMax?: number | null;
-};
+}
 
 interface RadialChartProps {
     state: RadialChartState;
     activeImage?: string;
     activeTrack?: number;
     isEdited?: boolean;
-};
-
+}
 export default function RadialChart({ state, activeImage, activeTrack, isEdited }: RadialChartProps) {
-    const { tiepoints, imageTiepoints, residualBounds, editedTracks } = useData();
+    const { tracks, imageTracks, residualBounds, editedTracks } = useData();
 
-    const activeTiepoints = useMemo<Tiepoint[]>(() => {
-        let result = [];
+    const activeTracks = useMemo<Track[]>(() => {
+        let newTracks: Track[] = [];
 
         if (!activeImage && !activeTrack) {
-            result = tiepoints;
+            newTracks = tracks;
         } else if (activeImage && !activeTrack) {
-            result = imageTiepoints[activeImage];
+            newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            result = tiepoints.filter((t) => t.trackId === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.trackId === Number(activeTrack));
         } else {
             return [];
         }
 
         if (isEdited) {
-            return result;
+            return newTracks;
         }
-        return result.filter((t) => !editedTracks.includes(t.trackId));
-    }, [tiepoints, imageTiepoints, editedTracks, activeImage]);
 
-    const plot = useCallback((element: HTMLDivElement) => {
-        if (activeTiepoints.length > 0 && element) {
-            let residuals = activeTiepoints.map((t) => [
-                {
-                    ...Polar(t.initialResidual),
-                    distance: Number(baseVector.distanceTo(new Vector2(...t.initialResidual)).toFixed(1)),
-                    isInitial: true,
-                },
-                {
-                    ...Polar(t.finalResidual),
-                    distance: Number(baseVector.distanceTo(new Vector2(...t.finalResidual)).toFixed(1)),
-                    isInitial: false,
-                }
-            ]).flat();
+        return newTracks.filter((track) => !editedTracks.includes(track.trackId));
+    }, [tracks, imageTracks, editedTracks, activeImage]);
 
-            const initialMin = residuals.filter((r) => r.isInitial).reduce((prev, curr) => prev.radius < curr.radius ? prev : curr);
-            const initialMax = residuals.filter((r) => r.isInitial).reduce((prev, curr) => prev.radius > curr.radius ? prev : curr);
+    const plot = useCallback(
+        (element: HTMLDivElement) => {
+            if (activeTracks.length > 0 && element) {
+                let residuals = [];
 
-            const finalMin = residuals.filter((r) => !r.isInitial).reduce((prev, curr) => prev.radius < curr.radius ? prev : curr);
-            const finalMax = residuals.filter((r) => !r.isInitial).reduce((prev, curr) => prev.radius > curr.radius ? prev : curr);
+                for (const track of activeTracks) {
+                    for (const point of track.points) {
+                        const initial = point.initialResidual;
+                        const final = point.finalResidual;
 
-            let width;
-            if (state.isRelative) {
-                width = Math.max(initialMax.radius, finalMax.radius);
-            } else {
-                width = residualBounds[1][1];
-            }
-            width *= 2;
+                        const polarInitial = Polar(initial);
+                        const polarFinal = Polar(final);
 
-            const height = width;
-            const padding = width * 0.1;
-            const radius = width * 0.01;
+                        const initialDistance = Number(
+                            baseVector.distanceTo(tempVector.set(initial[0], initial[1])).toFixed(1),
+                        );
+                        const finalDistance = Number(
+                            baseVector.distanceTo(tempVector.set(final[0], final[1])).toFixed(1),
+                        );
 
-            // Filter residuals after calculating circular bounds
-            if (state.residualMin) {
-                residuals = residuals.filter((r) => r.distance >= state.residualMin!);
-            }
-
-            if (state.residualMax) {
-                residuals = residuals.filter((r) => r.distance <= state.residualMax!);
-            }
-
-            if (state.residualAngleMin) {
-                residuals = residuals.filter((r) => r.angle >= state.residualAngleMin!);
-            }
-
-            if (state.residualAngleMax) {
-                residuals = residuals.filter((r) => r.angle <= state.residualAngleMax!);
-            }
-
-            const svg = d3.create('svg')
-                .attr('height', '100%')
-                .attr('width', '100%')
-                .attr('viewBox', [0, 0, width + padding, height + padding]);
-
-            const parent = svg.append('g')
-                    .attr('transform', `translate(${(width + padding) / 2 } ${(height + padding) / 2})`)
-
-            let residualCount = 0;
-            parent.selectAll('point')
-                .data(residuals.filter((r) => {
-                    if (r.isInitial && state.isInitial) {
-                        residualCount++;
-                        return true;
-                    } else if (!r.isInitial && state.isFinal) {
-                        residualCount++;
-                        return true;
+                        residuals.push(
+                            {
+                                ...polarInitial,
+                                distance: initialDistance,
+                                isInitial: true,
+                            },
+                            {
+                                ...polarFinal,
+                                distance: finalDistance,
+                                isInitial: false,
+                            },
+                        );
                     }
-                    return false;
-                }))
-                .enter()
-                    .append('circle')
-                        .attr('cx', (d) => d.radius * Math.cos(d.angle))
-                        .attr('cy', (d) => d.radius * Math.sin(d.angle))
-                        .attr('r', radius)
-                        .attr('fill', (d) => d.isInitial ? vars.color.initial : vars.color.final);
-
-            if (residualCount === 0) {
-                element.classList.add(styles.empty);
-                while (element.lastElementChild) {
-                    element.removeChild(element.lastElementChild);
                 }
-                return;
-            } else {
-                element.classList.remove(styles.empty);
+
+                const initialMin = residuals
+                    .filter((r) => r.isInitial)
+                    .reduce((prev, curr) => (prev.radius < curr.radius ? prev : curr));
+                const initialMax = residuals
+                    .filter((r) => r.isInitial)
+                    .reduce((prev, curr) => (prev.radius > curr.radius ? prev : curr));
+
+                const finalMin = residuals
+                    .filter((r) => !r.isInitial)
+                    .reduce((prev, curr) => (prev.radius < curr.radius ? prev : curr));
+                const finalMax = residuals
+                    .filter((r) => !r.isInitial)
+                    .reduce((prev, curr) => (prev.radius > curr.radius ? prev : curr));
+
+                let width;
+                if (state.isRelative) {
+                    width = Math.max(initialMax.radius, finalMax.radius);
+                } else {
+                    width = residualBounds[1][1];
+                }
+                width *= 2;
+
+                const height = width;
+                const padding = width * 0.1;
+                const radius = width * 0.01;
+
+                // Filter residuals after calculating circular bounds
+                if (state.residualMin) {
+                    residuals = residuals.filter((r) => r.distance >= state.residualMin!);
+                }
+
+                if (state.residualMax) {
+                    residuals = residuals.filter((r) => r.distance <= state.residualMax!);
+                }
+
+                if (state.residualAngleMin) {
+                    residuals = residuals.filter((r) => r.angle >= state.residualAngleMin!);
+                }
+
+                if (state.residualAngleMax) {
+                    residuals = residuals.filter((r) => r.angle <= state.residualAngleMax!);
+                }
+
+                const svg = d3
+                    .create('svg')
+                    .attr('height', '100%')
+                    .attr('width', '100%')
+                    .attr('viewBox', [0, 0, width + padding, height + padding]);
+
+                const parent = svg
+                    .append('g')
+                    .attr('transform', `translate(${(width + padding) / 2} ${(height + padding) / 2})`);
+
+                let residualCount = 0;
+                parent
+                    .selectAll('point')
+                    .data(
+                        residuals.filter((r) => {
+                            if (r.isInitial && state.isInitial) {
+                                residualCount++;
+                                return true;
+                            } else if (!r.isInitial && state.isFinal) {
+                                residualCount++;
+                                return true;
+                            }
+                            return false;
+                        }),
+                    )
+                    .enter()
+                    .append('circle')
+                    .attr('cx', (d) => d.radius * Math.cos(d.angle))
+                    .attr('cy', (d) => d.radius * Math.sin(d.angle))
+                    .attr('r', radius)
+                    .attr('fill', (d) => (d.isInitial ? vars.color.initial : vars.color.final));
+
+                if (residualCount === 0) {
+                    element.classList.add(styles.empty);
+                    while (element.lastElementChild) {
+                        element.removeChild(element.lastElementChild);
+                    }
+                    return;
+                } else {
+                    element.classList.remove(styles.empty);
+                }
+
+                if (state.isInitial) {
+                    parent
+                        .append('circle')
+                        .attr('cx', 0)
+                        .attr('cy', 0)
+                        .attr('r', initialMin.radius)
+                        .attr('stroke', vars.color.initial)
+                        .attr('stroke-width', radius)
+                        .attr('fill', 'transparent');
+                    parent
+                        .append('circle')
+                        .attr('cx', 0)
+                        .attr('cy', 0)
+                        .attr('r', initialMax.radius)
+                        .attr('stroke', vars.color.initial)
+                        .attr('stroke-width', radius)
+                        .attr('fill', 'transparent');
+                }
+
+                if (state.isFinal) {
+                    parent
+                        .append('circle')
+                        .attr('cx', 0)
+                        .attr('cy', 0)
+                        .attr('r', finalMin.radius)
+                        .attr('stroke', vars.color.final)
+                        .attr('stroke-width', radius)
+                        .attr('fill', 'transparent');
+
+                    parent
+                        .append('circle')
+                        .attr('cx', 0)
+                        .attr('cy', 0)
+                        .attr('r', finalMax.radius)
+                        .attr('stroke', vars.color.final)
+                        .attr('stroke-width', radius)
+                        .attr('fill', 'transparent');
+                }
+
+                element.replaceChildren(svg.node() as Node);
             }
-
-            if (state.isInitial) {
-                parent.append('circle')
-                    .attr('cx', 0)
-                    .attr('cy', 0)
-                    .attr('r', initialMin.radius)
-                    .attr('stroke', vars.color.initial)
-                    .attr('stroke-width', radius)
-                    .attr('fill', 'transparent');
-                parent.append('circle')
-                    .attr('cx', 0)
-                    .attr('cy', 0)
-                    .attr('r', initialMax.radius)
-                    .attr('stroke', vars.color.initial)
-                    .attr('stroke-width', radius)
-                    .attr('fill', 'transparent');
-            }
-
-            if (state.isFinal) {
-                parent.append('circle')
-                    .attr('cx', 0)
-                    .attr('cy', 0)
-                    .attr('r', finalMin.radius)
-                    .attr('stroke', vars.color.final)
-                    .attr('stroke-width', radius)
-                    .attr('fill', 'transparent');
-
-                parent.append('circle')
-                    .attr('cx', 0)
-                    .attr('cy', 0)
-                    .attr('r', finalMax.radius)
-                    .attr('stroke', vars.color.final)
-                    .attr('stroke-width', radius)
-                    .attr('fill', 'transparent');
-            }
-
-            element.replaceChildren(svg.node() as Node);
-        }
-    }, [state, activeTiepoints]);
-
-    return (
-        <div ref={plot} className={styles.container}></div>
+        },
+        [state, activeTracks],
     );
+
+    return <div ref={plot} className={styles.container}></div>;
 }

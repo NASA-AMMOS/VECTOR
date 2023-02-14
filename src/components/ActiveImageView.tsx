@@ -1,5 +1,3 @@
-import { useReducer } from 'react';
-
 import Tracks from '@/components/Tracks';
 import TiepointImage from '@/components/TiepointImage';
 import RadialChart from '@/components/RadialChart';
@@ -14,7 +12,7 @@ import * as styles from '@/components/ActiveImageView.css';
 interface ActiveImageViewProps {
     contextMenu: ContextMenuState;
     setContextMenu: React.Dispatch<ContextMenuState>;
-};
+}
 
 export default function ActiveImageView({ contextMenu, setContextMenu }: ActiveImageViewProps) {
     const { state } = useTools();
@@ -29,24 +27,14 @@ export default function ActiveImageView({ contextMenu, setContextMenu }: ActiveI
                         <TiepointImage state={state} />
                         <div className={styles.block}>
                             <div className={styles.item}>
-                                <RadialChart
-                                    state={state}
-                                    activeImage={activeImage}
-                                />
+                                <RadialChart state={state} activeImage={activeImage} />
                             </div>
                             <div className={styles.item}>
-                                <ResidualChart
-                                    state={state}
-                                    activeImage={activeImage}
-                                />
+                                <ResidualChart state={state} activeImage={activeImage} />
                             </div>
                         </div>
                     </div>
-                    <Tracks
-                        state={state}
-                        contextMenu={contextMenu}
-                        setContextMenu={setContextMenu}
-                    />
+                    <Tracks state={state} contextMenu={contextMenu} setContextMenu={setContextMenu} />
                 </section>
             )}
         </>

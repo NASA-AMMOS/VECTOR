@@ -14,8 +14,8 @@ export default function Overview() {
         <>
             {!activeImage && (
                 <>
-                    {router.pathname === Route.STATISTICS && <GlobalStatistics /> }
-                    {router.pathname === Route.CAMERAS && <GlobalScene /> }
+                    {router.pathname === Route.STATISTICS && <GlobalStatistics />}
+                    {router.pathname === Route.CAMERAS && <GlobalScene />}
                     {router.pathname === Route.IMAGES && <GlobalImageView />}
                 </>
             )}

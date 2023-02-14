@@ -9,11 +9,11 @@ interface Edit {
     id: any;
     type: string;
     operation: string;
-};
+}
 
 interface EditModalProps {
     handeClose: (event: React.MouseEvent) => void;
-};
+}
 
 const parser = new DOMParser();
 const serializer = new XMLSerializer();
@@ -24,10 +24,8 @@ export default function EditModal({ handeClose }: EditModalProps) {
     function handleEdit(edit: Edit) {
         setEditHistory((edits) => {
             const newEdits = [...edits];
-            const index = newEdits.findIndex((e) =>
-                e.id === edit.id &&
-                e.type === edit.type &&
-                e.operation === edit.operation
+            const index = newEdits.findIndex(
+                (e) => e.id === edit.id && e.type === edit.type && e.operation === edit.operation,
             );
             newEdits.splice(index, 1);
             return newEdits;
@@ -65,9 +63,7 @@ export default function EditModal({ handeClose }: EditModalProps) {
             <div className={styles.shadow} />
             <div className={styles.container}>
                 <div className={styles.header}>
-                    <h2 className={styles.title}>
-                        Edit History
-                    </h2>
+                    <h2 className={styles.title}>Edit History</h2>
                     <div className={styles.close} onClick={handeClose}>
                         +
                     </div>
@@ -77,10 +73,7 @@ export default function EditModal({ handeClose }: EditModalProps) {
                         <div className={styles.list}>
                             {editHistory.map(({ id, type, operation }) => (
                                 <div key={`${type}_${id}_${operation}`} className={styles.item}>
-                                    <p
-                                        key={`${type}_${id}_${operation}_text`}
-                                        className={styles.text}
-                                    >
+                                    <p key={`${type}_${id}_${operation}_text`} className={styles.text}>
                                         &gt; {type} {operation} {id}
                                     </p>
                                     <button
@@ -93,10 +86,7 @@ export default function EditModal({ handeClose }: EditModalProps) {
                                 </div>
                             ))}
                         </div>
-                        <button
-                            className={cn(styles.button, styles.large)}
-                            onClick={handleExport}
-                        >
+                        <button className={cn(styles.button, styles.large)} onClick={handleExport}>
                             Export
                         </button>
                     </>

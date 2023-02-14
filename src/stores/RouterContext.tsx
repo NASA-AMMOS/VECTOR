@@ -8,16 +8,16 @@ export enum Route {
     CAMERAS = 'CAMERAS',
     IMAGE = 'IMAGE',
     TRACK = 'TRACK',
-};
+}
 
 interface Router {
     pathname: Route;
     push: React.Dispatch<React.SetStateAction<Route>>;
-};
+}
 
 interface ProvideRouterProps {
     children: React.ReactNode;
-};
+}
 
 export const RouterContext = createContext<Router>({} as Router);
 
@@ -39,9 +39,5 @@ export default function ProvideRouter({ children }: ProvideRouterProps) {
         }
     }, [route]);
 
-    return (
-        <RouterContext.Provider value={{ pathname: route, push: setRoute }}>
-            {children}
-        </RouterContext.Provider>
-    );
+    return <RouterContext.Provider value={{ pathname: route, push: setRoute }}>{children}</RouterContext.Provider>;
 }
