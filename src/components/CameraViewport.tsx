@@ -1,65 +1,19 @@
 import { useRef, useState, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { Canvas, createPortal, useLoader, useFrame, useThree } from '@react-three/fiber';
-import {
-    OrbitControls,
-    PerspectiveCamera,
-    OrthographicCamera,
-    Instances,
-    Instance,
-    Text,
-    useContextBridge,
-    useCamera,
-} from '@react-three/drei';
+import { Canvas, useLoader } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, Text, useContextBridge } from '@react-three/drei';
 
 import { ToolsContext, useTools } from '@/stores/ToolsContext';
 import { Track, CameraModel, DataContext, useData, Cameras } from '@/stores/DataContext';
 
+import ViewCube from '@/components/ViewCube';
+
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/CameraViewport.css';
 
-const matrix = new THREE.Matrix4();
+const object3D = new THREE.Object3D();
 const planeGeometry = new THREE.PlaneGeometry(0.25, 0.25);
-
-function ViewCube() {
-    const { gl, scene, camera, size } = useThree();
-
-    const mesh = useRef<THREE.Mesh>(null);
-    const axes = useRef<THREE.AxesHelper>(null);
-    const virtualCamera = useRef<THREE.Camera>(null);
-
-    const virtualScene = useMemo(() => new THREE.Scene(), []);
-
-    useFrame(() => {
-        matrix.copy(camera.matrix).invert();
-        mesh.current?.quaternion.setFromRotationMatrix(matrix);
-        axes.current?.quaternion.setFromRotationMatrix(matrix);
-        gl.autoClear = true;
-        gl.render(scene, camera);
-        gl.autoClear = false;
-        gl.clearDepth();
-        gl.render(virtualScene, virtualCamera.current!);
-    }, 1);
-
-    return createPortal(
-        <>
-            <OrthographicCamera ref={virtualCamera} makeDefault={false} position={[0, 0, 100]} />
-            <mesh
-                ref={mesh}
-                raycast={useCamera(virtualCamera as React.MutableRefObject<THREE.Camera>)}
-                position={[size.width / 2 - 30, size.height / 2 - 30, 0]}
-            >
-                <meshLambertMaterial color="white" />
-                <boxBufferGeometry args={[10, 10, 10]} />
-            </mesh>
-            <axesHelper ref={axes} args={[25]} position={[size.width / 2 - 30, size.height / 2 - 30, 0]} />
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} intensity={0.5} />
-        </>,
-        virtualScene,
-    );
-}
 
 function Scene() {
     const { state } = useTools();
@@ -68,9 +22,14 @@ function Scene() {
 
     const obj = mesh && useLoader(OBJLoader, mesh);
 
-    const virtualCamera = useRef<THREE.Camera>(null!);
+    const sceneCamera = useRef<THREE.Camera>(null!);
 
-    const meshes = useRef<THREE.Group>(null!);
+    const cameraMeshes = useRef<THREE.Group>(null!);
+
+    // Manually create instanced meshes over react-three-drei Instances
+    // container because it cannot handle large datasets.
+    const instancedInitialPoints = useRef<THREE.InstancedMesh>(null);
+    const instancedFinalPoints = useRef<THREE.InstancedMesh>(null);
 
     const [text, setText] = useState<JSX.Element[]>([]);
 
@@ -123,62 +82,61 @@ function Scene() {
         return activeTracks.map((track) => track.finalXYZ);
     }, [activeTracks]);
 
-    async function initData() {
-        if (meshes.current?.children.length > 0) {
-            meshes.current.clear();
+    async function initMeshes() {
+        if (cameraMeshes.current?.children.length > 0) {
+            cameraMeshes.current.clear();
         }
 
-        // Exit early if camera filter is toggled off.
         if (!state.isCamera) {
+            // Exit early if camera filter is toggled off.
             setText([]);
-            return;
-        }
+        } else {
+            const newText: JSX.Element[] = [];
+            for (const [index, cameraId] of Object.keys(activeCameras).entries()) {
+                const camera = activeCameras[cameraId];
 
-        const newText: JSX.Element[] = [];
-        for (const [index, cameraId] of Object.keys(activeCameras).entries()) {
-            const camera = activeCameras[cameraId];
+                const metadata = getVICARFile(cameraId);
 
-            const metadata = getVICARFile(cameraId);
+                // Get coordinate system transformation group.
+                // const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
+                // const group = metadata.slice(frameIndex - 10, frameIndex + 1);
 
-            // Get coordinate system transformation group.
-            // const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
-            // const group = metadata.slice(frameIndex - 10, frameIndex + 1);
-
-            const originOffset = new THREE.Vector3(...parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR'));
-            const originRotation = new THREE.Quaternion(
-                ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(1, 4),
-                ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(0, 1),
-            );
-
-            // Apply coordinate transformation to SITE frame.
-            if (state.isInitial) {
-                renderCamera(
-                    index,
-                    meshes,
-                    camera.initial,
-                    originOffset,
-                    originRotation,
-                    theme.color.initialHex,
-                    newText,
-                    true,
+                const originOffset = new THREE.Vector3(...parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR'));
+                const originRotation = new THREE.Quaternion(
+                    ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(1, 4),
+                    ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(0, 1),
                 );
+
+                // Apply coordinate transformation to SITE frame.
+                if (state.isInitial) {
+                    renderCamera(
+                        index,
+                        cameraMeshes,
+                        camera.initial,
+                        originOffset,
+                        originRotation,
+                        theme.color.initialHex,
+                        newText,
+                        true,
+                    );
+                }
+
+                if (state.isFinal) {
+                    renderCamera(
+                        index,
+                        cameraMeshes,
+                        camera.final,
+                        originOffset,
+                        originRotation,
+                        theme.color.finalHex,
+                        newText,
+                        false,
+                    );
+                }
             }
 
-            if (state.isFinal) {
-                renderCamera(
-                    index,
-                    meshes,
-                    camera.final,
-                    originOffset,
-                    originRotation,
-                    theme.color.finalHex,
-                    newText,
-                    false,
-                );
-            }
+            setText(newText);
         }
-
-        setText(newText);
     }
 
     function renderCamera(
@@ -201,7 +159,7 @@ function Scene() {
         A.applyQuaternion(originRotation);
 
         // Render camera plane.
-        const planeMaterial = new THREE.MeshLambertMaterial({ color });
+        const planeMaterial = new THREE.MeshBasicMaterial({ color });
         planeMaterial.side = THREE.DoubleSide;
 
         const plane = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -236,30 +194,54 @@ function Scene() {
 
     useEffect(() => {
         if (state && activeTracks && activeCameras) {
-            initData();
+            initMeshes();
         }
     }, [state, activeTracks, activeCameras]);
 
+    useEffect(() => {
+        if (state.isPoint && state.isInitial && instancedInitialPoints.current) {
+            for (let i = 0; i < initialPoints.length; ++i) {
+                const point = initialPoints[i];
+                object3D.position.set(point[0], point[1], point[2]);
+                object3D.updateMatrix();
+                instancedInitialPoints.current.setMatrixAt(i, object3D.matrix);
+            }
+            instancedInitialPoints.current.instanceMatrix.needsUpdate = true;
+        } else if (instancedInitialPoints.current) {
+            instancedInitialPoints.current.visible = false;
+        }
+    }, [state]);
+
+    useEffect(() => {
+        if (state.isPoint && state.isFinal && instancedFinalPoints.current) {
+            for (let i = 0; i < finalPoints.length; ++i) {
+                const point = finalPoints[i];
+                object3D.position.set(point[0], point[1], point[2]);
+                object3D.updateMatrix();
+                instancedFinalPoints.current.setMatrixAt(i, object3D.matrix);
+            }
+            instancedFinalPoints.current.instanceMatrix.needsUpdate = true;
+        } else if (instancedFinalPoints.current) {
+            instancedFinalPoints.current.visible = false;
+        }
+    }, [state]);
+
     return (
         <>
-            <ambientLight />
             <color attach="background" args={[theme.color.white]} />
-            <PerspectiveCamera makeDefault ref={virtualCamera} position={[0, 0, initialPoints[0][2] - 10]} />
-            <group ref={meshes} />
-            <Instances>
+            <PerspectiveCamera makeDefault ref={sceneCamera} />
+            <group ref={cameraMeshes} />
+            <instancedMesh ref={instancedInitialPoints} args={[undefined, undefined, initialPoints.length]}>
                 <sphereGeometry args={[0.05]} />
-                <meshLambertMaterial color={theme.color.initialHex} />
-                {state.isPoint && state.isInitial && initialPoints.map((p, i) => <Instance key={i} position={p} />)}
-            </Instances>
-            <Instances>
+                <meshBasicMaterial color={theme.color.initialHex} />
+            </instancedMesh>
+            <instancedMesh ref={instancedFinalPoints} args={[undefined, undefined, finalPoints.length]}>
                 <sphereGeometry args={[0.05]} />
-                <meshLambertMaterial color={theme.color.finalHex} />
-                {state.isPoint && state.isFinal && finalPoints.map((p, i) => <Instance key={i} position={p} />)}
-            </Instances>
+                <meshBasicMaterial color={theme.color.finalHex} />
+            </instancedMesh>
             {text}
             {mesh && <primitive object={obj} />}
-            <gridHelper args={[1000, 1000]} rotation={[Math.PI / 2, 0, 0]} />
-            <OrbitControls camera={virtualCamera.current} target={initialPoints[0]} />
+            <OrbitControls camera={sceneCamera.current} target={initialPoints[0]} />
             {/* @ts-ignore: https://github.com/pmndrs/react-three-fiber/issues/925 */}
             <ViewCube />
         </>
