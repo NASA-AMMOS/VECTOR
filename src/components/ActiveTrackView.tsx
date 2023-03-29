@@ -35,7 +35,9 @@ export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveT
                                 activeTrack={activeTrack}
                             />
                         </div>
-                        <CameraViewport />
+                        <div className={styles.canvas}>
+                            <CameraViewport />
+                        </div>
                     </div>
                     <div className={styles.column}>
                         <RadialChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { fileOpen } from 'browser-fs-access';
 import cn from 'classnames';
 
 import Label from '@/components/Label';
@@ -20,29 +19,10 @@ export default function SideBar() {
 
     const { state, handleChange } = useTools();
 
-    const {
-        tracks,
-        images,
-        mesh,
-        activeImage,
-        activeTrack,
-        initialResidualBounds,
-        finalResidualBounds,
-        editHistory,
-        setMesh,
-    } = useData();
+    const { tracks, images, activeImage, activeTrack, initialResidualBounds, finalResidualBounds, editHistory } =
+        useData();
 
     const [activeHistoryModal, setActiveHistoryModal] = useState(false);
-
-    async function handleMesh() {
-        try {
-            const file = await fileOpen();
-            const url = URL.createObjectURL(file);
-            setMesh(url);
-        } catch (err) {
-            console.error(err);
-        }
-    }
 
     function handleHistoryClick() {
         setActiveHistoryModal((prevState) => !prevState);
@@ -102,22 +82,12 @@ export default function SideBar() {
                     <div className={styles.section}>
                         <h2 className={styles.subheader}>Scene</h2>
                         <div className={styles.item}>
-                            <button className={cn(styles.button, styles.small)} onClick={handleMesh}>
-                                Upload Mesh
-                            </button>
-                        </div>
-                        <div className={styles.item}>
                             <Checkbox name={Filter.SCENE_CAMERA} checked={state.isCamera} onChange={handleChange}>
                                 Camera
                             </Checkbox>
                             <Checkbox name={Filter.SCENE_POINT} checked={state.isPoint} onChange={handleChange}>
                                 Point
                             </Checkbox>
-                            {mesh && (
-                                <Checkbox name={Filter.SCENE_MESH} checked={state.isMesh} onChange={handleChange}>
-                                    Mesh
-                                </Checkbox>
-                            )}
                         </div>
                     </div>
                 )}

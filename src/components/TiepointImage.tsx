@@ -135,7 +135,9 @@ export default function TiepointImage({ state }: TiepointImageProps) {
     return (
         <section className={styles.container}>
             <h2 className={styles.header}>Image ID: {activeImage}</h2>
-            <canvas ref={stage} className={styles.stage} width={image?.width} height={image?.height} />
+            <div className={styles.image}>
+                <canvas ref={stage} className={styles.canvas} width={image?.width} height={image?.height} />
+            </div>
         </section>
     );
 }

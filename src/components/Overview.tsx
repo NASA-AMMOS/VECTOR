@@ -1,5 +1,5 @@
 import GlobalStatistics from '@/components/GlobalStatistics';
-import GlobalScene from '@/components/GlobalScene';
+import Global3DView from '@/components/Global3DView';
 import GlobalImageView from '@/components/GlobalImageView';
 
 import { Route, useRouter } from '@/stores/RouterContext';
@@ -15,7 +15,7 @@ export default function Overview() {
             {!activeImage && (
                 <>
                     {router.pathname === Route.STATISTICS && <GlobalStatistics />}
-                    {router.pathname === Route.CAMERAS && <GlobalScene />}
+                    {router.pathname === Route.CAMERAS && <Global3DView />}
                     {router.pathname === Route.IMAGES && <GlobalImageView />}
                 </>
             )}

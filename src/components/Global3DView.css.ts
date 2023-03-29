@@ -4,4 +4,6 @@ import { vars } from '../utils/theme.css';
 export const container = style({
     height: '100vh',
     width: `calc(100vw - ${vars.size.sidebar})`,
+    gridColumn: '2 / -1',
+    overflow: 'hidden',
 });

@@ -91,7 +91,6 @@ interface DataStore {
     cameras: Cameras;
     images: Image[];
     vicar: VICAR;
-    mesh: string | null;
 
     tiepointsFile: string;
 
@@ -115,7 +114,6 @@ interface DataStore {
     setCameras: React.Dispatch<React.SetStateAction<Cameras>>;
     setImages: React.Dispatch<React.SetStateAction<Image[]>>;
     setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
-    setMesh: React.Dispatch<React.SetStateAction<string | null>>;
 
     // TODO: Need equivalent of setTiepointsFile for tracks.
     setTiepointsFile: React.Dispatch<React.SetStateAction<string>>;
@@ -142,7 +140,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [cameras, setCameras] = useState<Cameras>({});
     const [images, setImages] = useState<Image[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
-    const [mesh, setMesh] = useState<string | null>(null);
 
     const [tiepointsFile, setTiepointsFile] = useState<string>('');
 
@@ -268,7 +265,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 cameras,
                 images,
                 vicar,
-                mesh,
 
                 tiepointsFile,
 
@@ -292,7 +288,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 setCameras,
                 setImages,
                 setVICAR,
-                setMesh,
 
                 setTiepointsFile,
 

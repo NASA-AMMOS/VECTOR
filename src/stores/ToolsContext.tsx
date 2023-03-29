@@ -18,7 +18,6 @@ export enum Filter {
     RESIDUAL_SORT_DIRECTION = 'RESIDUAL_SORT_DIRECTION',
     SCENE_CAMERA = 'SCENE_CAMERA',
     SCENE_POINT = 'SCENE_POINT',
-    SCENE_MESH = 'SCENE_MESH',
 }
 
 export enum ResidualSortField {
@@ -49,7 +48,6 @@ interface State {
     residualSort: ResidualSort;
     isCamera: boolean;
     isPoint: boolean;
-    isMesh: boolean;
 }
 
 interface Action {
@@ -81,7 +79,6 @@ const initialState: State = {
     },
     isCamera: true,
     isPoint: true,
-    isMesh: true,
 };
 
 function reducer(state: State, action: Action) {
@@ -114,8 +111,6 @@ function reducer(state: State, action: Action) {
             return { ...state, isCamera: !state.isCamera };
         case Filter.SCENE_POINT:
             return { ...state, isPoint: !state.isPoint };
-        case Filter.SCENE_MESH:
-            return { ...state, isMesh: !state.isMesh };
         default:
             return state;
     }

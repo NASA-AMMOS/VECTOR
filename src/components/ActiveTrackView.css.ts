@@ -12,7 +12,8 @@ export const container = style({
 
 export const panel = style({
     gridColumn: '1 / 5',
-    display: 'grid',
+    display: 'flex',
+    flexDirection: 'column',
     height: 'calc(100vh - 2rem)',
     padding: '1rem',
     backgroundColor: vars.color.white,
@@ -39,5 +40,8 @@ export const header = style({
 
 export const bar = style({
     marginBottom: '1rem',
-    overflow: 'auto',
+});
+
+export const canvas = style({
+    height: '100%',
 });
