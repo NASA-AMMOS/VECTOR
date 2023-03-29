@@ -9,7 +9,7 @@ import * as styles from '@/components/Landing.css';
 const parser = new DOMParser();
 
 export default function Landing() {
-    const { setTracks, setCameras, setImages, setVICAR, setTiepointsFile } = useData();
+    const { setTracks, setCameras, setImages, setVICAR } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
 
@@ -19,7 +19,6 @@ export default function Landing() {
                 const xmlString = await file.text();
                 const xml = parser.parseFromString(xmlString, 'application/xml');
                 if (xml.querySelector('tiepoint_file')) {
-                    setTiepointsFile(xmlString);
                     handleTracks(xml);
                 } else {
                     handleNavigation(xml);
@@ -36,16 +35,15 @@ export default function Landing() {
         const tiepoints = xml.querySelectorAll('tie');
         const newTracks: Track[] = [];
 
-        let trackIndex = 0;
         let pointIndex = 0;
 
         for (const tiepoint of tiepoints.values()) {
             const trackId = Number(tiepoint.querySelector('track')!.getAttribute('id'));
-            const currentTrack = newTracks.find((track) => track.trackId === trackId);
+            const currentTrack = newTracks.find((track) => track.id === trackId);
 
             if (!currentTrack) {
                 const leftKey = Number(tiepoint.getAttribute('left_key'));
-                const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
+                const leftImageName = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
                 const leftPixel = tiepoint.querySelector('left');
 
                 const leftInitialResidual = tiepoint.querySelector('left_init_residual');
@@ -59,7 +57,7 @@ export default function Landing() {
 
                 const pointLeft: Point = {
                     index: pointIndex,
-                    id: leftId,
+                    imageName: leftImageName,
                     key: leftKey,
                     pixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
                     initialResidual: [leftInitialResidualX, leftInitialResidualY],
@@ -74,7 +72,7 @@ export default function Landing() {
                 pointIndex++;
 
                 const rightKey = Number(tiepoint.getAttribute('right_key'));
-                const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
+                const rightImageName = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
                 const rightPixel = tiepoint.querySelector('right');
 
                 const rightInitialResidual = tiepoint.querySelector('right_init_residual');
@@ -88,7 +86,7 @@ export default function Landing() {
 
                 const pointRight: Point = {
                     index: pointIndex,
-                    id: rightId,
+                    imageName: rightImageName,
                     key: rightKey,
                     pixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
                     initialResidual: [rightInitialResidualX, rightInitialResidualY],
@@ -112,20 +110,20 @@ export default function Landing() {
                 const finalY = Number(finalXYZ!.getAttribute('y'));
                 const finalZ = Number(finalXYZ!.getAttribute('z'));
 
-                newTracks.push({
-                    trackId,
-                    index: trackIndex,
+                const newTrack: Track = {
+                    id: trackId,
                     initialXYZ: [initialX, initialY, initialZ],
                     finalXYZ: [finalX, finalY, finalZ],
                     points: [pointLeft, pointRight],
-                } as Track);
-                trackIndex++;
+                };
+
+                newTracks.push(newTrack);
             } else {
                 const leftKey = Number(tiepoint.getAttribute('left_key'));
                 const rightKey = Number(tiepoint.getAttribute('right_key'));
 
                 if (!currentTrack.points.some((point) => point.key == leftKey)) {
-                    const id = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
+                    const imageName = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
                     const pixel = tiepoint.querySelector('left');
 
                     const initialResidual = tiepoint.querySelector('left_init_residual');
@@ -138,8 +136,8 @@ export default function Landing() {
                     const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
                     const point: Point = {
+                        imageName,
                         index: pointIndex,
-                        id,
                         key: leftKey,
                         pixel: [Number(pixel!.getAttribute('samp')), Number(pixel!.getAttribute('line'))],
                         initialResidual: [initialResidualX, initialResidualY],
@@ -157,7 +155,7 @@ export default function Landing() {
                 }
 
                 if (!currentTrack.points.some((point) => point.key == rightKey)) {
-                    const id = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
+                    const imageName = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
                     const pixel = tiepoint.querySelector('right');
 
                     const initialResidual = tiepoint.querySelector('right_init_residual');
@@ -170,8 +168,8 @@ export default function Landing() {
                     const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
                     const pointRight: Point = {
+                        imageName,
                         index: pointIndex,
-                        id,
                         key: rightKey,
                         pixel: [Number(pixel!.getAttribute('samp')), Number(pixel!.getAttribute('line'))],
                         initialResidual: [initialResidualX, initialResidualY],

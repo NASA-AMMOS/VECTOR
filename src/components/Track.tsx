@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Vector2 } from 'three';
 import cn from 'classnames';
 
 import SlopeChart from '@/components/SlopeChart';
 
-import { ContextMenuState } from '@/App';
-import { Track as ITrack, useData } from '@/stores/DataContext';
+import { Point, Track as ITrack, useData } from '@/stores/DataContext';
 import { Route, useRouter } from '@/stores/RouterContext';
 import { ResidualSort } from '@/stores/ToolsContext';
 
 import { theme } from '@/utils/theme.css';
 import * as styles from '@/components/Tracks.css';
-
-const baseVector = new Vector2();
 
 export interface TrackState {
     isInitial: boolean;
@@ -30,8 +26,6 @@ interface StageProps {
 
 interface TrackProps {
     state: TrackState;
-    contextMenu: ContextMenuState;
-    setContextMenu: React.Dispatch<ContextMenuState>;
     activeImage: string | null;
     activeTrack: number | null;
     isGrouped?: boolean;
@@ -44,19 +38,73 @@ function Stage({ state, activeTrack }: StageProps) {
 
     const { tracks, getImageURL } = useData();
 
-    const [images, setImages] = useState<[string, HTMLImageElement][]>([]);
+    const [images, setImages] = useState<{ [key: string]: HTMLImageElement }>({});
 
-    const track = useMemo<ITrack>(() => tracks.find((t) => t.trackId === activeTrack)!, [tracks, activeTrack]);
+    const track = useMemo<ITrack>(() => tracks.find((t) => t.id === activeTrack)!, [tracks, activeTrack]);
 
     const imageURLs = useMemo(() => {
-        // Convert Array to Set to remove duplicates and back to Array for manipulation.
-        const imageIds = [...new Set(track.points.map((p) => p.id).flat())];
-        return imageIds.map((id) => [id, getImageURL(id)]);
+        const result: { [key: string]: string | null } = {};
+        for (const point of track.points) {
+            if (!(point.imageName in result)) {
+                result[point.imageName] = getImageURL(point.imageName);
+            }
+        }
+        return result;
     }, [track, getImageURL]);
+
+    const createPoint = (ctx: CanvasRenderingContext2D, point: Point, position: [number, number], count: number) => {
+        if (position[0] < count * height + count * padding || position[0] > count * height + count * padding + height)
+            return;
+
+        let isResidualRendered = false;
+
+        // Draw initial residual.
+        if (
+            state.isInitial &&
+            (!state.residualMin || (state.residualMin && state.residualMin <= point.initialResidualLength)) &&
+            (!state.residualMax || (state.residualMax && state.residualMax >= point.initialResidualLength))
+        ) {
+            ctx.beginPath();
+
+            ctx.strokeStyle = theme.color.initialHex;
+            ctx.lineWidth = 10;
+
+            ctx.moveTo(...position);
+            ctx.lineTo(position[0] + point.initialResidual[0] * 5, position[1] + point.initialResidual[1] * 5);
+
+            ctx.stroke();
+            isResidualRendered = true;
+        }
+
+        // Draw final residual.
+        if (
+            state.isFinal &&
+            (!state.residualMin || (state.residualMin && state.residualMin <= point.finalResidualLength)) &&
+            (!state.residualMax || (state.residualMax && state.residualMax >= point.finalResidualLength))
+        ) {
+            ctx.beginPath();
+
+            ctx.strokeStyle = theme.color.finalHex;
+            ctx.lineWidth = 10;
+
+            ctx.moveTo(...position);
+            ctx.lineTo(position[0] + point.finalResidual[0] * 5, position[1] + point.finalResidual[1] * 5);
+
+            ctx.stroke();
+            isResidualRendered = true;
+        }
+
+        // Draw pixel as circle.
+        if (isResidualRendered) {
+            ctx.beginPath();
+            ctx.arc(...position, 15, 0, Math.PI * 2, true);
+            ctx.fill();
+        }
+    };
 
     const stage = useCallback(
         (canvas: HTMLCanvasElement) => {
-            if (canvas && images.length > 0) {
+            if (canvas && Object.keys(images).length > 0) {
                 const ctx = canvas.getContext('2d');
                 if (!ctx) throw new Error();
 
@@ -64,21 +112,11 @@ function Stage({ state, activeTrack }: StageProps) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.save();
 
-                // Calculate image tiepoints without duplicates.
-                const imageResiduals = track.points
-                    .map((p) => [
-                        {
-                            id: p.id,
-                            pixel: p.pixel,
-                            initialResidual: p.initialResidual,
-                            finalResidual: p.finalResidual,
-                        },
-                    ])
-                    .flat();
+                const points = track.points;
 
                 // Calculate total height from scalable value.
                 // Calculate total width from N tiepoints with padding.
-                const width = height * imageResiduals.length + (imageResiduals.length - 1) * padding;
+                const width = height * points.length + (points.length - 1) * padding;
                 canvas.height = height;
                 canvas.width = width;
 
@@ -89,11 +127,8 @@ function Stage({ state, activeTrack }: StageProps) {
                 // Go through each tiepoint and draw both images related to each tiepoint.
                 let count = 0;
 
-                for (const residual of imageResiduals) {
-                    const { id, pixel, initialResidual, finalResidual } = residual;
-
-                    // Find the correct image for this tiepoint.
-                    const image = images.find((i) => i[0] === id)![1];
+                for (const point of points) {
+                    const image = images[point.imageName];
 
                     ctx.filter = 'contrast(2)';
 
@@ -101,7 +136,8 @@ function Stage({ state, activeTrack }: StageProps) {
                     ctx.drawImage(
                         image,
                         // Top-Left Corner
-                        ...(pixel.map((p) => p - offset) as [number, number]),
+                        point.pixel[0] - offset,
+                        point.pixel[1] - offset,
                         // Crop Area
                         offset * 2,
                         offset * 2,
@@ -114,8 +150,8 @@ function Stage({ state, activeTrack }: StageProps) {
                     );
 
                     // Draw main tiepoint.
-                    let imageCenter: [number, number] = [count * height + count * padding + height / 2, height / 2];
-                    drawTiepoint(ctx, imageCenter, count, initialResidual, finalResidual);
+                    const imageCenter: [number, number] = [count * height + count * padding + height / 2, height / 2];
+                    createPoint(ctx, point, imageCenter, count);
 
                     count++;
                 }
@@ -124,110 +160,21 @@ function Stage({ state, activeTrack }: StageProps) {
         [state, track, images],
     );
 
-    function drawTiepoint(
-        ctx: CanvasRenderingContext2D,
-        position: [number, number],
-        count: number,
-        initialResidual: [number, number],
-        finalResidual: [number, number],
-        isSibling?: boolean,
-    ) {
-        if (position[0] < count * height + count * padding || position[0] > count * height + count * padding + height)
-            return;
-
-        // Set opacity lower for sibling tiepoints in the image.
-        if (isSibling) {
-            ctx.globalAlpha = 0.3;
-        } else {
-            ctx.globalAlpha = 1;
-        }
-
-        // Calculate residual distance for filtering.
-        const initialDistance = Number(baseVector.distanceTo(new Vector2(...initialResidual)).toFixed(1));
-        const finalDistance = Number(baseVector.distanceTo(new Vector2(...finalResidual)).toFixed(1));
-
-        let isResidualRendered = false;
-
-        // Draw initial residual.
-        if (
-            state.isInitial &&
-            (!state.residualMin || (state.residualMin && state.residualMin <= initialDistance)) &&
-            (!state.residualMax || (state.residualMax && state.residualMax >= initialDistance))
-        ) {
-            ctx.beginPath();
-
-            ctx.strokeStyle = theme.color.initialHex;
-            ctx.lineWidth = 10;
-
-            ctx.moveTo(...position);
-            ctx.lineTo(
-                ...(position.map((p, i) => {
-                    let dist = (p + initialResidual[i]) * 5;
-                    // TODO: Check why this was added originally.
-                    // if (dist > count * height + count * padding + height) {
-                    //     dist = count * height + count * padding + height;
-                    // }
-                    return dist;
-                }) as [number, number]),
-            );
-
-            ctx.stroke();
-            isResidualRendered = true;
-        }
-
-        // Draw final residual.
-        if (
-            state.isFinal &&
-            (!state.residualMin || (state.residualMin && state.residualMin <= finalDistance)) &&
-            (!state.residualMax || (state.residualMax && state.residualMax >= finalDistance))
-        ) {
-            ctx.beginPath();
-
-            ctx.strokeStyle = theme.color.finalHex;
-            ctx.lineWidth = 10;
-
-            ctx.moveTo(...position);
-            ctx.lineTo(
-                ...(position.map((p, i) => {
-                    let dist = (p + finalResidual[i]) * 5;
-                    // TODO: Check why this was added originally.
-                    // if (dist > (count * height) + (count * padding) + height) {
-                    //     dist = (count * height) + (count * padding) + height;
-                    // }
-                    return dist;
-                }) as [number, number]),
-            );
-
-            ctx.stroke();
-            isResidualRendered = true;
-        }
-
-        // Draw pixel as circle.
-        if (isResidualRendered) {
-            ctx.beginPath();
-            ctx.arc(...position, 15, 0, Math.PI * 2, true);
-            ctx.fill();
-        }
-
-        // Reset alpha.
-        ctx.globalAlpha = 1;
-    }
-
     useEffect(() => {
         if (imageURLs) {
-            const newImages: [string, HTMLImageElement][] = [];
-            for (const [id, imageURL] of imageURLs) {
-                if (id && imageURL) {
-                    const newImage = new Image();
-                    newImage.onload = () => {
-                        newImages.push([id, newImage]);
-                        if (newImages.length === imageURLs.length) {
+            const newImages: { [key: string]: HTMLImageElement } = {};
+            for (const [name, url] of Object.entries(imageURLs)) {
+                if (name && url) {
+                    const image = new Image();
+                    image.onload = () => {
+                        newImages[name] = image;
+                        if (Object.keys(newImages).length === Object.keys(imageURLs).length) {
                             setImages(newImages);
                         }
                     };
-                    newImage.src = imageURL;
+                    image.src = url;
                 } else {
-                    throw new Error();
+                    throw new Error('Failed to load image in track');
                 }
             }
         }
@@ -236,26 +183,14 @@ function Stage({ state, activeTrack }: StageProps) {
     return <canvas ref={stage} className={styles.tiepoints} />;
 }
 
-export default function Track({ state, contextMenu, setContextMenu, activeImage, activeTrack, isGrouped }: TrackProps) {
+export default function Track({ state, activeImage, activeTrack, isGrouped }: TrackProps) {
     const router = useRouter();
 
-    const { editedTracks, setActiveTrack } = useData();
+    const { setActiveTrack } = useData();
 
     function handleClick() {
         router.push(Route.TRACK);
         setActiveTrack(activeTrack);
-    }
-
-    function handleContextMenu(event: React.MouseEvent<HTMLDivElement>) {
-        if (setContextMenu) {
-            event.preventDefault();
-            const newState = { isTiepoint: false, x: event.pageX, y: event.pageY, data: activeTrack };
-            if (contextMenu?.isEnabled) {
-                setContextMenu({ ...newState, isEnabled: false, isTrack: false });
-            } else {
-                setContextMenu({ ...newState, isEnabled: true, isTrack: true });
-            }
-        }
     }
 
     return (
@@ -264,22 +199,14 @@ export default function Track({ state, contextMenu, setContextMenu, activeImage,
             className={cn(styles.track, {
                 [styles.trackSpacing]: isGrouped,
                 [styles.trackWidth]: !isGrouped,
-                [styles.trackEdited]: activeTrack && editedTracks.includes(activeTrack),
             })}
             onClick={handleClick}
-            onContextMenu={handleContextMenu}
         >
             {isGrouped && activeImage && activeTrack && (
                 <>
                     <h3 className={styles.subheader}>ID: {activeTrack}</h3>
                     <div className={styles.slope}>
-                        <SlopeChart
-                            state={state}
-                            activeImage={activeImage}
-                            activeTrack={activeTrack}
-                            isSmall
-                            isEdited
-                        />
+                        <SlopeChart state={state} activeImage={activeImage} activeTrack={activeTrack} isSmall />
                     </div>
                 </>
             )}

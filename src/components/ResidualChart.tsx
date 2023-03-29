@@ -29,11 +29,10 @@ interface ResidualChartProps {
     state: ResidualChartState;
     activeImage?: string;
     activeTrack?: number;
-    isEdited?: boolean;
 }
 
-export default function ResidualChart({ state, activeImage, activeTrack, isEdited }: ResidualChartProps) {
-    const { tracks, imageTracks, residualBounds, editedTracks } = useData();
+export default function ResidualChart({ state, activeImage, activeTrack }: ResidualChartProps) {
+    const { tracks, imageTracks, residualBounds } = useData();
 
     const activeTracks = useMemo<Track[]>(() => {
         let newTracks: Track[] = [];
@@ -43,17 +42,13 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
         } else if (activeImage && !activeTrack) {
             newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            newTracks = tracks.filter((t) => t.trackId === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.id === Number(activeTrack));
         } else {
             return [];
         }
 
-        if (isEdited) {
-            return newTracks;
-        }
-
-        return newTracks.filter((track) => !editedTracks.includes(track.trackId));
-    }, [tracks, imageTracks, editedTracks, activeImage]);
+        return newTracks;
+    }, [tracks, imageTracks, activeImage]);
 
     const plot = useCallback(
         (element: HTMLDivElement) => {

@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Vector2 } from 'three';
 
-import { ContextMenuState } from '@/App';
 import { useData } from '@/stores/DataContext';
 import { ResidualSortField, ResidualSortDirection } from '@/stores/ToolsContext';
 import Track, { TrackState } from '@/components/Track';
@@ -13,11 +12,9 @@ const tempVector = new Vector2();
 
 interface TracksProps {
     state: TrackState;
-    contextMenu: ContextMenuState;
-    setContextMenu: React.Dispatch<ContextMenuState>;
 }
 
-export default function Tracks({ state, contextMenu, setContextMenu }: TracksProps) {
+export default function Tracks({ state }: TracksProps) {
     const { tracks, imageTracks, activeImage } = useData();
 
     const activeTracks = useMemo<number[]>(() => {
@@ -26,11 +23,11 @@ export default function Tracks({ state, contextMenu, setContextMenu }: TracksPro
         }
 
         const imageTrack = imageTracks[activeImage];
-        const trackIds = [...new Set(imageTrack.map((track) => track.trackId))];
+        const trackIds = [...new Set(imageTrack.map((track) => track.id))];
 
         trackIds.sort((idA, idB) => {
-            const trackA = tracks.find((track) => track.trackId === idA);
-            const trackB = tracks.find((track) => track.trackId === idB);
+            const trackA = tracks.find((track) => track.id === idA);
+            const trackB = tracks.find((track) => track.id === idB);
 
             if (trackA === undefined || trackB === undefined) {
                 throw new Error('Failed to sort tracks');
@@ -108,15 +105,7 @@ export default function Tracks({ state, contextMenu, setContextMenu }: TracksPro
         <div className={styles.container}>
             <h2 className={styles.header}>Tracks</h2>
             {activeTracks.map((trackId) => (
-                <Track
-                    key={trackId}
-                    state={state}
-                    contextMenu={contextMenu}
-                    setContextMenu={setContextMenu}
-                    activeImage={activeImage}
-                    activeTrack={trackId}
-                    isGrouped
-                />
+                <Track key={trackId} state={state} activeImage={activeImage} activeTrack={trackId} isGrouped />
             ))}
         </div>
     );

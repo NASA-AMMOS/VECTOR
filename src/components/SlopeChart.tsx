@@ -1,5 +1,4 @@
 import { useMemo, useCallback } from 'react';
-import { Vector2 } from 'three';
 // @ts-ignore: https://github.com/observablehq/plot/issues/401
 import * as Plot from '@observablehq/plot';
 
@@ -8,9 +7,6 @@ import { Pixel } from '@/utils/helpers';
 
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/SlopeChart.css';
-
-const baseVector = new Vector2();
-const tempVector = new Vector2();
 
 interface SlopeChartState {
     isRelative: boolean;
@@ -23,7 +19,6 @@ interface SlopeChartProps {
     activeImage?: string;
     activeTrack?: number;
     isSmall?: boolean;
-    isEdited?: boolean;
 }
 
 interface Residual {
@@ -33,8 +28,8 @@ interface Residual {
     decreased: boolean;
 }
 
-export default function SlopeChart({ state, activeImage, activeTrack, isSmall, isEdited }: SlopeChartProps) {
-    const { tracks, imageTracks, residualBounds, editedTracks } = useData();
+export default function SlopeChart({ state, activeImage, activeTrack, isSmall }: SlopeChartProps) {
+    const { tracks, imageTracks, residualBounds } = useData();
 
     const activeTracks = useMemo<Track[]>(() => {
         let newTracks: Track[] = [];
@@ -42,16 +37,13 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall, i
         if (activeImage && !activeTrack) {
             newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            newTracks = tracks.filter((t) => t.trackId === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.id === Number(activeTrack));
         } else {
             return [];
         }
 
-        if (isEdited) {
-            return newTracks;
-        }
-        return newTracks.filter((track) => !editedTracks.includes(track.trackId));
-    }, [tracks, imageTracks, editedTracks, activeImage]);
+        return newTracks;
+    }, [tracks, imageTracks, activeImage]);
 
     const plot = useCallback(
         (element: HTMLDivElement) => {

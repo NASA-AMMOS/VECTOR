@@ -45,7 +45,7 @@ export default function CameraViewport() {
         if (!activeTrack) {
             return tracks;
         }
-        return tracks.filter((track) => track.trackId === activeTrack);
+        return tracks.filter((track) => track.id === activeTrack);
     }, [tracks, activeTrack]);
 
     const animate = () => {
@@ -110,8 +110,8 @@ export default function CameraViewport() {
         const cameraIds: string[] = [];
         for (const track of activeTracks) {
             for (const point of track.points) {
-                if (point.id in cameras && !cameraIds.includes(point.id)) {
-                    cameraIds.push(point.id);
+                if (point.imageName in cameras && !cameraIds.includes(point.imageName)) {
+                    cameraIds.push(point.imageName);
                 }
             }
         }

@@ -1,4 +1,3 @@
-import { ContextMenuState } from '@/App';
 import { useTools } from '@/stores/ToolsContext';
 import { useData } from '@/stores/DataContext';
 
@@ -10,12 +9,7 @@ import SlopeChart from '@/components/SlopeChart';
 
 import * as styles from '@/components/ActiveTrackView.css';
 
-interface ActiveTrackViewProps {
-    contextMenu: ContextMenuState;
-    setContextMenu: React.Dispatch<ContextMenuState>;
-}
-
-export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveTrackViewProps) {
+export default function ActiveTrackView() {
     const { state } = useTools();
 
     const { activeImage, activeTrack } = useData();
@@ -27,22 +21,16 @@ export default function ActiveTrackView({ contextMenu, setContextMenu }: ActiveT
                     <div className={styles.panel}>
                         <h3 className={styles.header}>Track ID: {activeTrack}</h3>
                         <div className={styles.bar}>
-                            <Track
-                                state={state}
-                                contextMenu={contextMenu}
-                                setContextMenu={setContextMenu}
-                                activeImage={activeImage}
-                                activeTrack={activeTrack}
-                            />
+                            <Track state={state} activeImage={activeImage} activeTrack={activeTrack} />
                         </div>
                         <div className={styles.canvas}>
                             <CameraViewport />
                         </div>
                     </div>
                     <div className={styles.column}>
-                        <RadialChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />
-                        <ResidualChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />
-                        <SlopeChart state={state} activeImage={activeImage} activeTrack={activeTrack} isEdited />
+                        <RadialChart state={state} activeImage={activeImage} activeTrack={activeTrack} />
+                        <ResidualChart state={state} activeImage={activeImage} activeTrack={activeTrack} />
+                        <SlopeChart state={state} activeImage={activeImage} activeTrack={activeTrack} />
                     </div>
                 </section>
             )}

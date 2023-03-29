@@ -65,7 +65,7 @@ export default function TiepointImage({ state }: TiepointImageProps) {
                 // Draw Residuals
                 for (const track of activeTracks) {
                     for (const point of track.points) {
-                        if (point.id === activeImage) {
+                        if (point.imageName === activeImage) {
                             const { initialResidual, finalResidual, pixel } = point;
 
                             // Calculate residual distance for filtering.

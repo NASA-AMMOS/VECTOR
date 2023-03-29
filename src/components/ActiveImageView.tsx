@@ -3,18 +3,12 @@ import TiepointImage from '@/components/TiepointImage';
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 
-import { ContextMenuState } from '@/App';
 import { useTools } from '@/stores/ToolsContext';
 import { useData } from '@/stores/DataContext';
 
 import * as styles from '@/components/ActiveImageView.css';
 
-interface ActiveImageViewProps {
-    contextMenu: ContextMenuState;
-    setContextMenu: React.Dispatch<ContextMenuState>;
-}
-
-export default function ActiveImageView({ contextMenu, setContextMenu }: ActiveImageViewProps) {
+export default function ActiveImageView() {
     const { state } = useTools();
 
     const { activeImage, activeTrack } = useData();
@@ -34,7 +28,7 @@ export default function ActiveImageView({ contextMenu, setContextMenu }: ActiveI
                             </div>
                         </div>
                     </div>
-                    <Tracks state={state} contextMenu={contextMenu} setContextMenu={setContextMenu} />
+                    <Tracks state={state} />
                 </section>
             )}
         </>

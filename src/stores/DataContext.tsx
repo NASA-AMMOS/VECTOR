@@ -4,22 +4,11 @@ import { Polar } from '@/utils/helpers';
 
 const baseVector = new Vector2();
 
-export enum EditOperation {
-    EDIT = 'EDIT',
-    DELETE = 'DELETE',
-}
-
-export enum EditType {
-    IMAGE = 'IMAGE',
-    TRACK = 'TRACK',
-    TIEPOINT = 'TIEPOINT',
-}
-
 export type ImageTrackMap = Record<string, Track[]>;
 
 export interface Point {
     index: number;
-    id: string;
+    imageName: string;
     key: number;
     pixel: [number, number];
     initialResidual: [number, number];
@@ -29,8 +18,7 @@ export interface Point {
 }
 
 export interface Track {
-    index: number;
-    trackId: number;
+    id: number;
     initialXYZ: [number, number, number];
     finalXYZ: [number, number, number];
     points: Point[];
@@ -66,30 +54,19 @@ export interface VICAR {
     [key: string]: string[];
 }
 
-export interface Edit {
-    id: string | number;
-    type: string;
-    operation: string;
-}
-
 interface DataStore {
     tracks: Track[];
     cameras: Cameras;
     images: Image[];
     vicar: VICAR;
 
-    tiepointsFile: string;
-
     activeImage: string | null;
     activeTrack: number | null;
-
-    editHistory: Edit[];
 
     imageTracks: ImageTrackMap;
     initialResidualBounds: [[number, number], [number, number]];
     finalResidualBounds: [[number, number], [number, number]];
     residualBounds: [[number, number], [number, number]];
-    editedTracks: number[];
 
     getImageURL: (id: string) => string | null;
     getVICARFile: (id: string) => string[];
@@ -99,11 +76,6 @@ interface DataStore {
     setCameras: React.Dispatch<React.SetStateAction<Cameras>>;
     setImages: React.Dispatch<React.SetStateAction<Image[]>>;
     setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
-
-    // TODO: Need equivalent of setTiepointsFile for tracks.
-    setTiepointsFile: React.Dispatch<React.SetStateAction<string>>;
-
-    setEditHistory: React.Dispatch<React.SetStateAction<Edit[]>>;
 
     setActiveImage: React.Dispatch<React.SetStateAction<string | null>>;
     setActiveTrack: React.Dispatch<React.SetStateAction<number | null>>;
@@ -125,21 +97,17 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [images, setImages] = useState<Image[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
 
-    const [tiepointsFile, setTiepointsFile] = useState<string>('');
-
     const [activeImage, setActiveImage] = useState<string | null>(null);
     const [activeTrack, setActiveTrack] = useState<number | null>(null);
-
-    const [editHistory, setEditHistory] = useState<Edit[]>([]);
 
     const imageTracks = useMemo(() => {
         return tracks.reduce<ImageTrackMap>((result: ImageTrackMap, track: Track) => {
             for (const point of track.points) {
                 // TODO: Check for duplicate tracks being included?
-                if (point.id in result) {
-                    result[point.id].push(track);
+                if (point.imageName in result) {
+                    result[point.imageName].push(track);
                 } else {
-                    result[point.id] = [track];
+                    result[point.imageName] = [track];
                 }
             }
             return result;
@@ -193,15 +161,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
         ];
     }, [initialResidualBounds, finalResidualBounds]);
 
-    const editedTracks = useMemo<number[]>(
-        () =>
-            editHistory
-                .filter((e) => e.type === EditType.TRACK)
-                .map((e) => e.id)
-                .map(Number),
-        [editHistory],
-    );
-
     const getImageURL = useCallback(
         (id: string) => {
             const fileId = id.slice(6);
@@ -238,10 +197,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 images,
                 vicar,
 
-                tiepointsFile,
-
-                editHistory,
-
                 activeImage,
                 activeTrack,
 
@@ -249,7 +204,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 initialResidualBounds,
                 finalResidualBounds,
                 residualBounds,
-                editedTracks,
 
                 getImageURL,
                 getVICARFile,
@@ -259,10 +213,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 setCameras,
                 setImages,
                 setVICAR,
-
-                setTiepointsFile,
-
-                setEditHistory,
 
                 setActiveImage,
                 setActiveTrack,

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import cn from 'classnames';
 
 import Label from '@/components/Label';
@@ -6,7 +5,6 @@ import Checkbox from '@/components/Checkbox';
 import NumberInput from '@/components/NumberInput';
 import Radio from '@/components/Radio';
 import Select from '@/components/Select';
-import EditModal from '@/components/EditModal';
 
 import { Route, useRouter } from '@/stores/RouterContext';
 import { Filter, ResidualSortField, ResidualSortDirection, useTools } from '@/stores/ToolsContext';
@@ -19,14 +17,7 @@ export default function SideBar() {
 
     const { state, handleChange } = useTools();
 
-    const { tracks, images, activeImage, activeTrack, initialResidualBounds, finalResidualBounds, editHistory } =
-        useData();
-
-    const [activeHistoryModal, setActiveHistoryModal] = useState(false);
-
-    function handleHistoryClick() {
-        setActiveHistoryModal((prevState) => !prevState);
-    }
+    const { tracks, images, activeImage, activeTrack, initialResidualBounds, finalResidualBounds } = useData();
 
     return (
         <>
@@ -215,16 +206,9 @@ export default function SideBar() {
                     <div className={styles.item}>
                         <p className={styles.text}>{images.length} Images</p>
                         <p className={styles.text}>{tracks.length} Tracks</p>
-                        {/* TODO: Add tiepoint count? */}
                     </div>
-                    {editHistory.length > 0 && (
-                        <button className={styles.button} onClick={handleHistoryClick}>
-                            Edit History
-                        </button>
-                    )}
                 </div>
             </nav>
-            {activeHistoryModal && <EditModal handeClose={handleHistoryClick} />}
         </>
     );
 }
