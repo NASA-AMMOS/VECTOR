@@ -45,49 +45,61 @@ export default function Landing() {
 
             if (!currentTrack) {
                 const leftKey = Number(tiepoint.getAttribute('left_key'));
-                const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id');
+                const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
                 const leftPixel = tiepoint.querySelector('left');
 
                 const leftInitialResidual = tiepoint.querySelector('left_init_residual');
                 const leftFinalResidual = tiepoint.querySelector('left_final_residual');
+
+                const leftInitialResidualX = Number(leftInitialResidual!.getAttribute('samp'));
+                const leftInitialResidualY = Number(leftInitialResidual!.getAttribute('line'));
+
+                const leftFinalResidualX = Number(leftFinalResidual!.getAttribute('samp'));
+                const leftFinalResidualY = Number(leftFinalResidual!.getAttribute('line'));
 
                 const pointLeft: Point = {
                     index: pointIndex,
                     id: leftId,
                     key: leftKey,
                     pixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
-                    initialResidual: [
-                        Number(leftInitialResidual!.getAttribute('samp')),
-                        Number(leftInitialResidual!.getAttribute('line')),
-                    ],
-                    finalResidual: [
-                        Number(leftFinalResidual!.getAttribute('samp')),
-                        Number(leftFinalResidual!.getAttribute('line')),
-                    ],
-                } as Point;
+                    initialResidual: [leftInitialResidualX, leftInitialResidualY],
+                    initialResidualLength: Math.sqrt(
+                        leftInitialResidualX * leftInitialResidualX + leftInitialResidualY * leftInitialResidualY,
+                    ),
+                    finalResidual: [leftFinalResidualX, leftFinalResidualY],
+                    finalResidualLength: Math.sqrt(
+                        leftFinalResidualX * leftFinalResidualX + leftFinalResidualY * leftFinalResidualY,
+                    ),
+                };
                 pointIndex++;
 
                 const rightKey = Number(tiepoint.getAttribute('right_key'));
-                const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id');
+                const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
                 const rightPixel = tiepoint.querySelector('right');
 
                 const rightInitialResidual = tiepoint.querySelector('right_init_residual');
                 const rightFinalResidual = tiepoint.querySelector('right_final_residual');
+
+                const rightInitialResidualX = Number(rightInitialResidual!.getAttribute('samp'));
+                const rightInitialResidualY = Number(rightInitialResidual!.getAttribute('line'));
+
+                const rightFinalResidualX = Number(rightFinalResidual!.getAttribute('samp'));
+                const rightFinalResidualY = Number(rightFinalResidual!.getAttribute('line'));
 
                 const pointRight: Point = {
                     index: pointIndex,
                     id: rightId,
                     key: rightKey,
                     pixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
-                    initialResidual: [
-                        Number(rightInitialResidual!.getAttribute('samp')),
-                        Number(rightInitialResidual!.getAttribute('line')),
-                    ],
-                    finalResidual: [
-                        Number(rightFinalResidual!.getAttribute('samp')),
-                        Number(rightFinalResidual!.getAttribute('line')),
-                    ],
-                } as Point;
+                    initialResidual: [rightInitialResidualX, rightInitialResidualY],
+                    initialResidualLength: Math.sqrt(
+                        rightInitialResidualX * rightInitialResidualX + rightInitialResidualY * rightInitialResidualY,
+                    ),
+                    finalResidual: [rightFinalResidualX, rightFinalResidualY],
+                    finalResidualLength: Math.sqrt(
+                        rightFinalResidualX * rightFinalResidualX + rightFinalResidualY * rightFinalResidualY,
+                    ),
+                };
                 pointIndex++;
 
                 const initialXYZ = tiepoint.querySelector('init_xyz');
@@ -113,52 +125,64 @@ export default function Landing() {
                 const rightKey = Number(tiepoint.getAttribute('right_key'));
 
                 if (!currentTrack.points.some((point) => point.key == leftKey)) {
-                    const leftId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id');
-                    const leftPixel = tiepoint.querySelector('left');
+                    const id = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
+                    const pixel = tiepoint.querySelector('left');
 
-                    const leftInitialResidual = tiepoint.querySelector('left_init_residual');
-                    const leftFinalResidual = tiepoint.querySelector('left_final_residual');
+                    const initialResidual = tiepoint.querySelector('left_init_residual');
+                    const finalResidual = tiepoint.querySelector('left_final_residual');
 
-                    const pointLeft: Point = {
+                    const initialResidualX = Number(initialResidual!.getAttribute('samp'));
+                    const initialResidualY = Number(initialResidual!.getAttribute('line'));
+
+                    const finalResidualX = Number(finalResidual!.getAttribute('samp'));
+                    const finalResidualY = Number(finalResidual!.getAttribute('line'));
+
+                    const point: Point = {
                         index: pointIndex,
-                        id: leftId,
+                        id,
                         key: leftKey,
-                        pixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
-                        initialResidual: [
-                            Number(leftInitialResidual!.getAttribute('samp')),
-                            Number(leftInitialResidual!.getAttribute('line')),
-                        ],
-                        finalResidual: [
-                            Number(leftFinalResidual!.getAttribute('samp')),
-                            Number(leftFinalResidual!.getAttribute('line')),
-                        ],
-                    } as Point;
+                        pixel: [Number(pixel!.getAttribute('samp')), Number(pixel!.getAttribute('line'))],
+                        initialResidual: [initialResidualX, initialResidualY],
+                        initialResidualLength: Math.sqrt(
+                            initialResidualX * initialResidualX + initialResidualY * initialResidualY,
+                        ),
+                        finalResidual: [finalResidualX, finalResidualY],
+                        finalResidualLength: Math.sqrt(
+                            finalResidualX * finalResidualX + finalResidualY * finalResidualY,
+                        ),
+                    };
                     pointIndex++;
 
-                    currentTrack.points.push(pointLeft);
+                    currentTrack.points.push(point);
                 }
 
                 if (!currentTrack.points.some((point) => point.key == rightKey)) {
-                    const rightId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id');
-                    const rightPixel = tiepoint.querySelector('right');
+                    const id = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
+                    const pixel = tiepoint.querySelector('right');
 
-                    const rightInitialResidual = tiepoint.querySelector('right_init_residual');
-                    const rightFinalResidual = tiepoint.querySelector('right_final_residual');
+                    const initialResidual = tiepoint.querySelector('right_init_residual');
+                    const finalResidual = tiepoint.querySelector('right_final_residual');
+
+                    const initialResidualX = Number(initialResidual!.getAttribute('samp'));
+                    const initialResidualY = Number(initialResidual!.getAttribute('line'));
+
+                    const finalResidualX = Number(finalResidual!.getAttribute('samp'));
+                    const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
                     const pointRight: Point = {
                         index: pointIndex,
-                        id: rightId,
+                        id,
                         key: rightKey,
-                        pixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
-                        initialResidual: [
-                            Number(rightInitialResidual!.getAttribute('samp')),
-                            Number(rightInitialResidual!.getAttribute('line')),
-                        ],
-                        finalResidual: [
-                            Number(rightFinalResidual!.getAttribute('samp')),
-                            Number(rightFinalResidual!.getAttribute('line')),
-                        ],
-                    } as Point;
+                        pixel: [Number(pixel!.getAttribute('samp')), Number(pixel!.getAttribute('line'))],
+                        initialResidual: [initialResidualX, initialResidualY],
+                        initialResidualLength: Math.sqrt(
+                            initialResidualX * initialResidualX + initialResidualY * initialResidualY,
+                        ),
+                        finalResidual: [finalResidualX, finalResidualY],
+                        finalResidualLength: Math.sqrt(
+                            finalResidualX * finalResidualX + finalResidualY * finalResidualY,
+                        ),
+                    };
                     pointIndex++;
 
                     currentTrack.points.push(pointRight);

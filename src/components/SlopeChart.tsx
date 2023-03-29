@@ -61,27 +61,17 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall, i
 
                 for (const track of activeTracks) {
                     for (const point of track.points) {
-                        const initialResidual = point.initialResidual;
-                        const initialDistance = Math.trunc(
-                            baseVector.distanceTo(tempVector.set(initialResidual[0], initialResidual[1])),
-                        );
-
-                        const finalResidual = point.finalResidual;
-                        const finalDistance = Math.trunc(
-                            baseVector.distanceTo(tempVector.set(finalResidual[0], finalResidual[1])),
-                        );
-
                         initialResiduals.push({
                             group: 'Initial',
-                            residual: initialDistance,
-                            decreased: finalDistance <= initialDistance,
-                            // Note: Need unique id per pixel for plot to work
+                            residual: point.initialResidualLength,
+                            decreased: point.finalResidualLength <= point.initialResidualLength,
+                            // Note: Need unique ID per pixel for plot to work
                             tiepoint: point.index,
                         });
 
                         finalResiduals.push({
                             group: 'Final',
-                            residual: finalDistance,
+                            residual: point.finalResidualLength,
                             tiepoint: point.index,
                         });
                     }

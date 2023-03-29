@@ -23,7 +23,9 @@ export interface Point {
     key: number;
     pixel: [number, number];
     initialResidual: [number, number];
+    initialResidualLength: number;
     finalResidual: [number, number];
+    finalResidualLength: number;
 }
 
 export interface Track {

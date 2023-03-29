@@ -1,5 +1,4 @@
 import { useMemo, useCallback } from 'react';
-import { Vector2 } from 'three';
 import * as d3 from 'd3';
 
 import { Track, useData } from '@/stores/DataContext';
@@ -7,9 +6,6 @@ import { Polar } from '@/utils/helpers';
 
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/RadialChart.css';
-
-const baseVector = new Vector2();
-const tempVector = new Vector2();
 
 interface RadialChartState {
     isInitial: boolean;
@@ -57,28 +53,15 @@ export default function RadialChart({ state, activeImage, activeTrack, isEdited 
 
                 for (const track of activeTracks) {
                     for (const point of track.points) {
-                        const initial = point.initialResidual;
-                        const final = point.finalResidual;
-
-                        const polarInitial = Polar(initial);
-                        const polarFinal = Polar(final);
-
-                        const initialDistance = Number(
-                            baseVector.distanceTo(tempVector.set(initial[0], initial[1])).toFixed(1),
-                        );
-                        const finalDistance = Number(
-                            baseVector.distanceTo(tempVector.set(final[0], final[1])).toFixed(1),
-                        );
-
                         residuals.push(
                             {
-                                ...polarInitial,
-                                distance: initialDistance,
+                                ...Polar(point.initialResidual),
+                                distance: point.initialResidualLength,
                                 isInitial: true,
                             },
                             {
-                                ...polarFinal,
-                                distance: finalDistance,
+                                ...Polar(point.finalResidual),
+                                distance: point.finalResidualLength,
                                 isInitial: false,
                             },
                         );

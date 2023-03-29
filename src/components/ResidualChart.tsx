@@ -9,9 +9,6 @@ import { Pixel, Polar } from '@/utils/helpers';
 import { vars } from '@/utils/theme.css';
 import * as styles from '@/components/ResidualChart.css';
 
-const baseVector = new Vector2();
-const tempVector = new Vector2();
-
 interface Residual {
     distance: number;
     angle: number;
@@ -66,21 +63,16 @@ export default function ResidualChart({ state, activeImage, activeTrack, isEdite
 
                 for (const track of activeTracks) {
                     for (const point of track.points) {
-                        const initialResidual = point.initialResidual;
-                        const finalResidual = point.finalResidual;
-
-                        const initialDistance = Number(
-                            baseVector.distanceTo(tempVector.set(initialResidual[0], initialResidual[1])).toFixed(1),
-                        );
-                        const finalDistance = Number(
-                            baseVector.distanceTo(tempVector.set(finalResidual[0], finalResidual[1])).toFixed(1),
-                        );
-
-                        const initialAngle = Polar(initialResidual).angle;
-                        const finalAngle = Polar(finalResidual).angle;
-
-                        initialResiduals.push({ distance: initialDistance, angle: initialAngle, isInitial: true });
-                        finalResiduals.push({ distance: finalDistance, angle: finalAngle, isInitial: false });
+                        initialResiduals.push({
+                            distance: point.initialResidualLength,
+                            angle: Polar(point.initialResidual).angle,
+                            isInitial: true,
+                        });
+                        finalResiduals.push({
+                            distance: point.finalResidualLength,
+                            angle: Polar(point.finalResidual).angle,
+                            isInitial: false,
+                        });
                     }
                 }
 
