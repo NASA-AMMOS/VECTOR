@@ -25,7 +25,7 @@ export interface ContextMenuState {
 export default function App() {
     const router = useRouter();
 
-    const { tiepoints, cameras, vicar, activeImage, activeTrack, editHistory } = useData();
+    const { tracks, cameras, vicar, editHistory } = useData();
 
     const [contextMenu, setContextMenu] = useState<ContextMenuState>({
         isEnabled: false,
@@ -55,7 +55,7 @@ export default function App() {
 
     return (
         <>
-            {tiepoints.length === 0 || Object.keys(cameras).length === 0 || Object.keys(vicar).length === 0 ? (
+            {tracks.length === 0 || Object.keys(cameras).length === 0 || Object.keys(vicar).length === 0 ? (
                 <Landing />
             ) : (
                 <main className={styles.container}>

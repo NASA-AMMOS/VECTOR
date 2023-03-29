@@ -5,7 +5,7 @@ import cn from 'classnames';
 import SlopeChart from '@/components/SlopeChart';
 
 import { ContextMenuState } from '@/App';
-import { Tiepoint, Track as ITrack, useData } from '@/stores/DataContext';
+import { Track as ITrack, useData } from '@/stores/DataContext';
 import { Route, useRouter } from '@/stores/RouterContext';
 import { ResidualSort } from '@/stores/ToolsContext';
 
@@ -95,21 +95,6 @@ function Stage({ state, activeTrack }: StageProps) {
                     // Find the correct image for this tiepoint.
                     const image = images.find((i) => i[0] === id)![1];
 
-                    // Get nearest tiepoints based on offset per image.
-                    const nearbyTiepoints: Tiepoint[] = [];
-                    // TODO: Handle nearby tiepoints in visualization.
-                    // const nearbyTiepoints = imageTiepoints[id].filter((t) => {
-                    //     const p = t.leftId === id ? t.leftPixel : t.rightPixel;
-                    //     if (
-                    //         Math.abs(p[0] - pixel[0]) > offset ||
-                    //         Math.abs(p[1] - pixel[1]) > offset ||
-                    //         (p[0] == pixel[0] && p[1] == pixel[1])
-                    //     ) {
-                    //         return false;
-                    //     }
-                    //     return true;
-                    // });
-
                     ctx.filter = 'contrast(2)';
 
                     // Crop image correctly to tiepoint location.
@@ -132,17 +117,6 @@ function Stage({ state, activeTrack }: StageProps) {
                     let imageCenter: [number, number] = [count * height + count * padding + height / 2, height / 2];
                     drawTiepoint(ctx, imageCenter, count, initialResidual, finalResidual);
 
-                    // Draw relevant tiepoints
-                    for (const t of nearbyTiepoints) {
-                        const p = t.leftId === id ? t.leftPixel : t.rightPixel;
-                        const xOffset = pixel[0] - p[0];
-                        const yOffset = pixel[1] - p[1];
-
-                        // Calculate relative offset.
-                        imageCenter[0] -= xOffset;
-                        imageCenter[1] -= yOffset;
-                        drawTiepoint(ctx, imageCenter, count, t.initialResidual, t.finalResidual, true);
-                    }
                     count++;
                 }
             }

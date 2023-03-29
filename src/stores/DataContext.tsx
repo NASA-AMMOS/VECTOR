@@ -17,21 +17,6 @@ export enum EditType {
 
 export type ImageTrackMap = Record<string, Track[]>;
 
-export interface Tiepoint {
-    index: number;
-    trackId: number;
-    leftId: string;
-    rightId: string;
-    leftKey: number;
-    rightKey: number;
-    initialXYZ: [number, number, number];
-    finalXYZ: [number, number, number];
-    leftPixel: [number, number];
-    rightPixel: [number, number];
-    initialResidual: [number, number];
-    finalResidual: [number, number];
-}
-
 export interface Point {
     index: number;
     id: string;
@@ -87,7 +72,6 @@ export interface Edit {
 
 interface DataStore {
     tracks: Track[];
-    tiepoints: Tiepoint[];
     cameras: Cameras;
     images: Image[];
     vicar: VICAR;
@@ -110,7 +94,6 @@ interface DataStore {
     parseVICARField: (metadata: string[], fieldName: string) => number[];
 
     setTracks: React.Dispatch<React.SetStateAction<Track[]>>;
-    setTiepoints: React.Dispatch<React.SetStateAction<Tiepoint[]>>;
     setCameras: React.Dispatch<React.SetStateAction<Cameras>>;
     setImages: React.Dispatch<React.SetStateAction<Image[]>>;
     setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
@@ -136,7 +119,6 @@ export function useData() {
 
 export default function ProvideData({ children }: ProvideDataProps) {
     const [tracks, setTracks] = useState<Track[]>([]);
-    const [tiepoints, setTiepoints] = useState<Tiepoint[]>([]);
     const [cameras, setCameras] = useState<Cameras>({});
     const [images, setImages] = useState<Image[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
@@ -184,17 +166,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
             }
         }
 
-        for (const tiepoint of tiepoints) {
-            const initialResidual = new Vector2(...tiepoint.initialResidual);
-            const finalResidual = new Vector2(...tiepoint.finalResidual);
-            const initialDistance = Number(baseVector.distanceTo(initialResidual).toFixed(1));
-            const finalDistance = Number(baseVector.distanceTo(finalResidual).toFixed(1));
-            cartInitialResiduals.push(initialDistance);
-            cartFinalResiduals.push(finalDistance);
-            polarInitialResiduals.push(Polar(tiepoint.initialResidual).radius);
-            polarFinalResiduals.push(Polar(tiepoint.finalResidual).radius);
-        }
-
         return [
             [
                 [Math.min(...cartInitialResiduals), Math.max(...cartInitialResiduals)],
@@ -205,7 +176,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 [Math.min(...polarFinalResiduals), Math.max(...polarFinalResiduals)],
             ],
         ];
-    }, [tiepoints]);
+    }, [tracks]);
 
     const residualBounds = useMemo<[[number, number], [number, number]]>(() => {
         return [
@@ -261,7 +232,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
         <DataContext.Provider
             value={{
                 tracks,
-                tiepoints,
                 cameras,
                 images,
                 vicar,
@@ -284,7 +254,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 parseVICARField,
 
                 setTracks,
-                setTiepoints,
                 setCameras,
                 setImages,
                 setVICAR,
