@@ -50,22 +50,22 @@ export default function SideBar() {
                     </button>
                     {activeImage && (
                         <button
-                            className={cn(styles.link, styles.middleLevel, {
+                            className={cn(styles.link, {
                                 [styles.active]: router.pathname === Route.IMAGE,
                             })}
                             onClick={() => router.push(Route.IMAGE)}
                         >
-                            Active Image
+                            Image ID: {activeImage}
                         </button>
                     )}
-                    {activeImage && activeTrack && (
+                    {activeTrack && (
                         <button
-                            className={cn(styles.link, styles.lastLevel, {
+                            className={cn(styles.link, {
                                 [styles.active]: router.pathname === Route.TRACK,
                             })}
                             onClick={() => router.push(Route.TRACK)}
                         >
-                            Active Track
+                            Track ID: {activeTrack}
                         </button>
                     )}
                 </div>
@@ -86,12 +86,8 @@ export default function SideBar() {
                     <h2 className={styles.subheader}>Residuals</h2>
                     <div className={styles.item}>
                         <Label>Metadata</Label>
-                        <p className={styles.text}>
-                            Initial: {initialResidualBounds[0][0]}...{initialResidualBounds[0][1]}px
-                        </p>
-                        <p className={styles.text}>
-                            Final: {finalResidualBounds[0][0]}...{finalResidualBounds[0][1]}px
-                        </p>
+                        <p className={styles.text}>Initial: {initialResidualBounds[0][1]}px</p>
+                        <p className={styles.text}>Final: {finalResidualBounds[0][1]}px</p>
                     </div>
                     <div className={styles.item}>
                         <Label>Type</Label>

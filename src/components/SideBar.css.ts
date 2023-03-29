@@ -12,16 +12,16 @@ export const container = style({
     overflowY: 'auto',
 });
 
-export const section = style({
-    padding: '2rem',
-    borderBottom: `0.1rem solid ${vars.color.background}`,
-});
-
 export const header = style({
     padding: '2rem',
     borderBottom: `0.1rem solid ${vars.color.background}`,
     fontWeight: 500,
     fontSize: '2.5rem',
+});
+
+export const section = style({
+    padding: '2rem',
+    borderBottom: `0.1rem solid ${vars.color.background}`,
 });
 
 export const subheader = style({
@@ -41,23 +41,9 @@ export const item = style({
     },
 });
 
-export const button = style({
-    display: 'block',
-    padding: '1rem',
-    backgroundColor: vars.color.background,
-    color: vars.color.black,
-    borderRadius: '0.4rem',
-    transition: 'opacity 0.1s',
-
-    selectors: {
-        '&:hover': {
-            opacity: 0.7,
-        },
-    },
-});
-
 export const link = style({
     display: 'block',
+    textAlign: 'left',
     color: vars.color.black,
     opacity: 0.3,
     transition: 'opacity 0.1s',
