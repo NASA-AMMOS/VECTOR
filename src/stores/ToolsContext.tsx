@@ -1,6 +1,5 @@
 import { createContext, useContext, useReducer, useEffect } from 'react';
 
-import { useRouter } from '@/stores/RouterContext';
 import { useData } from '@/stores/DataContext';
 
 export enum Filter {
@@ -123,8 +122,6 @@ export function useTools() {
 }
 
 export default function ProvideTools({ children }: ProvideToolsProps) {
-    const router = useRouter();
-
     const { initialResidualBounds, finalResidualBounds } = useData();
 
     const [state, dispatch] = useReducer(reducer, initialState);
@@ -133,19 +130,6 @@ export default function ProvideTools({ children }: ProvideToolsProps) {
         const target = event.currentTarget as HTMLInputElement | HTMLSelectElement;
         dispatch({ type: target.name, data: target.value });
     }
-
-    // Reset filters when the route changes.
-    useEffect(() => {
-        dispatch({ type: Filter.RESET, data: '' });
-        dispatch({
-            type: Filter.RESIDUAL_LENGTH_MIN,
-            data: Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]).toFixed(1),
-        });
-        dispatch({
-            type: Filter.RESIDUAL_LENGTH_MAX,
-            data: Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]).toFixed(1),
-        });
-    }, [router.pathname]);
 
     // Set default values for residual length for filters.
     useEffect(() => {

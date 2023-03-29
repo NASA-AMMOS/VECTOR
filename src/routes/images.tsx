@@ -1,30 +1,29 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Vector2 } from 'three';
+
+import { ResidualSortField, ResidualSortDirection, useTools } from '@/stores/ToolsContext';
+import { useData } from '@/stores/DataContext';
 
 import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 import SlopeChart from '@/components/SlopeChart';
 
-import { Route, useRouter } from '@/stores/RouterContext';
-import { ResidualSortField, ResidualSortDirection, useTools } from '@/stores/ToolsContext';
-import { useData } from '@/stores/DataContext';
-
-import * as styles from '@/components/GlobalImageView.css';
+import * as styles from '@/routes/images.css';
 
 const baseVector = new Vector2();
 const tempVector = new Vector2();
 
-export default function GlobalImageView() {
-    const router = useRouter();
+export default function Images() {
+    const navigate = useNavigate();
 
     const { state } = useTools();
 
-    const { imageTracks, getImageURL, setActiveImage } = useData();
+    const { imageTracks, getImageURL } = useData();
 
-    function handleClick(id: string) {
-        router.push(Route.IMAGE);
-        setActiveImage(id);
-    }
+    const handleClick = (name: string) => {
+        navigate(`/images/${name}`);
+    };
 
     const images = useMemo(() => {
         const newImages = Object.keys(imageTracks);
@@ -121,15 +120,15 @@ export default function GlobalImageView() {
 
     return (
         <section className={styles.container}>
-            {images.map((id) => (
-                <div key={id} className={styles.item} onClick={() => handleClick(id)}>
+            {images.map((imageName) => (
+                <div key={imageName} className={styles.item} onClick={() => handleClick(imageName)}>
                     <div>
-                        <h2 className={styles.header}>Image ID: {id}</h2>
-                        <img className={styles.image} src={getImageURL(id)!} alt={`Image with ID: ${id}`} />
+                        <h2 className={styles.header}>{imageName}</h2>
+                        <img className={styles.image} src={getImageURL(imageName)!} alt={`Image Name: ${imageName}`} />
                     </div>
-                    <RadialChart state={state} activeImage={id} />
-                    <ResidualChart state={state} activeImage={id} />
-                    <SlopeChart state={state} activeImage={id} />
+                    <RadialChart state={state} activeImage={imageName} />
+                    <ResidualChart state={state} activeImage={imageName} />
+                    <SlopeChart state={state} activeImage={imageName} />
                 </div>
             ))}
         </section>

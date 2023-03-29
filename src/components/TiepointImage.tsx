@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Vector2 } from 'three';
 
 import { Track, useData } from '@/stores/DataContext';
@@ -21,11 +22,18 @@ interface TiepointImageProps {
 }
 
 export default function TiepointImage({ state }: TiepointImageProps) {
-    const { imageTracks, activeImage, getImageURL } = useData();
+    const { imageName: activeImage } = useParams();
+
+    const { imageTracks, getImageURL } = useData();
 
     const [image, setImage] = useState<HTMLImageElement>(null!);
 
-    const imageURL = useMemo<string | null>(() => activeImage && getImageURL(activeImage), [activeImage, getImageURL]);
+    const imageURL = useMemo<string | null>(() => {
+        if (activeImage) {
+            return getImageURL(activeImage);
+        }
+        return null;
+    }, [activeImage, getImageURL]);
 
     const activeTracks = useMemo<Track[] | never[]>(() => {
         if (activeImage) {

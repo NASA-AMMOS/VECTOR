@@ -4,18 +4,18 @@ import RadialChart from '@/components/RadialChart';
 import ResidualChart from '@/components/ResidualChart';
 
 import { useTools } from '@/stores/ToolsContext';
-import { useData } from '@/stores/DataContext';
 
-import * as styles from '@/components/ActiveImageView.css';
+import * as styles from '@/routes/image.css';
+import { useParams } from 'react-router-dom';
 
-export default function ActiveImageView() {
+export default function Image() {
+    const { imageName: activeImage } = useParams();
+
     const { state } = useTools();
-
-    const { activeImage, activeTrack } = useData();
 
     return (
         <>
-            {activeImage && !activeTrack && (
+            {activeImage && (
                 <section className={styles.container}>
                     <div className={styles.column}>
                         <TiepointImage state={state} />

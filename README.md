@@ -73,14 +73,6 @@ Note 1: Note that the PNG images must have a .png extension to be recognized by 
 
 Note 2: Currently, the input tiepoints and navigation files MUST have a .xml file extension (for example, 'tiepoints.xml' and 'navigation.xml'). This will be changed eventually so other commonly-used extension such as '.tpt', '.tie', and '.nav' are also accepted.
 
-## Major Dependencies
-
--   [React](https://reactjs.org)
--   [Three.js + React Three Fiber](https://github.com/pmndrs/react-three-fiber)
--   [D3.js](https://d3js.org)
--   [Observable Plot](https://github.com/observablehq/plot)
--   [Vanilla Extract](https://vanilla-extract.style)
-
 ## Authors
 
 Kazi Jawad, Racquel Fygenson, Isabel Li

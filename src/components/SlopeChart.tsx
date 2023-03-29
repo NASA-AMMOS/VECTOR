@@ -17,7 +17,7 @@ interface SlopeChartState {
 interface SlopeChartProps {
     state: SlopeChartState;
     activeImage?: string;
-    activeTrack?: number;
+    activeTrack?: string;
     isSmall?: boolean;
 }
 
@@ -37,7 +37,7 @@ export default function SlopeChart({ state, activeImage, activeTrack, isSmall }:
         if (activeImage && !activeTrack) {
             newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            newTracks = tracks.filter((t) => t.id === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.id === activeTrack);
         } else {
             return [];
         }

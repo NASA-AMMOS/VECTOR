@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import { Vector2 } from 'three';
 
 import { useData } from '@/stores/DataContext';
@@ -15,9 +16,11 @@ interface TracksProps {
 }
 
 export default function Tracks({ state }: TracksProps) {
-    const { tracks, imageTracks, activeImage } = useData();
+    const { imageName: activeImage } = useParams();
 
-    const activeTracks = useMemo<number[]>(() => {
+    const { tracks, imageTracks } = useData();
+
+    const activeTracks = useMemo<string[]>(() => {
         if (Object.keys(imageTracks).length === 0 || !activeImage) {
             return [];
         }
@@ -105,7 +108,7 @@ export default function Tracks({ state }: TracksProps) {
         <div className={styles.container}>
             <h2 className={styles.header}>Tracks</h2>
             {activeTracks.map((trackId) => (
-                <Track key={trackId} state={state} activeImage={activeImage} activeTrack={trackId} isGrouped />
+                <Track key={trackId} state={state} activeImage={activeImage ?? null} activeTrack={trackId} isGrouped />
             ))}
         </div>
     );

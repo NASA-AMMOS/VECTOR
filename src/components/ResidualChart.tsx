@@ -28,7 +28,7 @@ interface ResidualChartState {
 interface ResidualChartProps {
     state: ResidualChartState;
     activeImage?: string;
-    activeTrack?: number;
+    activeTrack?: string;
 }
 
 export default function ResidualChart({ state, activeImage, activeTrack }: ResidualChartProps) {
@@ -42,7 +42,7 @@ export default function ResidualChart({ state, activeImage, activeTrack }: Resid
         } else if (activeImage && !activeTrack) {
             newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            newTracks = tracks.filter((t) => t.id === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.id === activeTrack);
         } else {
             return [];
         }

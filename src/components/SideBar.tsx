@@ -1,3 +1,4 @@
+import { Link, useLocation, useParams } from 'react-router-dom';
 import cn from 'classnames';
 
 import Label from '@/components/Label';
@@ -6,70 +7,70 @@ import NumberInput from '@/components/NumberInput';
 import Radio from '@/components/Radio';
 import Select from '@/components/Select';
 
-import { Route, useRouter } from '@/stores/RouterContext';
 import { Filter, ResidualSortField, ResidualSortDirection, useTools } from '@/stores/ToolsContext';
 import { useData } from '@/stores/DataContext';
 
 import * as styles from '@/components/SideBar.css';
 
 export default function SideBar() {
-    const router = useRouter();
+    const location = useLocation();
+    const { imageName: activeImage, trackId: activeTrack } = useParams();
 
     const { state, handleChange } = useTools();
 
-    const { tracks, images, activeImage, activeTrack, initialResidualBounds, finalResidualBounds } = useData();
+    const { tracks, images, initialResidualBounds, finalResidualBounds } = useData();
 
     return (
         <>
             <nav className={styles.container}>
                 <h1 className={styles.header}>VECTOR</h1>
                 <div className={styles.section}>
-                    <button
+                    <Link
                         className={cn(styles.link, {
-                            [styles.active]: router.pathname === Route.STATISTICS,
+                            [styles.active]: location.pathname.includes('overview'),
                         })}
-                        onClick={() => router.push(Route.STATISTICS)}
+                        to="/overview"
                     >
                         Overview
-                    </button>
-                    <button
+                    </Link>
+                    <Link
                         className={cn(styles.link, {
-                            [styles.active]: router.pathname === Route.CAMERAS,
+                            [styles.active]: location.pathname.includes('scene'),
                         })}
-                        onClick={() => router.push(Route.CAMERAS)}
+                        to="/scene"
                     >
                         Scene
-                    </button>
-                    <button
+                    </Link>
+                    <Link
                         className={cn(styles.link, {
-                            [styles.active]: router.pathname === Route.IMAGES,
+                            [styles.active]: location.pathname.includes('images') && !activeImage,
                         })}
-                        onClick={() => router.push(Route.IMAGES)}
+                        to="/images"
                     >
                         Images
-                    </button>
+                    </Link>
                     {activeImage && (
-                        <button
+                        <Link
                             className={cn(styles.link, {
-                                [styles.active]: router.pathname === Route.IMAGE,
+                                [styles.active]: location.pathname.includes(activeImage),
                             })}
-                            onClick={() => router.push(Route.IMAGE)}
+                            to={`/images/${activeImage}`}
                         >
                             Image ID: {activeImage}
-                        </button>
+                        </Link>
                     )}
                     {activeTrack && (
-                        <button
+                        <Link
                             className={cn(styles.link, {
-                                [styles.active]: router.pathname === Route.TRACK,
+                                [styles.active]: location.pathname.includes(activeTrack.toString()),
                             })}
-                            onClick={() => router.push(Route.TRACK)}
+                            to={`/tracks/${activeImage}`}
                         >
                             Track ID: {activeTrack}
-                        </button>
+                        </Link>
                     )}
                 </div>
-                {[Route.CAMERAS, Route.TRACK].includes(router.pathname) && (
+                {(location.pathname.includes('scene') || location.pathname.includes('track')) && (
                     <div className={styles.section}>
                         <h2 className={styles.subheader}>Scene</h2>
                         <div className={styles.item}>
@@ -109,7 +110,7 @@ export default function SideBar() {
                             Final
                         </Checkbox>
                     </div>
-                    {router.pathname !== Route.CAMERAS && (
+                    {!location.pathname.includes('scene') && (
                         <>
                             <div className={styles.item}>
                                 <Label>Length</Label>
@@ -145,7 +146,7 @@ export default function SideBar() {
                                     Max
                                 </NumberInput>
                             </div>
-                            {router.pathname === Route.IMAGE && (
+                            {activeImage && (
                                 <div className={styles.item}>
                                     <Label>Scale</Label>
                                     <NumberInput
@@ -158,7 +159,7 @@ export default function SideBar() {
                             )}
                         </>
                     )}
-                    {[Route.IMAGES, Route.IMAGE].includes(router.pathname) && (
+                    {location.pathname.includes('image') && (
                         <div className={styles.item}>
                             <Label>Sort</Label>
                             <Select
@@ -183,7 +184,7 @@ export default function SideBar() {
                         </div>
                     )}
                 </div>
-                {[Route.IMAGES, Route.IMAGE, Route.TRACK].includes(router.pathname) && (
+                {(location.pathname.includes('image') || location.pathname.includes('track')) && (
                     <div className={styles.section}>
                         <h2 className={styles.subheader}>Axes</h2>
                         <div className={styles.item}>

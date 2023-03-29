@@ -1,4 +1,5 @@
 import { useRef, useMemo, useEffect, useCallback, useReducer } from 'react';
+import { useParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
@@ -22,9 +23,11 @@ const initialLineMaterial = new THREE.LineBasicMaterial({ color: theme.color.ini
 const finalLineMaterial = new THREE.LineBasicMaterial({ color: theme.color.finalHex });
 
 export default function CameraViewport() {
+    const { trackId: activeTrack } = useParams();
+
     const { state } = useTools();
 
-    const { tracks, cameras, activeTrack, getVICARFile, parseVICARField } = useData();
+    const { tracks, cameras, getVICARFile, parseVICARField } = useData();
 
     const sceneRef = useRef<THREE.Scene>(new THREE.Scene());
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);

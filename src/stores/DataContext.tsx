@@ -18,7 +18,7 @@ export interface Point {
 }
 
 export interface Track {
-    id: number;
+    id: string;
     initialXYZ: [number, number, number];
     finalXYZ: [number, number, number];
     points: Point[];
@@ -60,9 +60,6 @@ interface DataStore {
     images: Image[];
     vicar: VICAR;
 
-    activeImage: string | null;
-    activeTrack: number | null;
-
     imageTracks: ImageTrackMap;
     initialResidualBounds: [[number, number], [number, number]];
     finalResidualBounds: [[number, number], [number, number]];
@@ -76,9 +73,6 @@ interface DataStore {
     setCameras: React.Dispatch<React.SetStateAction<Cameras>>;
     setImages: React.Dispatch<React.SetStateAction<Image[]>>;
     setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
-
-    setActiveImage: React.Dispatch<React.SetStateAction<string | null>>;
-    setActiveTrack: React.Dispatch<React.SetStateAction<number | null>>;
 }
 
 interface ProvideDataProps {
@@ -96,9 +90,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [cameras, setCameras] = useState<Cameras>({});
     const [images, setImages] = useState<Image[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
-
-    const [activeImage, setActiveImage] = useState<string | null>(null);
-    const [activeTrack, setActiveTrack] = useState<number | null>(null);
 
     const imageTracks = useMemo(() => {
         return tracks.reduce<ImageTrackMap>((result: ImageTrackMap, track: Track) => {
@@ -197,9 +188,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 images,
                 vicar,
 
-                activeImage,
-                activeTrack,
-
                 imageTracks,
                 initialResidualBounds,
                 finalResidualBounds,
@@ -213,9 +201,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 setCameras,
                 setImages,
                 setVICAR,
-
-                setActiveImage,
-                setActiveTrack,
             }}
         >
             {children}

@@ -5,9 +5,9 @@ import ResidualChart from '@/components/ResidualChart';
 
 import { useTools } from '@/stores/ToolsContext';
 
-import * as styles from '@/components/GlobalStatistics.css';
+import * as styles from '@/routes/overview.css';
 
-export default function GlobalStatistics() {
+export default function Overview() {
     const { state } = useTools();
 
     return (

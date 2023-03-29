@@ -9,8 +9,6 @@
     "dependencies": {
         "@observablehq/plot": "^0.5.2",
         "@placemarkio/flat-drop-files": "^1.0.2",
-        "@react-three/drei": "^9.14.3",
-        "@react-three/fiber": "^8.0.27",
         "@vanilla-extract/css": "^1.7.2",
         "@vanilla-extract/vite-plugin": "^3.2.1",
         "browser-fs-access": "^0.30.1",
@@ -18,6 +16,7 @@
         "d3": "^7.6.1",
         "react": "^18.0.0",
         "react-dom": "^18.0.0",
+        "react-router-dom": "^6.10.0",
         "three": "^0.142.0"
     },
     "devDependencies": {

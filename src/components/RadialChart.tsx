@@ -20,7 +20,7 @@ interface RadialChartState {
 interface RadialChartProps {
     state: RadialChartState;
     activeImage?: string;
-    activeTrack?: number;
+    activeTrack?: string;
 }
 
 export default function RadialChart({ state, activeImage, activeTrack }: RadialChartProps) {
@@ -34,7 +34,7 @@ export default function RadialChart({ state, activeImage, activeTrack }: RadialC
         } else if (activeImage && !activeTrack) {
             newTracks = imageTracks[activeImage];
         } else if (activeTrack) {
-            newTracks = tracks.filter((t) => t.id === Number(activeTrack));
+            newTracks = tracks.filter((t) => t.id === activeTrack);
         } else {
             return [];
         }

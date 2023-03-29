@@ -1,8 +1,8 @@
 import CameraViewport from '@/components/CameraViewport';
 
-import * as styles from '@/components/Global3DView.css';
+import * as styles from '@/routes/scene.css';
 
-export default function Global3DView() {
+export default function Scene() {
     return (
         <section className={styles.container}>
             <CameraViewport />

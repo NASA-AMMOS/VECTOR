@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
 import SlopeChart from '@/components/SlopeChart';
 
 import { Point, Track as ITrack, useData } from '@/stores/DataContext';
-import { Route, useRouter } from '@/stores/RouterContext';
 import { ResidualSort } from '@/stores/ToolsContext';
 
 import { theme } from '@/utils/theme.css';
@@ -21,13 +21,13 @@ export interface TrackState {
 
 interface StageProps {
     state: TrackState;
-    activeTrack: number | null;
+    activeTrack: string | null;
 }
 
 interface TrackProps {
     state: TrackState;
-    activeImage: string | null;
-    activeTrack: number | null;
+    activeImage?: string | null;
+    activeTrack: string | null;
     isGrouped?: boolean;
 }
 
@@ -184,14 +184,11 @@ function Stage({ state, activeTrack }: StageProps) {
 }
 
 export default function Track({ state, activeImage, activeTrack, isGrouped }: TrackProps) {
-    const router = useRouter();
+    const navigate = useNavigate();
 
-    const { setActiveTrack } = useData();
-
-    function handleClick() {
-        router.push(Route.TRACK);
-        setActiveTrack(activeTrack);
-    }
+    const handleClick = () => {
+        navigate(`/tracks/${activeTrack}`);
+    };
 
     return (
         <div

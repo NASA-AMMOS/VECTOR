@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
 
 import { Track, Point, Cameras, useData } from '@/stores/DataContext';
 
-import * as styles from '@/components/Landing.css';
+import * as styles from '@/routes/landing.css';
 
 const parser = new DOMParser();
 
 export default function Landing() {
-    const { setTracks, setCameras, setImages, setVICAR } = useData();
+    const navigate = useNavigate();
+
+    const { tracks, setTracks, cameras, setCameras, setImages, vicar, setVICAR } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
 
-    async function parseFiles() {
+    const parseFiles = async () => {
         for (const file of files) {
             if (file.type === 'text/xml') {
                 const xmlString = await file.text();
@@ -29,16 +32,16 @@ export default function Landing() {
                 await handleVICAR(file);
             }
         }
-    }
+    };
 
-    function handleTracks(xml: XMLDocument) {
+    const handleTracks = (xml: XMLDocument) => {
         const tiepoints = xml.querySelectorAll('tie');
         const newTracks: Track[] = [];
 
         let pointIndex = 0;
 
         for (const tiepoint of tiepoints.values()) {
-            const trackId = Number(tiepoint.querySelector('track')!.getAttribute('id'));
+            const trackId = tiepoint.querySelector('track')!.getAttribute('id')!;
             const currentTrack = newTracks.find((track) => track.id === trackId);
 
             if (!currentTrack) {
@@ -189,9 +192,9 @@ export default function Landing() {
         }
 
         setTracks(newTracks);
-    }
+    };
 
-    function handleNavigation(xml: XMLDocument) {
+    const handleNavigation = (xml: XMLDocument) => {
         const solutions = xml.querySelectorAll('solution');
         const newCameras: Cameras = {};
 
@@ -257,43 +260,49 @@ export default function Landing() {
         }
 
         setCameras(newCameras);
-    }
+    };
 
-    function handleImage(file: File) {
+    const handleImage = (file: File) => {
         const url = URL.createObjectURL(file);
         setImages((oldImages) => [...oldImages, { name: file.name, url }]);
-    }
+    };
 
-    async function handleVICAR(file: File) {
+    const handleVICAR = async (file: File) => {
         const text = await file.text();
         const metadata = text
             .split(/(\s+)/)
             .map((t) => t.trim())
             .filter(Boolean);
         setVICAR((v) => ({ ...v, [file.name]: metadata }));
-    }
+    };
 
-    async function handleClick() {
+    const handleClick = async () => {
         const file = await fileOpen();
         setFiles((oldFiles) => oldFiles.filter((f) => f.name !== file.name).concat([file]));
-    }
+    };
 
-    async function handleDrop(event: React.DragEvent) {
+    const handleDrop = async (event: React.DragEvent) => {
         event.preventDefault();
         const newFiles = await getFilesFromDataTransferItems(event.dataTransfer.items);
         const newFilenames = newFiles.map((f) => f.name);
         setFiles((oldFiles) => oldFiles.filter((f) => !newFilenames.includes(f.name)).concat(newFiles));
-    }
+    };
 
-    function disableEvent(event: React.DragEvent) {
+    const disableEvent = (event: React.DragEvent) => {
         event.preventDefault();
-    }
+    };
 
     useEffect(() => {
         if (files.length > 0) {
             parseFiles();
         }
     }, [files]);
+
+    useEffect(() => {
+        if (tracks.length > 0 && Object.keys(cameras).length > 0 && Object.keys(vicar).length > 0) {
+            navigate('/overview');
+        }
+    }, [tracks, cameras, vicar]);
 
     return (
         <main className={styles.container}>
