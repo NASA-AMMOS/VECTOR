@@ -1,11 +1,10 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '../utils/theme.css';
+import { vars } from '@/theme.css';
 
 export const container = style({
     display: 'flex',
     alignItems: 'center',
     height: '2rem',
-    fontSize: '1.2rem',
 
     selectors: {
         '&:not(:last-of-type)': {

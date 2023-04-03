@@ -3,18 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
 
-import { Track, Point, Cameras, useData } from '@/stores/DataContext';
+import { Track, Point, useData, Image, Camera } from '@/stores/DataContext';
 
 import * as styles from '@/routes/landing.css';
 
 const parser = new DOMParser();
 
+interface ImageFile {
+    name: string;
+    url: string;
+}
+
 export default function Landing() {
     const navigate = useNavigate();
 
-    const { tracks, setTracks, cameras, setCameras, setImages, vicar, setVICAR } = useData();
+    const { tracks, setTracks, images, setImages, vicar, setVICAR } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
+    const [cameras, setCameras] = useState<Camera[]>([]);
+    const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
 
     const parseFiles = async () => {
         for (const file of files) {
@@ -46,7 +53,7 @@ export default function Landing() {
 
             if (!currentTrack) {
                 const leftKey = Number(tiepoint.getAttribute('left_key'));
-                const leftImageName = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
+                const leftCameraId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
                 const leftPixel = tiepoint.querySelector('left');
 
                 const leftInitialResidual = tiepoint.querySelector('left_init_residual');
@@ -60,22 +67,27 @@ export default function Landing() {
 
                 const pointLeft: Point = {
                     index: pointIndex,
-                    imageName: leftImageName,
+                    cameraId: leftCameraId,
                     key: leftKey,
                     pixel: [Number(leftPixel!.getAttribute('samp')), Number(leftPixel!.getAttribute('line'))],
                     initialResidual: [leftInitialResidualX, leftInitialResidualY],
                     initialResidualLength: Math.sqrt(
                         leftInitialResidualX * leftInitialResidualX + leftInitialResidualY * leftInitialResidualY,
                     ),
+                    initialResidualAngle: Math.atan2(leftInitialResidualY, leftInitialResidualX) * (180 / Math.PI),
                     finalResidual: [leftFinalResidualX, leftFinalResidualY],
                     finalResidualLength: Math.sqrt(
                         leftFinalResidualX * leftFinalResidualX + leftFinalResidualY * leftFinalResidualY,
                     ),
+                    finalResidualAngle: Math.atan2(leftFinalResidualY, leftFinalResidualX) * (180 / Math.PI),
                 };
                 pointIndex++;
 
+                if (pointLeft.initialResidualAngle < 0) pointLeft.initialResidualAngle += 360.0;
+                if (pointLeft.finalResidualAngle < 0) pointLeft.finalResidualAngle += 360.0;
+
                 const rightKey = Number(tiepoint.getAttribute('right_key'));
-                const rightImageName = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
+                const rightCameraId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
                 const rightPixel = tiepoint.querySelector('right');
 
                 const rightInitialResidual = tiepoint.querySelector('right_init_residual');
@@ -89,19 +101,24 @@ export default function Landing() {
 
                 const pointRight: Point = {
                     index: pointIndex,
-                    imageName: rightImageName,
+                    cameraId: rightCameraId,
                     key: rightKey,
                     pixel: [Number(rightPixel!.getAttribute('samp')), Number(rightPixel!.getAttribute('line'))],
                     initialResidual: [rightInitialResidualX, rightInitialResidualY],
                     initialResidualLength: Math.sqrt(
                         rightInitialResidualX * rightInitialResidualX + rightInitialResidualY * rightInitialResidualY,
                     ),
+                    initialResidualAngle: Math.atan2(rightInitialResidualY, rightInitialResidualX) * (180 / Math.PI),
                     finalResidual: [rightFinalResidualX, rightFinalResidualY],
                     finalResidualLength: Math.sqrt(
                         rightFinalResidualX * rightFinalResidualX + rightFinalResidualY * rightFinalResidualY,
                     ),
+                    finalResidualAngle: Math.atan2(rightFinalResidualY, rightFinalResidualX) * (180 / Math.PI),
                 };
                 pointIndex++;
+
+                if (pointRight.initialResidualAngle < 0) pointRight.initialResidualAngle += 360.0;
+                if (pointRight.finalResidualAngle < 0) pointRight.finalResidualAngle += 360.0;
 
                 const initialXYZ = tiepoint.querySelector('init_xyz');
                 const initialX = Number(initialXYZ!.getAttribute('x'));
@@ -126,7 +143,7 @@ export default function Landing() {
                 const rightKey = Number(tiepoint.getAttribute('right_key'));
 
                 if (!currentTrack.points.some((point) => point.key == leftKey)) {
-                    const imageName = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
+                    const cameraId = xml.querySelector(`image[key="${leftKey}"]`)!.getAttribute('unique_id')!;
                     const pixel = tiepoint.querySelector('left');
 
                     const initialResidual = tiepoint.querySelector('left_init_residual');
@@ -139,7 +156,7 @@ export default function Landing() {
                     const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
                     const point: Point = {
-                        imageName,
+                        cameraId,
                         index: pointIndex,
                         key: leftKey,
                         pixel: [Number(pixel!.getAttribute('samp')), Number(pixel!.getAttribute('line'))],
@@ -147,18 +164,23 @@ export default function Landing() {
                         initialResidualLength: Math.sqrt(
                             initialResidualX * initialResidualX + initialResidualY * initialResidualY,
                         ),
+                        initialResidualAngle: Math.atan2(initialResidualY, initialResidualX) * (180 / Math.PI),
                         finalResidual: [finalResidualX, finalResidualY],
                         finalResidualLength: Math.sqrt(
                             finalResidualX * finalResidualX + finalResidualY * finalResidualY,
                         ),
+                        finalResidualAngle: Math.atan2(finalResidualY, finalResidualX) * (180 / Math.PI),
                     };
                     pointIndex++;
+
+                    if (point.initialResidualAngle < 0) point.initialResidualAngle += 360.0;
+                    if (point.finalResidualAngle < 0) point.finalResidualAngle += 360.0;
 
                     currentTrack.points.push(point);
                 }
 
                 if (!currentTrack.points.some((point) => point.key == rightKey)) {
-                    const imageName = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
+                    const cameraId = xml.querySelector(`image[key="${rightKey}"]`)!.getAttribute('unique_id')!;
                     const pixel = tiepoint.querySelector('right');
 
                     const initialResidual = tiepoint.querySelector('right_init_residual');
@@ -170,8 +192,8 @@ export default function Landing() {
                     const finalResidualX = Number(finalResidual!.getAttribute('samp'));
                     const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
-                    const pointRight: Point = {
-                        imageName,
+                    const point: Point = {
+                        cameraId,
                         index: pointIndex,
                         key: rightKey,
                         pixel: [Number(pixel!.getAttribute('samp')), Number(pixel!.getAttribute('line'))],
@@ -179,14 +201,19 @@ export default function Landing() {
                         initialResidualLength: Math.sqrt(
                             initialResidualX * initialResidualX + initialResidualY * initialResidualY,
                         ),
+                        initialResidualAngle: Math.atan2(initialResidualY, initialResidualX) * (180 / Math.PI),
                         finalResidual: [finalResidualX, finalResidualY],
                         finalResidualLength: Math.sqrt(
                             finalResidualX * finalResidualX + finalResidualY * finalResidualY,
                         ),
+                        finalResidualAngle: Math.atan2(finalResidualY, finalResidualX) * (180 / Math.PI),
                     };
                     pointIndex++;
 
-                    currentTrack.points.push(pointRight);
+                    if (point.initialResidualAngle < 0) point.initialResidualAngle += 360.0;
+                    if (point.finalResidualAngle < 0) point.finalResidualAngle += 360.0;
+
+                    currentTrack.points.push(point);
                 }
             }
         }
@@ -196,67 +223,46 @@ export default function Landing() {
 
     const handleNavigation = (xml: XMLDocument) => {
         const solutions = xml.querySelectorAll('solution');
-        const newCameras: Cameras = {};
+        const newCameras: Camera[] = [];
 
         for (const image of solutions) {
-            const imageId = image.querySelector('image')!.getAttribute('unique_id')!;
+            const id = image.querySelector('image')!.getAttribute('unique_id')!;
 
             const initialCamera = image.querySelector('original_camera_model');
             const initialC = initialCamera!.querySelector('parameter[id="C"]')!;
             const initialA = initialCamera!.querySelector('parameter[id="A"]')!;
-            const initialH = initialCamera!.querySelector('parameter[id="H"]')!;
-            const initialFrame = initialCamera!.querySelector('reference_frame')!;
 
             const finalCamera = image.querySelector('camera_model');
             const finalC = finalCamera!.querySelector('parameter[id="C"]')!;
             const finalA = finalCamera!.querySelector('parameter[id="A"]')!;
-            const finalH = finalCamera!.querySelector('parameter[id="H"]')!;
-            const finalFrame = finalCamera!.querySelector('reference_frame')!;
 
-            newCameras[imageId] = {
+            newCameras.push({
+                id,
                 initial: {
-                    C: [
+                    center: [
                         Number(initialC.getAttribute('value1')),
                         Number(initialC.getAttribute('value2')),
                         Number(initialC.getAttribute('value3')),
                     ],
-                    A: [
+                    axis: [
                         Number(initialA.getAttribute('value1')),
                         Number(initialA.getAttribute('value2')),
                         Number(initialA.getAttribute('value3')),
                     ],
-                    H: [
-                        Number(initialH.getAttribute('value1')),
-                        Number(initialH.getAttribute('value2')),
-                        Number(initialH.getAttribute('value3')),
-                    ],
-                    frame: {
-                        name: initialFrame.getAttribute('name')!,
-                        index: initialFrame.getAttribute('index1')!,
-                    },
                 },
                 final: {
-                    C: [
+                    center: [
                         Number(finalC.getAttribute('value1')),
                         Number(finalC.getAttribute('value2')),
                         Number(finalC.getAttribute('value3')),
                     ],
-                    A: [
+                    axis: [
                         Number(finalA.getAttribute('value1')),
                         Number(finalA.getAttribute('value2')),
                         Number(finalA.getAttribute('value3')),
                     ],
-                    H: [
-                        Number(finalH.getAttribute('value1')),
-                        Number(finalH.getAttribute('value2')),
-                        Number(finalH.getAttribute('value3')),
-                    ],
-                    frame: {
-                        name: finalFrame.getAttribute('name')!,
-                        index: finalFrame.getAttribute('index1')!,
-                    },
                 },
-            };
+            });
         }
 
         setCameras(newCameras);
@@ -264,7 +270,14 @@ export default function Landing() {
 
     const handleImage = (file: File) => {
         const url = URL.createObjectURL(file);
-        setImages((oldImages) => [...oldImages, { name: file.name, url }]);
+        const exists = imageFiles.find((v) => v.name === file.name);
+        if (!exists) {
+            const newImage: ImageFile = {
+                name: file.name,
+                url,
+            };
+            setImageFiles((v) => [...v, newImage]);
+        }
     };
 
     const handleVICAR = async (file: File) => {
@@ -278,14 +291,14 @@ export default function Landing() {
 
     const handleClick = async () => {
         const file = await fileOpen();
-        setFiles((oldFiles) => oldFiles.filter((f) => f.name !== file.name).concat([file]));
+        setFiles((v) => v.filter((f) => f.name !== file.name).concat([file]));
     };
 
     const handleDrop = async (event: React.DragEvent) => {
         event.preventDefault();
-        const newFiles = await getFilesFromDataTransferItems(event.dataTransfer.items);
-        const newFilenames = newFiles.map((f) => f.name);
-        setFiles((oldFiles) => oldFiles.filter((f) => !newFilenames.includes(f.name)).concat(newFiles));
+        const file = await getFilesFromDataTransferItems(event.dataTransfer.items);
+        const names = file.map((f) => f.name);
+        setFiles((v) => v.filter((f) => !names.includes(f.name)).concat(file));
     };
 
     const disableEvent = (event: React.DragEvent) => {
@@ -299,10 +312,33 @@ export default function Landing() {
     }, [files]);
 
     useEffect(() => {
-        if (tracks.length > 0 && Object.keys(cameras).length > 0 && Object.keys(vicar).length > 0) {
+        if (tracks.length > 0 && images.length > 0 && Object.keys(vicar).length > 0) {
             navigate('/overview');
         }
-    }, [tracks, cameras, vicar]);
+    }, [tracks, images, vicar]);
+
+    useEffect(() => {
+        if (imageFiles.length === cameras.length && imageFiles.length > 0) {
+            const newImages: Image[] = [];
+
+            for (const imageFile of imageFiles) {
+                const camera = cameras.find((v) => imageFile.name.includes(v.id.slice(6)));
+                if (!camera) {
+                    console.error('Failed to find camera tied to image:', imageFile);
+                    continue;
+                }
+
+                const image: Image = {
+                    ...imageFile,
+                    camera,
+                };
+
+                newImages.push(image);
+            }
+
+            setImages(newImages);
+        }
+    }, [cameras, imageFiles]);
 
     return (
         <main className={styles.container}>

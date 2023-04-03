@@ -1,134 +1,175 @@
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Vector2 } from 'three';
+import cn from 'classnames';
 
-import { ResidualSortField, ResidualSortDirection, useTools } from '@/stores/ToolsContext';
-import { useData } from '@/stores/DataContext';
+import { ResidualType, useData } from '@/stores/DataContext';
+import { AxesType, ResidualSortDirection, ResidualSortField, useFilters } from '@/stores/FiltersContext';
 
-import RadialChart from '@/components/RadialChart';
-import ResidualChart from '@/components/ResidualChart';
-import SlopeChart from '@/components/SlopeChart';
+import RadialChart, { RadialChartPoint } from '@/charts/radial';
+import HistogramChart, { HistogramChartPoint } from '@/charts/histogram';
+import SlopeChart, { SlopeChartPoint } from '@/charts/slope';
 
+import { H2 } from '@/styles/headers.css';
 import * as styles from '@/routes/images.css';
 
-const baseVector = new Vector2();
-const tempVector = new Vector2();
+type CameraLengthMap = Record<string, HistogramChartPoint[][]>;
+type CameraAngleMap = Record<string, RadialChartPoint[]>;
+type CameraPointMap = Record<string, SlopeChartPoint[]>;
 
 export default function Images() {
     const navigate = useNavigate();
 
-    const { state } = useTools();
+    const { images, setImages, cameraPointMap, maxResidualLength } = useData();
+    const { filterState, guardInitialPoint, guardFinalPoint, guardPoint } = useFilters();
 
-    const { imageTracks, getImageURL } = useData();
+    const [residualAngles, setResidualAngles] = useState<CameraAngleMap>({});
+    const [residualLengths, setResidualLengths] = useState<CameraLengthMap>({});
+    const [residualPoints, setResidualPoints] = useState<CameraPointMap>({});
 
     const handleClick = (name: string) => {
         navigate(`/images/${name}`);
     };
 
-    const images = useMemo(() => {
-        const newImages = Object.keys(imageTracks);
+    useEffect(() => {
+        const newAngles: CameraAngleMap = {};
+        const newLengths: CameraLengthMap = {};
+        const newPoints: CameraPointMap = {};
 
-        newImages.sort((idA, idB) => {
-            const tracksA = imageTracks[idA];
-            const tracksB = imageTracks[idB];
+        // TODO: Cache this?
+        const maxResiduals: { [key: string]: number } = {};
 
-            if (state.residualSort.field === ResidualSortField.INITIAL) {
-                const imageAResiduals = [];
-                const imageBResiduals = [];
+        for (const image of images) {
+            const imageAngles: RadialChartPoint[] = [];
+            const imageLengths: HistogramChartPoint[][] = [[], []];
+            const imagePoints: SlopeChartPoint[] = [];
 
-                for (const track of tracksA) {
-                    const points = track.points;
-                    for (const point of points) {
-                        const residual = point.initialResidual;
-                        const distance = baseVector.distanceTo(tempVector.set(residual[0], residual[1]));
-                        imageAResiduals.push(Number(distance.toFixed(1)));
+            const imageResiduals: number[] = [];
+
+            for (const point of cameraPointMap[image.camera.id]) {
+                if (guardInitialPoint(point)) {
+                    imageAngles.push({
+                        radius: point.initialResidualLength,
+                        angle: point.initialResidualAngle,
+                        type: ResidualType.INITIAL,
+                    });
+                    imageLengths[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
+
+                    if (filterState.residualSortField === ResidualSortField.INITIAL) {
+                        imageResiduals.push(point.initialResidualLength);
                     }
                 }
 
-                for (const track of tracksB) {
-                    const points = track.points;
-                    for (const point of points) {
-                        const residual = point.initialResidual;
-                        const distance = baseVector.distanceTo(tempVector.set(residual[0], residual[1]));
-                        imageBResiduals.push(Number(distance.toFixed(1)));
+                if (guardFinalPoint(point)) {
+                    imageAngles.push({
+                        radius: point.finalResidualLength,
+                        angle: point.finalResidualAngle,
+                        type: ResidualType.FINAL,
+                    });
+                    imageLengths[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
+
+                    if (filterState.residualSortField === ResidualSortField.FINAL) {
+                        imageResiduals.push(point.finalResidualLength);
                     }
                 }
 
-                const maxResidualA = Math.max(...imageAResiduals);
-                const maxResidualB = Math.max(...imageBResiduals);
-
-                if (
-                    (state.residualSort.direction === ResidualSortDirection.INCREASING &&
-                        maxResidualA < maxResidualB) ||
-                    (state.residualSort.direction === ResidualSortDirection.DECREASING && maxResidualA > maxResidualB)
-                ) {
-                    return -1;
+                if (guardPoint(point)) {
+                    imagePoints.push(
+                        { type: ResidualType.INITIAL, index: point.index, value: point.initialResidualLength },
+                        { type: ResidualType.FINAL, index: point.index, value: point.finalResidualLength },
+                    );
                 }
-
-                return 1;
-            } else if (state.residualSort.field === ResidualSortField.FINAL) {
-                const imageAResiduals = [];
-                const imageBResiduals = [];
-
-                for (const track of tracksA) {
-                    const points = track.points;
-                    for (const point of points) {
-                        const residual = point.finalResidual;
-                        const distance = baseVector.distanceTo(tempVector.set(residual[0], residual[1]));
-                        imageAResiduals.push(Number(distance.toFixed(1)));
-                    }
-                }
-
-                for (const track of tracksB) {
-                    const points = track.points;
-                    for (const point of points) {
-                        const residual = point.finalResidual;
-                        const distance = baseVector.distanceTo(tempVector.set(residual[0], residual[1]));
-                        imageBResiduals.push(Number(distance.toFixed(1)));
-                    }
-                }
-
-                const maxResidualA = Math.max(...imageAResiduals);
-                const maxResidualB = Math.max(...imageBResiduals);
-
-                if (
-                    (state.residualSort.direction === ResidualSortDirection.INCREASING &&
-                        maxResidualA < maxResidualB) ||
-                    (state.residualSort.direction === ResidualSortDirection.DECREASING && maxResidualA > maxResidualB)
-                ) {
-                    return -1;
-                }
-
-                return 1;
-            } else if (state.residualSort.field === ResidualSortField.SCLK) {
-                if (
-                    (state.residualSort.direction === ResidualSortDirection.INCREASING &&
-                        idA.localeCompare(idB, undefined, { numeric: true }) < 0) ||
-                    (state.residualSort.direction === ResidualSortDirection.DECREASING &&
-                        idA.localeCompare(idB, undefined, { numeric: true }) > 0)
-                ) {
-                    return -1;
-                }
-                return 1;
             }
 
-            return 0;
-        });
+            newAngles[image.camera.id] = imageAngles;
+            newLengths[image.camera.id] = imageLengths.filter((v) => v.length > 0);
+            newPoints[image.camera.id] = imagePoints;
 
-        return newImages;
-    }, [state, imageTracks]);
+            maxResiduals[image.camera.id] = Math.max.apply(Math, imageResiduals);
+        }
+
+        const newImages = images.slice(0);
+        if (filterState.residualSortField === ResidualSortField.ACQUISITION_ORDER) {
+            newImages.sort((a, b) => {
+                const aId = a.camera.id;
+                const bId = b.camera.id;
+
+                if (filterState.residualSortDirection === ResidualSortDirection.DECREASING) {
+                    if (aId > bId) {
+                        return -1;
+                    } else if (aId < bId) {
+                        return 1;
+                    }
+                    return 0;
+                } else if (filterState.residualSortDirection === ResidualSortDirection.INCREASING) {
+                    if (aId < bId) {
+                        return -1;
+                    } else if (aId > bId) {
+                        return 1;
+                    }
+                    return 0;
+                }
+
+                return 0;
+            });
+        } else {
+            newImages.sort((a, b) => {
+                const aResiduals = maxResiduals[a.camera.id];
+                const bResiduals = maxResiduals[b.camera.id];
+
+                if (filterState.residualSortDirection === ResidualSortDirection.DECREASING) {
+                    if (aResiduals > bResiduals) {
+                        return -1;
+                    } else if (aResiduals < bResiduals) {
+                        return 1;
+                    }
+                    return 0;
+                } else if (filterState.residualSortDirection === ResidualSortDirection.INCREASING) {
+                    if (aResiduals < bResiduals) {
+                        return -1;
+                    } else if (aResiduals > bResiduals) {
+                        return 1;
+                    }
+                    return 0;
+                }
+
+                return 0;
+            });
+        }
+
+        setImages(newImages);
+
+        setResidualAngles(newAngles);
+        setResidualLengths(newLengths);
+        setResidualPoints(newPoints);
+    }, [filterState]);
 
     return (
         <section className={styles.container}>
-            {images.map((imageName) => (
-                <div key={imageName} className={styles.item} onClick={() => handleClick(imageName)}>
-                    <div>
-                        <h2 className={styles.header}>{imageName}</h2>
-                        <img className={styles.image} src={getImageURL(imageName)!} alt={`Image Name: ${imageName}`} />
+            {images.map((image) => (
+                <div key={image.camera.id} className={styles.panel} onClick={() => handleClick(image.camera.id)}>
+                    <div className={styles.item}>
+                        <h2 className={cn(H2, styles.header)}>{image.camera.id}</h2>
+                        <img className={styles.image} src={image.url} alt={`Image Name: ${image.name}`} />
                     </div>
-                    <RadialChart state={state} activeImage={imageName} />
-                    <ResidualChart state={state} activeImage={imageName} />
-                    <SlopeChart state={state} activeImage={imageName} />
+                    <div className={styles.item}>
+                        {image.camera.id in residualAngles && (
+                            <RadialChart
+                                data={residualAngles[image.camera.id]}
+                                maxRadius={filterState.axesType === AxesType.ABSOLUTE ? maxResidualLength : null}
+                            />
+                        )}
+                    </div>
+                    <div className={styles.item}>
+                        {image.camera.id in residualLengths && (
+                            <HistogramChart data={residualLengths[image.camera.id]} hideAxes />
+                        )}
+                    </div>
+                    {image.camera.id in residualPoints && (
+                        <SlopeChart
+                            data={residualPoints[image.camera.id]}
+                            yDomain={filterState.axesType === AxesType.ABSOLUTE ? [0, maxResidualLength] : null}
+                        />
+                    )}
                 </div>
             ))}
         </section>

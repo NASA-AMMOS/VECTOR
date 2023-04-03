@@ -1,12 +1,12 @@
-import { useRef, useMemo, useEffect, useCallback, useReducer } from 'react';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import { useTools } from '@/stores/ToolsContext';
-import { Track, CameraModel, useData } from '@/stores/DataContext';
+import { Track, CameraModel, Camera, useData } from '@/stores/DataContext';
+import { useFilters } from '@/stores/FiltersContext';
 
-import { theme } from '@/utils/theme.css';
+import { theme } from '@/theme.css';
 
 // Set proper axis to match SITE frame.
 THREE.Object3D.DefaultUp.set(0, 0, -1);
@@ -25,9 +25,9 @@ const finalLineMaterial = new THREE.LineBasicMaterial({ color: theme.color.final
 export default function CameraViewport() {
     const { trackId: activeTrack } = useParams();
 
-    const { state } = useTools();
+    const { filterState } = useFilters();
 
-    const { tracks, cameras, getVICARFile, parseVICARField } = useData();
+    const { tracks, cameraImageMap, getVICARFile, parseVICARField } = useData();
 
     const sceneRef = useRef<THREE.Scene>(new THREE.Scene());
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -52,12 +52,12 @@ export default function CameraViewport() {
     }, [tracks, activeTrack]);
 
     const animate = () => {
-        rAFRef.current = requestAnimationFrame(animate);
-
         if (rendererRef.current && controlsRef.current && cameraRef.current) {
             controlsRef.current.update();
             rendererRef.current.render(sceneRef.current, cameraRef.current);
         }
+
+        rAFRef.current = requestAnimationFrame(animate);
     };
 
     const initPoints = () => {
@@ -110,33 +110,31 @@ export default function CameraViewport() {
     };
 
     const initCameras = () => {
-        const cameraIds: string[] = [];
+        const cameras: { [key: string]: Camera } = {};
         for (const track of activeTracks) {
             for (const point of track.points) {
-                if (point.imageName in cameras && !cameraIds.includes(point.imageName)) {
-                    cameraIds.push(point.imageName);
+                if (!(point.cameraId in cameras)) {
+                    cameras[point.cameraId] = cameraImageMap[point.cameraId].camera;
                 }
             }
         }
 
         if (!initialCameras.current) {
-            initialCameras.current = new THREE.InstancedMesh(planeGeometry, initialMaterial, cameraIds.length);
+            initialCameras.current = new THREE.InstancedMesh(
+                planeGeometry,
+                initialMaterial,
+                Object.keys(cameras).length,
+            );
             sceneRef.current.add(initialCameras.current);
         }
 
         if (!finalCameras.current) {
-            finalCameras.current = new THREE.InstancedMesh(planeGeometry, finalMaterial, cameraIds.length);
+            finalCameras.current = new THREE.InstancedMesh(planeGeometry, finalMaterial, Object.keys(cameras).length);
             sceneRef.current.add(finalCameras.current);
         }
 
-        for (const [i, id] of cameraIds.entries()) {
-            const camera = cameras[id];
-
-            const metadata = getVICARFile(id);
-
-            // Get coordinate system transformation group.
-            // const frameIndex = metadata.findIndex((v) => v === `REFERENCE_COORD_SYSTEM_NAME='SITE_FRAME'`) + 1;
-            // const group = metadata.slice(frameIndex - 10, frameIndex + 1);
+        for (const [i, camera] of Object.values(cameras).entries()) {
+            const metadata = getVICARFile(camera.id);
 
             const originOffset = new THREE.Vector3(...parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR'));
             const originRotation = new THREE.Quaternion(
@@ -157,9 +155,8 @@ export default function CameraViewport() {
         originRotation: THREE.Quaternion,
         isInitial: boolean,
     ) => {
-        const C = new THREE.Vector3(...model.C).applyQuaternion(originRotation).add(originOffset);
-        const A = new THREE.Vector3(...model.A);
-        const H = new THREE.Vector3(...model.H);
+        const C = new THREE.Vector3(...model.center).applyQuaternion(originRotation).add(originOffset);
+        const A = new THREE.Vector3(...model.axis);
 
         A.applyQuaternion(originRotation);
 
@@ -225,9 +222,13 @@ export default function CameraViewport() {
             return;
         }
 
-        const rect = canvas.parentElement.getBoundingClientRect();
-        const width = rect.width;
-        const height = rect.height;
+        const computedStyle = getComputedStyle(canvas.parentElement);
+        const width =
+            canvas.parentElement.clientWidth -
+            (parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight));
+        const height =
+            canvas.parentElement.clientHeight -
+            (parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom));
 
         canvas.width = width;
         canvas.height = height;
@@ -241,10 +242,13 @@ export default function CameraViewport() {
         }
         rendererRef.current.setSize(width, height);
         rendererRef.current.setPixelRatio(Math.min(2, window.devicePixelRatio));
-        rendererRef.current.setClearColor(theme.color.background);
+        rendererRef.current.setClearColor(theme.color.white);
 
         if (!controlsRef.current) {
             controlsRef.current = new OrbitControls(cameraRef.current, rendererRef.current.domElement);
+            controlsRef.current.panSpeed = 0.5;
+            controlsRef.current.rotateSpeed = 0.5;
+            controlsRef.current.zoomSpeed = 0.5;
         }
 
         initPoints();
@@ -254,19 +258,19 @@ export default function CameraViewport() {
     }, []);
 
     useEffect(() => {
-        if (state.isPoint && state.isInitial && initialPoints.current) {
+        if (filterState.viewPoints && filterState.viewInitialResiduals && initialPoints.current) {
             initialPoints.current.visible = true;
         } else if (initialPoints.current) {
             initialPoints.current.visible = false;
         }
 
-        if (state.isPoint && state.isFinal && finalPoints.current) {
+        if (filterState.viewPoints && filterState.viewFinalResiduals && finalPoints.current) {
             finalPoints.current.visible = true;
         } else if (finalPoints.current) {
             finalPoints.current.visible = false;
         }
 
-        if (state.isCamera && state.isInitial && initialCameras.current) {
+        if (filterState.viewCameras && filterState.viewInitialResiduals && initialCameras.current) {
             initialCameras.current.visible = true;
             sceneRef.current.traverse((object) => {
                 const userData = object.userData;
@@ -284,7 +288,7 @@ export default function CameraViewport() {
             });
         }
 
-        if (state.isCamera && state.isFinal && finalCameras.current) {
+        if (filterState.viewCameras && filterState.viewFinalResiduals && finalCameras.current) {
             finalCameras.current.visible = true;
             sceneRef.current.traverse((object) => {
                 const userData = object.userData;
@@ -301,7 +305,7 @@ export default function CameraViewport() {
                 }
             });
         }
-    }, [state]);
+    }, [filterState]);
 
     useEffect(() => {
         window.addEventListener('resize', handleResize);

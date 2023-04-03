@@ -1,36 +1,76 @@
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import cn from 'classnames';
+
+import { ResidualType, useData } from '@/stores/DataContext';
+import { AxesType, useFilters } from '@/stores/FiltersContext';
+
+import RadialChart, { RadialChartPoint } from '@/charts/radial';
+import HistogramChart, { HistogramChartPoint } from '@/charts/histogram';
+
 import Tracks from '@/components/Tracks';
 import TiepointImage from '@/components/TiepointImage';
-import RadialChart from '@/components/RadialChart';
-import ResidualChart from '@/components/ResidualChart';
 
-import { useTools } from '@/stores/ToolsContext';
-
+import { H2 } from '@/styles/headers.css';
 import * as styles from '@/routes/image.css';
-import { useParams } from 'react-router-dom';
 
 export default function Image() {
-    const { imageName: activeImage } = useParams();
+    const { cameraId } = useParams();
+    if (!cameraId) return null;
 
-    const { state } = useTools();
+    const { cameraPointMap, maxResidualLength } = useData();
+    const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
+
+    const [residualAngles, setResidualAngles] = useState<RadialChartPoint[]>([]);
+    const [residualCounts, setResidualCounts] = useState<HistogramChartPoint[][]>([]);
+
+    useEffect(() => {
+        const newAngles: RadialChartPoint[] = [];
+        const newCounts: HistogramChartPoint[][] = [[], []];
+
+        for (const point of cameraPointMap[cameraId]) {
+            if (guardInitialPoint(point)) {
+                newAngles.push({
+                    radius: point.initialResidualLength,
+                    angle: point.initialResidualAngle,
+                    type: ResidualType.INITIAL,
+                });
+                newCounts[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
+            }
+
+            if (guardFinalPoint(point)) {
+                newAngles.push({
+                    radius: point.finalResidualLength,
+                    angle: point.finalResidualAngle,
+                    type: ResidualType.FINAL,
+                });
+                newCounts[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
+            }
+        }
+
+        setResidualAngles(newAngles);
+        setResidualCounts(newCounts.filter((v) => v.length > 0));
+    }, [cameraId, cameraPointMap, filterState]);
 
     return (
-        <>
-            {activeImage && (
-                <section className={styles.container}>
-                    <div className={styles.column}>
-                        <TiepointImage state={state} />
-                        <div className={styles.block}>
-                            <div className={styles.item}>
-                                <RadialChart state={state} activeImage={activeImage} />
-                            </div>
-                            <div className={styles.item}>
-                                <ResidualChart state={state} activeImage={activeImage} />
-                            </div>
-                        </div>
+        <section className={styles.container}>
+            <div className={styles.column}>
+                <TiepointImage />
+                <div className={styles.block}>
+                    <div className={styles.item}>
+                        <h2 className={cn(H2, styles.header)}>Residual Angle</h2>
+                        <RadialChart
+                            data={residualAngles}
+                            maxRadius={filterState.axesType === AxesType.ABSOLUTE ? maxResidualLength : null}
+                        />
                     </div>
-                    <Tracks state={state} />
-                </section>
-            )}
-        </>
+                    <div className={styles.item}>
+                        <h2 className={cn(H2, styles.header)}>Residual Length vs. Pixel</h2>
+                        <HistogramChart data={residualCounts} />
+                    </div>
+                </div>
+            </div>
+            <Tracks />
+        </section>
     );
 }

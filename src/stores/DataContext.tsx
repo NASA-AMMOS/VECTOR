@@ -1,20 +1,27 @@
 import { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { Vector2 } from 'three';
-import { Polar } from '@/utils/helpers';
 
-const baseVector = new Vector2();
+export type CameraImageMap = Record<string, Image>;
+export type CameraTrackMap = Record<string, Track[]>;
+export type CameraPointMap = Record<string, Point[]>;
 
-export type ImageTrackMap = Record<string, Track[]>;
+export type VICAR = Record<string, string[]>;
+
+export enum ResidualType {
+    INITIAL = 'INITIAL',
+    FINAL = 'FINAL',
+}
 
 export interface Point {
     index: number;
-    imageName: string;
+    cameraId: string;
     key: number;
     pixel: [number, number];
     initialResidual: [number, number];
     initialResidualLength: number;
+    initialResidualAngle: number;
     finalResidual: [number, number];
     finalResidualLength: number;
+    finalResidualAngle: number;
 }
 
 export interface Track {
@@ -24,53 +31,43 @@ export interface Track {
     points: Point[];
 }
 
-export interface Frame {
-    name: string;
-    index: string;
-}
-
 export interface CameraModel {
-    C: number[];
-    A: number[];
-    H: number[];
-    frame: Frame;
+    center: number[];
+    axis: number[];
 }
 
 export interface Camera {
+    id: string;
     initial: CameraModel;
     final: CameraModel;
-}
-
-export interface Cameras {
-    [key: string]: Camera;
 }
 
 export interface Image {
     name: string;
     url: string;
-}
-
-export interface VICAR {
-    [key: string]: string[];
+    camera: Camera;
 }
 
 interface DataStore {
     tracks: Track[];
-    cameras: Cameras;
     images: Image[];
     vicar: VICAR;
 
-    imageTracks: ImageTrackMap;
-    initialResidualBounds: [[number, number], [number, number]];
-    finalResidualBounds: [[number, number], [number, number]];
-    residualBounds: [[number, number], [number, number]];
+    cameraImageMap: CameraImageMap;
+    cameraTrackMap: CameraTrackMap;
+    cameraPointMap: CameraPointMap;
+    points: Point[];
 
-    getImageURL: (id: string) => string | null;
+    minResidualLength: number;
+    maxResidualLength: number;
+
+    minResidualAngle: number;
+    maxResidualAngle: number;
+
     getVICARFile: (id: string) => string[];
     parseVICARField: (metadata: string[], fieldName: string) => number[];
 
     setTracks: React.Dispatch<React.SetStateAction<Track[]>>;
-    setCameras: React.Dispatch<React.SetStateAction<Cameras>>;
     setImages: React.Dispatch<React.SetStateAction<Image[]>>;
     setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
 }
@@ -87,80 +84,64 @@ export function useData() {
 
 export default function ProvideData({ children }: ProvideDataProps) {
     const [tracks, setTracks] = useState<Track[]>([]);
-    const [cameras, setCameras] = useState<Cameras>({});
     const [images, setImages] = useState<Image[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
 
-    const imageTracks = useMemo(() => {
-        return tracks.reduce<ImageTrackMap>((result: ImageTrackMap, track: Track) => {
+    // Provide a LUT for images by camera ID. This improves the rendering
+    // significantly because images can be 100s of entries and we often
+    // need specific cameras while knowing the ID.
+    const cameraImageMap = useMemo(() => {
+        return images.reduce<CameraImageMap>((result, v) => {
+            if (!(v.camera.id in result)) {
+                result[v.camera.id] = v;
+            }
+            return result;
+        }, {});
+    }, [images]);
+
+    // Same reasoning — we can map cameras to tracks to improve performance.
+    const cameraTrackMap = useMemo(() => {
+        return tracks.reduce<CameraTrackMap>((result, track) => {
             for (const point of track.points) {
-                // TODO: Check for duplicate tracks being included?
-                if (point.imageName in result) {
-                    result[point.imageName].push(track);
+                if (point.cameraId in result) {
+                    result[point.cameraId].push(track);
                 } else {
-                    result[point.imageName] = [track];
+                    result[point.cameraId] = [track];
                 }
             }
             return result;
         }, {});
-    }, [tracks]);
+    }, [images, tracks]);
 
-    const [initialResidualBounds, finalResidualBounds] = useMemo<
-        [[[number, number], [number, number]], [[number, number], [number, number]]]
-    >(() => {
-        const cartInitialResiduals = [];
-        const polarInitialResiduals = [];
+    const cameraPointMap = useMemo(() => {
+        return images.reduce<CameraPointMap>((result, image) => {
+            const tracks = cameraTrackMap[image.camera.id];
+            result[image.camera.id] = tracks.map((track) => track.points).flat();
+            return result;
+        }, {});
+    }, [cameraTrackMap]);
 
-        const cartFinalResiduals = [];
-        const polarFinalResiduals = [];
+    // Another one — useful for processing global residual information.
+    const points = useMemo(() => tracks.map((track) => track.points).flat(), [tracks]);
+
+    // The bounds for residual length and angle can be precomputed as it's
+    // often needed for various aspects of the charts.
+    const [[minResidualLength, maxResidualLength], [minResidualAngle, maxResidualAngle]] = useMemo(() => {
+        const residualLengths = [];
+        const residualAngles = [];
 
         for (const track of tracks) {
             for (const point of track.points) {
-                const initialResidual = new Vector2(...point.initialResidual);
-                const finalResidual = new Vector2(...point.finalResidual);
-                const initialDistance = Number(baseVector.distanceTo(initialResidual).toFixed(1));
-                const finalDistance = Number(baseVector.distanceTo(finalResidual).toFixed(1));
-                cartInitialResiduals.push(initialDistance);
-                cartFinalResiduals.push(finalDistance);
-                polarInitialResiduals.push(Polar(point.initialResidual).radius);
-                polarFinalResiduals.push(Polar(point.finalResidual).radius);
+                residualLengths.push(point.initialResidualLength, point.finalResidualLength);
+                residualAngles.push(point.initialResidualAngle, point.finalResidualAngle);
             }
         }
 
         return [
-            [
-                [Math.min(...cartInitialResiduals), Math.max(...cartInitialResiduals)],
-                [Math.min(...polarInitialResiduals), Math.max(...polarInitialResiduals)],
-            ],
-            [
-                [Math.min(...cartFinalResiduals), Math.max(...cartFinalResiduals)],
-                [Math.min(...polarFinalResiduals), Math.max(...polarFinalResiduals)],
-            ],
+            [Math.min.apply(Math, residualLengths), Math.max.apply(Math, residualLengths)],
+            [Math.min.apply(Math, residualAngles), Math.max.apply(Math, residualAngles)],
         ];
     }, [tracks]);
-
-    const residualBounds = useMemo<[[number, number], [number, number]]>(() => {
-        return [
-            [
-                Math.min(initialResidualBounds[0][0], finalResidualBounds[0][0]),
-                Math.max(initialResidualBounds[0][1], finalResidualBounds[0][1]),
-            ],
-            [
-                Math.min(initialResidualBounds[1][0], finalResidualBounds[1][0]),
-                Math.max(initialResidualBounds[1][1], finalResidualBounds[1][1]),
-            ],
-        ];
-    }, [initialResidualBounds, finalResidualBounds]);
-
-    const getImageURL = useCallback(
-        (id: string) => {
-            const fileId = id.slice(6);
-            const image = images.find((image) => image.name.includes(fileId));
-            if (!image) return null;
-            return image.url;
-        },
-        [images],
-    );
 
     const getVICARFile = useCallback(
         (id: string) => {
@@ -184,21 +165,24 @@ export default function ProvideData({ children }: ProvideDataProps) {
         <DataContext.Provider
             value={{
                 tracks,
-                cameras,
                 images,
                 vicar,
 
-                imageTracks,
-                initialResidualBounds,
-                finalResidualBounds,
-                residualBounds,
+                cameraImageMap,
+                cameraTrackMap,
+                cameraPointMap,
+                points,
 
-                getImageURL,
+                minResidualLength,
+                maxResidualLength,
+
+                minResidualAngle,
+                maxResidualAngle,
+
                 getVICARFile,
                 parseVICARField,
 
                 setTracks,
-                setCameras,
                 setImages,
                 setVICAR,
             }}

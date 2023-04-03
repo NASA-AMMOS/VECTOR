@@ -1,5 +1,5 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '../utils/theme.css';
+import { vars } from '@/theme.css';
 
 export const container = style({
     display: 'grid',
@@ -8,40 +8,55 @@ export const container = style({
     padding: '1rem',
     height: '100vh',
     width: `calc(100vw - ${vars.size.sidebar})`,
+    overflow: 'hidden',
 });
 
-export const panel = style({
+export const stage = style({
     gridColumn: '1 / 5',
     display: 'flex',
     flexDirection: 'column',
     height: 'calc(100vh - 2rem)',
     padding: '1rem',
     backgroundColor: vars.color.white,
-    borderRadius: '0.4rem',
+    borderRadius: vars.border.radius,
 });
 
-export const column = style({
-    gridColumn: '5 / -1',
-    display: 'grid',
-    gridTemplateRows: 'minmax(0, 1fr) 2fr 1fr',
-    gridGap: '1rem',
-    height: 'calc(100vh - 2rem)',
-    padding: '1rem',
-    backgroundColor: vars.color.white,
-    borderRadius: '0.4rem',
-});
-
-export const header = style({
+export const trackTitle = style({
     paddingBottom: '1rem',
-    fontSize: '1.2rem',
-    fontWeight: 500,
-    textTransform: 'uppercase',
 });
 
-export const bar = style({
+export const track = style({
     marginBottom: '1rem',
 });
 
 export const canvas = style({
     height: '100%',
+    border: vars.border.standard,
+    borderRadius: vars.border.radius,
+});
+
+export const charts = style({
+    gridColumn: '5 / -1',
+    display: 'grid',
+    gridTemplateRows: 'repeat(3, minmax(0, 1fr))',
+    height: 'calc(100vh - 2rem)',
+    backgroundColor: vars.color.white,
+    borderRadius: vars.border.radius,
+});
+
+export const chart = style({
+    display: 'grid',
+    gridTemplateRows: 'auto minmax(0, 1fr)',
+    padding: '2rem',
+
+    selectors: {
+        '&:not(:last-child)': {
+            borderBottom: vars.border.standard,
+        },
+    },
+});
+
+export const chartTitle = style({
+    paddingBottom: '1rem',
+    textAlign: 'center',
 });

@@ -1,5 +1,5 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '../utils/theme.css';
+import { vars } from '@/theme.css';
 
 export const container = style({
     display: 'grid',
@@ -21,11 +21,21 @@ export const block = style({
     gridTemplateRows: '1fr',
     gridGap: '1rem',
     height: 'calc((100vh - 2rem) / 2 - 0.5rem)',
-    padding: '1rem',
     backgroundColor: vars.color.white,
-    borderRadius: '0.4rem',
+    borderRadius: vars.border.radius,
 });
 
 export const item = style({
-    height: 'calc((100vh - 2rem) / 2 - 0.5rem - 2rem)',
+    padding: '2rem',
+
+    selectors: {
+        '&:not(:last-child)': {
+            borderRight: vars.border.standard,
+        },
+    },
+});
+
+export const header = style({
+    width: '100%',
+    textAlign: 'center',
 });

@@ -1,114 +1,67 @@
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Vector2 } from 'three';
+import cn from 'classnames';
 
-import { useData } from '@/stores/DataContext';
-import { ResidualSortField, ResidualSortDirection } from '@/stores/ToolsContext';
-import Track, { TrackState } from '@/components/Track';
+import { Track as ITrack, useData } from '@/stores/DataContext';
+import { ResidualSortField, ResidualSortDirection, useFilters } from '@/stores/FiltersContext';
 
+import Track from '@/components/Track';
+
+import { H2 } from '@/styles/headers.css';
 import * as styles from '@/components/Tracks.css';
 
-const baseVector = new Vector2();
-const tempVector = new Vector2();
+export default function Tracks() {
+    const { cameraId } = useParams();
 
-interface TracksProps {
-    state: TrackState;
-}
+    const { cameraTrackMap } = useData();
+    const { filterState } = useFilters();
 
-export default function Tracks({ state }: TracksProps) {
-    const { imageName: activeImage } = useParams();
+    if (!cameraId || !(cameraId in cameraTrackMap)) {
+        return null;
+    }
 
-    const { tracks, imageTracks } = useData();
+    const cameraTracks = useMemo<ITrack[]>(() => {
+        const selectedTracks = cameraTrackMap[cameraId];
 
-    const activeTracks = useMemo<string[]>(() => {
-        if (Object.keys(imageTracks).length === 0 || !activeImage) {
-            return [];
-        }
+        selectedTracks.sort((a, b) => {
+            let aMaxResidualLength = 0,
+                bMaxResidualLength = 0;
 
-        const imageTrack = imageTracks[activeImage];
-        const trackIds = [...new Set(imageTrack.map((track) => track.id))];
+            if (filterState.residualSortField === ResidualSortField.INITIAL) {
+                const aResidualLength = a.points.map((p) => p.initialResidualLength);
+                const bResidualLength = b.points.map((p) => p.initialResidualLength);
 
-        trackIds.sort((idA, idB) => {
-            const trackA = tracks.find((track) => track.id === idA);
-            const trackB = tracks.find((track) => track.id === idB);
+                aMaxResidualLength = Math.max.apply(Math, aResidualLength);
+                bMaxResidualLength = Math.max.apply(Math, bResidualLength);
+            } else if (filterState.residualSortField === ResidualSortField.FINAL) {
+                const aResidualLength = a.points.map((p) => p.finalResidualLength);
+                const bResidualLength = b.points.map((p) => p.finalResidualLength);
 
-            if (trackA === undefined || trackB === undefined) {
-                throw new Error('Failed to sort tracks');
+                aMaxResidualLength = Math.max.apply(Math, aResidualLength);
+                bMaxResidualLength = Math.max.apply(Math, bResidualLength);
             }
 
-            const trackAPoints = trackA.points;
-            const trackBPoints = trackB.points;
-
-            // TODO: This is a similar calculation to what we do in GlobalImageView, we can cache this...
-            if (state.residualSort.field === ResidualSortField.INITIAL) {
-                const trackAInitialResiduals = [];
-                for (const point of trackAPoints) {
-                    const distance = baseVector.distanceTo(
-                        tempVector.set(point.initialResidual[0], point.initialResidual[1]),
-                    );
-                    trackAInitialResiduals.push(Number(distance.toFixed(1)));
-                }
-
-                const trackBInitialResiduals = [];
-                for (const point of trackBPoints) {
-                    const distance = baseVector.distanceTo(
-                        tempVector.set(point.initialResidual[0], point.initialResidual[1]),
-                    );
-                    trackBInitialResiduals.push(Number(distance.toFixed(1)));
-                }
-
-                const maxResidualA = Math.max(...trackAInitialResiduals);
-                const maxResidualB = Math.max(...trackBInitialResiduals);
-
-                if (
-                    (state.residualSort.direction === ResidualSortDirection.INCREASING &&
-                        maxResidualA < maxResidualB) ||
-                    (state.residualSort.direction === ResidualSortDirection.DECREASING && maxResidualA > maxResidualB)
-                ) {
-                    return -1;
-                }
-                return 1;
-            } else if (state.residualSort.field === ResidualSortField.FINAL) {
-                const trackAFinalResiduals = [];
-                for (const point of trackAPoints) {
-                    const distance = baseVector.distanceTo(
-                        tempVector.set(point.finalResidual[0], point.finalResidual[1]),
-                    );
-                    trackAFinalResiduals.push(Number(distance.toFixed(1)));
-                }
-
-                const trackBFinalResiduals = [];
-                for (const point of trackBPoints) {
-                    const distance = baseVector.distanceTo(
-                        tempVector.set(point.finalResidual[0], point.finalResidual[1]),
-                    );
-                    trackBFinalResiduals.push(Number(distance.toFixed(1)));
-                }
-
-                const maxResidualA = Math.max(...trackAFinalResiduals);
-                const maxResidualB = Math.max(...trackBFinalResiduals);
-
-                if (
-                    (state.residualSort.direction === ResidualSortDirection.INCREASING &&
-                        maxResidualA < maxResidualB) ||
-                    (state.residualSort.direction === ResidualSortDirection.DECREASING && maxResidualA > maxResidualB)
-                ) {
-                    return -1;
-                }
-                return 1;
+            if (aMaxResidualLength === bMaxResidualLength) {
+                return 0;
+            } else if (
+                (filterState.residualSortDirection === ResidualSortDirection.INCREASING &&
+                    aMaxResidualLength < bMaxResidualLength) ||
+                (filterState.residualSortDirection === ResidualSortDirection.DECREASING &&
+                    aMaxResidualLength > bMaxResidualLength)
+            ) {
+                return -1;
             }
-
-            return 0;
+            return 1;
         });
 
-        return trackIds;
-    }, [state, imageTracks, activeImage]);
+        return selectedTracks;
+    }, [cameraId, cameraTrackMap, filterState]);
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.header}>Tracks</h2>
-            {activeTracks.map((trackId) => (
-                <Track key={trackId} state={state} activeImage={activeImage ?? null} activeTrack={trackId} isGrouped />
+            <h2 className={cn(H2, styles.header)}>Tracks</h2>
+            {cameraTracks.map((track) => (
+                <Track key={track.id} trackId={track.id} isGrouped />
             ))}
         </div>
     );

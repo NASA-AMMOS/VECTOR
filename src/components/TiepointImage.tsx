@@ -1,148 +1,104 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Vector2 } from 'three';
+import cn from 'classnames';
 
-import { Track, useData } from '@/stores/DataContext';
+import { useData } from '@/stores/DataContext';
+import { useFilters } from '@/stores/FiltersContext';
 
-import { theme } from '@/utils/theme.css';
+import { theme } from '@/theme.css';
+import { H2 } from '@/styles/headers.css';
 import * as styles from '@/components/TiepointImage.css';
 
-const baseVector = new Vector2();
+export default function TiepointImage() {
+    const { cameraId } = useParams();
 
-interface TiepointImageState {
-    isInitial: boolean;
-    isFinal: boolean;
-    residualMin: number | null;
-    residualMax: number | null;
-    residualScale: number;
-}
+    const { cameraImageMap, cameraTrackMap } = useData();
+    const { filterState } = useFilters();
 
-interface TiepointImageProps {
-    state: TiepointImageState;
-}
-
-export default function TiepointImage({ state }: TiepointImageProps) {
-    const { imageName: activeImage } = useParams();
-
-    const { imageTracks, getImageURL } = useData();
-
-    const [image, setImage] = useState<HTMLImageElement>(null!);
-
-    const imageURL = useMemo<string | null>(() => {
-        if (activeImage) {
-            return getImageURL(activeImage);
-        }
+    if (!cameraId || !(cameraId in cameraImageMap)) {
         return null;
-    }, [activeImage, getImageURL]);
+    }
 
-    const activeTracks = useMemo<Track[] | never[]>(() => {
-        if (activeImage) {
-            return imageTracks[activeImage];
-        }
-        return [];
-    }, [imageTracks, activeImage]);
+    const image = useMemo<HTMLImageElement>(() => {
+        const element = new Image();
+        element.src = cameraImageMap[cameraId].url;
+        return element;
+    }, [cameraId]);
 
-    useEffect(() => {
-        if (imageURL) {
-            const newImage = new Image();
-            newImage.onload = () => {
-                setImage(newImage);
-            };
-            newImage.src = imageURL;
-        }
-    }, [imageURL]);
+    const stage = (canvas: HTMLCanvasElement | null) => {
+        if (canvas && image) {
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('Failed to create 2D context for TiepointImage');
 
-    const stage = useCallback(
-        (canvas: HTMLCanvasElement) => {
-            if (canvas && image) {
-                const ctx = canvas.getContext('2d');
-                if (!ctx) throw new Error();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
 
-                // Clear canvas.
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
+            // Preserve aspect ratio with dynamic sizing.
+            // This will prevent image distortion.
+            const aspectRatio = image.width / image.height;
+            canvas.style.width = `${canvas.offsetHeight * aspectRatio}px`;
 
-                // Preserve aspect ratio w/ dynamic sizing.
-                // This will prevent image distortion.
-                const aspectRatio = image.width / image.height;
-                canvas.style.width = `${canvas.offsetHeight * aspectRatio}px`;
+            // Draw image.
+            ctx.drawImage(image, 0, 0);
 
-                // Draw image.
-                ctx.drawImage(image, 0, 0);
+            // Draw Residuals
+            const tracks = cameraTrackMap[cameraId];
+            for (const track of tracks) {
+                for (const point of track.points) {
+                    if (point.cameraId === cameraId) {
+                        let isResidualDrawn = false;
 
-                // Draw Residuals
-                for (const track of activeTracks) {
-                    for (const point of track.points) {
-                        if (point.imageName === activeImage) {
-                            const { initialResidual, finalResidual, pixel } = point;
-
-                            // Calculate residual distance for filtering.
-                            const initialDistance = Number(
-                                baseVector.distanceTo(new Vector2(...initialResidual)).toFixed(1),
+                        // Draw initial residual.
+                        if (
+                            filterState.viewInitialResiduals &&
+                            filterState.minResidualLength <= point.initialResidualLength &&
+                            filterState.maxResidualLength >= point.initialResidualLength
+                        ) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = theme.color.initialHex;
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(point.pixel[0], point.pixel[1]);
+                            ctx.lineTo(
+                                point.pixel[0] + point.initialResidual[0],
+                                point.pixel[1] + point.initialResidual[1],
                             );
-                            const finalDistance = Number(
-                                baseVector.distanceTo(new Vector2(...finalResidual)).toFixed(1),
+                            ctx.stroke();
+                            isResidualDrawn = true;
+                        }
+
+                        // Draw final residual.
+                        if (
+                            filterState.viewFinalResiduals &&
+                            filterState.minResidualLength <= point.finalResidualLength &&
+                            filterState.maxResidualLength >= point.finalResidualLength
+                        ) {
+                            ctx.beginPath();
+                            ctx.strokeStyle = theme.color.finalHex;
+                            ctx.lineWidth = 2;
+                            ctx.moveTo(point.pixel[0], point.pixel[1]);
+                            ctx.lineTo(
+                                point.pixel[0] + point.finalResidual[0],
+                                point.pixel[1] + point.finalResidual[1],
                             );
+                            ctx.stroke();
+                            isResidualDrawn = true;
+                        }
 
-                            let isResidualRendered = false;
-
-                            // Draw initial residual.
-                            if (
-                                state.isInitial &&
-                                (!state.residualMin || (state.residualMin && state.residualMin <= initialDistance)) &&
-                                (!state.residualMax || (state.residualMax && state.residualMax >= initialDistance))
-                            ) {
-                                ctx.beginPath();
-                                ctx.strokeStyle = theme.color.initialHex;
-                                ctx.lineWidth = 2;
-                                ctx.moveTo(...pixel);
-                                ctx.lineTo(
-                                    ...(pixel.map((p, i) => p + initialResidual[i] * state.residualScale) as [
-                                        number,
-                                        number,
-                                    ]),
-                                );
-                                ctx.stroke();
-                                isResidualRendered = true;
-                            }
-
-                            // Draw final residual.
-                            if (
-                                state.isFinal &&
-                                (!state.residualMin || (state.residualMin && state.residualMin <= finalDistance)) &&
-                                (!state.residualMax || (state.residualMax && state.residualMax >= finalDistance))
-                            ) {
-                                ctx.beginPath();
-                                ctx.strokeStyle = theme.color.finalHex;
-                                ctx.lineWidth = 2;
-                                ctx.moveTo(...pixel);
-                                ctx.lineTo(
-                                    ...(pixel.map((p, i) => p + finalResidual[i] * state.residualScale) as [
-                                        number,
-                                        number,
-                                    ]),
-                                );
-                                ctx.stroke();
-                                isResidualRendered = true;
-                            }
-
-                            // Draw pixel as circle.
-                            if (isResidualRendered) {
-                                ctx.beginPath();
-                                ctx.arc(...pixel, 2.5, 0, Math.PI * 2, true);
-                                ctx.fill();
-                            }
+                        // Draw pixel as circle.
+                        if (isResidualDrawn) {
+                            ctx.beginPath();
+                            ctx.arc(point.pixel[0], point.pixel[1], 2, 0, Math.PI * 2, true);
+                            ctx.fill();
                         }
                     }
                 }
             }
-        },
-        [state, image, activeTracks],
-    );
+        }
+    };
 
     return (
         <section className={styles.container}>
-            <h2 className={styles.header}>Image ID: {activeImage}</h2>
+            <h2 className={cn(H2, styles.header)}>Image ID: {cameraId}</h2>
             <div className={styles.image}>
                 <canvas ref={stage} className={styles.canvas} width={image?.width} height={image?.height} />
             </div>

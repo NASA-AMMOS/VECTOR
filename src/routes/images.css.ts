@@ -1,5 +1,5 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '../utils/theme.css';
+import { vars } from '@/theme.css';
 
 export const container = style({
     display: 'flex',
@@ -8,25 +8,31 @@ export const container = style({
     overflowX: 'auto',
 });
 
-export const item = style({
+export const panel = style({
     display: 'grid',
     gridTemplateRows: 'minmax(0, 1.3fr) repeat(3, minmax(0, 1fr))',
     gridGap: '1rem',
     margin: '1rem',
-    padding: '1rem',
     backgroundColor: vars.color.white,
-    borderRadius: '0.4rem',
+    borderRadius: vars.border.radius,
     cursor: 'pointer',
+});
+
+export const item = style({
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '1rem',
+    borderBottom: vars.border.standard,
 });
 
 export const header = style({
     paddingBottom: '1rem',
-    fontSize: '1.2rem',
-    fontWeight: 500,
     textTransform: 'uppercase',
     textAlign: 'center',
 });
 
 export const image = style({
-    width: 'calc(15vw - 2rem)',
+    width: '100%',
 });

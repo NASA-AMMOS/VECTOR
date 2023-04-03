@@ -1,11 +1,10 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '../utils/theme.css';
+import { vars } from '@/theme.css';
 
 export const container = style({
     display: 'flex',
     alignItems: 'center',
     height: '2rem',
-    fontSize: '1.2rem',
 
     selectors: {
         '&:not(:last-of-type)': {
@@ -21,8 +20,8 @@ export const input = style({
     width: '1.4rem',
     marginRight: '0.4rem',
     transition: 'all 0.3s',
-    borderRadius: '0.2rem',
     border: `0.1rem solid ${vars.color.gray}`,
+    borderRadius: vars.border.inputRadius,
     cursor: 'pointer',
 
     selectors: {
@@ -47,20 +46,18 @@ export const label = style({
     cursor: 'pointer',
 });
 
-export const circle = style({
-    display: 'inline-block',
-    height: '0.8rem',
-    width: '0.8rem',
-    borderRadius: '50%',
-    backgroundColor: vars.color.initial,
-
+export const initial = style({
     selectors: {
-        '&:last-child': {
-            marginLeft: '0.4rem',
+        '&:checked::after': {
+            backgroundColor: vars.color.initial,
         },
     },
 });
 
-export const inverted = style({
-    backgroundColor: vars.color.final,
+export const final = style({
+    selectors: {
+        '&:checked::after': {
+            backgroundColor: vars.color.final,
+        },
+    },
 });

@@ -14,7 +14,6 @@ export const router = createBrowserRouter([
         element: <Landing />,
     },
     {
-        path: '/',
         element: <Root />,
         children: [
             {
@@ -30,7 +29,7 @@ export const router = createBrowserRouter([
                 element: <Images />,
             },
             {
-                path: 'images/:imageName',
+                path: 'images/:cameraId',
                 element: <Image />,
             },
             {

@@ -2,67 +2,74 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
-import SlopeChart from '@/components/SlopeChart';
+import { Point, ResidualType, useData } from '@/stores/DataContext';
+import { useFilters } from '@/stores/FiltersContext';
 
-import { Point, Track as ITrack, useData } from '@/stores/DataContext';
-import { ResidualSort } from '@/stores/ToolsContext';
+import SlopeChart, { SlopeChartPoint } from '@/charts/slope';
 
-import { theme } from '@/utils/theme.css';
-import * as styles from '@/components/Tracks.css';
-
-export interface TrackState {
-    isInitial: boolean;
-    isFinal: boolean;
-    isRelative: boolean;
-    residualMin: number | null;
-    residualMax: number | null;
-    residualSort: ResidualSort;
-}
-
-interface StageProps {
-    state: TrackState;
-    activeTrack: string | null;
-}
+import { theme } from '@/theme.css';
+import { H3 } from '@/styles/headers.css';
+import * as styles from '@/components/Track.css';
 
 interface TrackProps {
-    state: TrackState;
-    activeImage?: string | null;
-    activeTrack: string | null;
+    trackId: string;
     isGrouped?: boolean;
 }
 
-function Stage({ state, activeTrack }: StageProps) {
-    const height = 400;
-    const padding = 40;
-    const offset = 15;
+const height = 400;
+const padding = 40;
+const offset = 15;
 
-    const { tracks, getImageURL } = useData();
+export default function Track({ trackId, isGrouped = false }: TrackProps) {
+    const navigate = useNavigate();
+
+    const { tracks, cameraImageMap } = useData();
+    const { filterState } = useFilters();
+
+    const track = useMemo(() => tracks.find((t) => t.id === trackId) ?? null, [trackId, tracks]);
+    if (!track) {
+        return null;
+    }
 
     const [images, setImages] = useState<{ [key: string]: HTMLImageElement }>({});
-
-    const track = useMemo<ITrack>(() => tracks.find((t) => t.id === activeTrack)!, [tracks, activeTrack]);
+    const [points, setPoints] = useState<SlopeChartPoint[]>([]);
 
     const imageURLs = useMemo(() => {
         const result: { [key: string]: string | null } = {};
         for (const point of track.points) {
-            if (!(point.imageName in result)) {
-                result[point.imageName] = getImageURL(point.imageName);
+            if (!(point.cameraId in result)) {
+                result[point.cameraId] = cameraImageMap[point.cameraId].url;
             }
         }
         return result;
-    }, [track, getImageURL]);
+    }, [track, cameraImageMap]);
+
+    const handleClick = () => {
+        navigate(`/tracks/${trackId}`);
+    };
+
+    useEffect(() => {
+        setPoints(
+            track.points
+                .map((point) => [
+                    { type: ResidualType.INITIAL, index: point.index, value: point.initialResidualLength },
+                    { type: ResidualType.FINAL, index: point.index, value: point.finalResidualLength },
+                ])
+                .flat(),
+        );
+    }, [track, filterState]);
 
     const createPoint = (ctx: CanvasRenderingContext2D, point: Point, position: [number, number], count: number) => {
         if (position[0] < count * height + count * padding || position[0] > count * height + count * padding + height)
             return;
 
-        let isResidualRendered = false;
+        let isResidualDrawn = false;
 
         // Draw initial residual.
         if (
-            state.isInitial &&
-            (!state.residualMin || (state.residualMin && state.residualMin <= point.initialResidualLength)) &&
-            (!state.residualMax || (state.residualMax && state.residualMax >= point.initialResidualLength))
+            filterState.viewInitialResiduals &&
+            filterState.minResidualLength <= point.initialResidualLength &&
+            filterState.maxResidualLength >= point.initialResidualLength
         ) {
             ctx.beginPath();
 
@@ -73,14 +80,14 @@ function Stage({ state, activeTrack }: StageProps) {
             ctx.lineTo(position[0] + point.initialResidual[0] * 5, position[1] + point.initialResidual[1] * 5);
 
             ctx.stroke();
-            isResidualRendered = true;
+            isResidualDrawn = true;
         }
 
         // Draw final residual.
         if (
-            state.isFinal &&
-            (!state.residualMin || (state.residualMin && state.residualMin <= point.finalResidualLength)) &&
-            (!state.residualMax || (state.residualMax && state.residualMax >= point.finalResidualLength))
+            filterState.viewFinalResiduals &&
+            filterState.minResidualLength <= point.finalResidualLength &&
+            filterState.maxResidualLength >= point.finalResidualLength
         ) {
             ctx.beginPath();
 
@@ -91,16 +98,36 @@ function Stage({ state, activeTrack }: StageProps) {
             ctx.lineTo(position[0] + point.finalResidual[0] * 5, position[1] + point.finalResidual[1] * 5);
 
             ctx.stroke();
-            isResidualRendered = true;
+            isResidualDrawn = true;
         }
 
         // Draw pixel as circle.
-        if (isResidualRendered) {
+        if (isResidualDrawn) {
             ctx.beginPath();
-            ctx.arc(...position, 15, 0, Math.PI * 2, true);
+            ctx.arc(position[0], position[1], 8, 0, Math.PI * 2, true);
             ctx.fill();
         }
     };
+
+    useEffect(() => {
+        if (imageURLs) {
+            const newImages: { [key: string]: HTMLImageElement } = {};
+            for (const [name, url] of Object.entries(imageURLs)) {
+                if (name && url) {
+                    const image = new Image();
+                    image.onload = () => {
+                        newImages[name] = image;
+                        if (Object.keys(newImages).length === Object.keys(imageURLs).length) {
+                            setImages(newImages);
+                        }
+                    };
+                    image.src = url;
+                } else {
+                    throw new Error('Failed to load image in track');
+                }
+            }
+        }
+    }, [imageURLs]);
 
     const stage = useCallback(
         (canvas: HTMLCanvasElement) => {
@@ -128,7 +155,7 @@ function Stage({ state, activeTrack }: StageProps) {
                 let count = 0;
 
                 for (const point of points) {
-                    const image = images[point.imageName];
+                    const image = images[point.cameraId];
 
                     ctx.filter = 'contrast(2)';
 
@@ -157,57 +184,27 @@ function Stage({ state, activeTrack }: StageProps) {
                 }
             }
         },
-        [state, track, images],
+        [track, images, filterState],
     );
-
-    useEffect(() => {
-        if (imageURLs) {
-            const newImages: { [key: string]: HTMLImageElement } = {};
-            for (const [name, url] of Object.entries(imageURLs)) {
-                if (name && url) {
-                    const image = new Image();
-                    image.onload = () => {
-                        newImages[name] = image;
-                        if (Object.keys(newImages).length === Object.keys(imageURLs).length) {
-                            setImages(newImages);
-                        }
-                    };
-                    image.src = url;
-                } else {
-                    throw new Error('Failed to load image in track');
-                }
-            }
-        }
-    }, [imageURLs]);
-
-    return <canvas ref={stage} className={styles.tiepoints} />;
-}
-
-export default function Track({ state, activeImage, activeTrack, isGrouped }: TrackProps) {
-    const navigate = useNavigate();
-
-    const handleClick = () => {
-        navigate(`/tracks/${activeTrack}`);
-    };
 
     return (
         <div
-            key={activeTrack}
-            className={cn(styles.track, {
-                [styles.trackSpacing]: isGrouped,
-                [styles.trackWidth]: !isGrouped,
+            key={trackId}
+            className={cn(styles.container, {
+                [styles.spacer]: isGrouped,
+                [styles.expand]: !isGrouped,
             })}
             onClick={handleClick}
         >
-            {isGrouped && activeImage && activeTrack && (
+            {isGrouped && trackId && (
                 <>
-                    <h3 className={styles.subheader}>ID: {activeTrack}</h3>
+                    <h3 className={cn(H3, styles.subheader)}>{trackId}</h3>
                     <div className={styles.slope}>
-                        <SlopeChart state={state} activeImage={activeImage} activeTrack={activeTrack} isSmall />
+                        <SlopeChart data={points} />
                     </div>
                 </>
             )}
-            <Stage state={state} activeTrack={activeTrack} />
+            <canvas ref={stage} className={styles.tiepoints} />;
         </div>
     );
 }
