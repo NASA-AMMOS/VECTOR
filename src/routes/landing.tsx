@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
 
-import { Track, Point, useData, Image, Camera } from '@/stores/DataContext';
+import { Track, Point, useData, Image, Camera, VICAR } from '@/stores/DataContext';
 
 import * as styles from '@/routes/landing.css';
 
@@ -24,21 +24,29 @@ export default function Landing() {
     const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
 
     const parseFiles = async () => {
-        for (const file of files) {
-            if (file.type === 'text/xml') {
-                const xmlString = await file.text();
-                const xml = parser.parseFromString(xmlString, 'application/xml');
-                if (xml.querySelector('tiepoint_file')) {
-                    handleTracks(xml);
+        const newImages: ImageFile[] = [];
+        const newVICAR: VICAR = {};
+
+        await Promise.all(
+            files.map(async (file) => {
+                if (file.type === 'text/xml') {
+                    const xmlString = await file.text();
+                    const xml = parser.parseFromString(xmlString, 'application/xml');
+                    if (xml.querySelector('tiepoint_file')) {
+                        return handleTracks(xml);
+                    } else {
+                        return handleNavigation(xml);
+                    }
+                } else if (file.type === 'image/png' || file.type === 'image/jpeg') {
+                    return handleImage(file, newImages);
                 } else {
-                    handleNavigation(xml);
+                    return handleVICAR(file, newVICAR);
                 }
-            } else if (file.type === 'image/png' || file.type === 'image/jpeg') {
-                handleImage(file);
-            } else {
-                await handleVICAR(file);
-            }
-        }
+            }),
+        );
+
+        setImageFiles(newImages);
+        setVICAR(newVICAR);
     };
 
     const handleTracks = (xml: XMLDocument) => {
@@ -268,25 +276,25 @@ export default function Landing() {
         setCameras(newCameras);
     };
 
-    const handleImage = (file: File) => {
+    const handleImage = (file: File, container: ImageFile[]) => {
         const url = URL.createObjectURL(file);
-        const exists = imageFiles.find((v) => v.name === file.name);
-        if (!exists) {
-            const newImage: ImageFile = {
-                name: file.name,
-                url,
-            };
-            setImageFiles((v) => [...v, newImage]);
-        }
+        container.push({
+            name: file.name,
+            url,
+        });
     };
 
-    const handleVICAR = async (file: File) => {
-        const text = await file.text();
-        const metadata = text
-            .split(/(\s+)/)
-            .map((t) => t.trim())
-            .filter(Boolean);
-        setVICAR((v) => ({ ...v, [file.name]: metadata }));
+    const handleVICAR = async (file: File, container: VICAR) => {
+        const label = await file.slice(0, 40).text();
+        const labelSize = label.split(/(\s+)/)[0].split('=')[1];
+        if (!Number.isNaN(parseFloat(labelSize))) {
+            const header = await file.slice(0, parseFloat(labelSize)).text();
+            const metadata = header
+                .split(/(\s+)/)
+                .map((t) => t.trim())
+                .filter(Boolean);
+            container[file.name] = metadata;
+        }
     };
 
     const handleClick = async () => {
