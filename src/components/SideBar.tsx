@@ -22,7 +22,7 @@ export default function SideBar() {
     const location = useLocation();
     const { cameraId, trackId } = useParams();
 
-    const { tracks, images } = useData();
+    const { tracks, cameras } = useData();
     const { filterState } = useFilters();
 
     return (
@@ -163,7 +163,7 @@ export default function SideBar() {
                 <div className={styles.section}>
                     <h1 className={subheader}>File Information</h1>
                     <div className={styles.item}>
-                        <p className={body}>{images.length} Images</p>
+                        <p className={body}>{cameras.length} Images</p>
                         <p className={body}>{tracks.length} Tracks</p>
                     </div>
                 </div>

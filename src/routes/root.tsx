@@ -10,7 +10,7 @@ import * as styles from '@/routes/root.css';
 export default function Root() {
     const navigate = useNavigate();
 
-    const { tracks, images, vicar } = useData();
+    const { tracks, cameras: images, vicar } = useData();
 
     useEffect(() => {
         if (tracks.length < 1 && images.length < 1 && Object.keys(vicar).length < 1) {

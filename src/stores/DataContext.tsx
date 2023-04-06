@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 
-export type CameraImageMap = Record<string, Image>;
+import CameraModel from '@/models/Camera';
+
+export type CameraImageMap = Record<string, Camera>;
 export type CameraTrackMap = Record<string, Track[]>;
 export type CameraPointMap = Record<string, Point[]>;
 
@@ -31,29 +33,22 @@ export interface Track {
     points: Point[];
 }
 
-export interface CameraModel {
-    center: number[];
-    axis: number[];
-}
-
 export interface Camera {
     id: string;
+    imageName: string;
+    imageURL: string;
+    imageWidth: number;
+    imageHeight: number;
     initial: CameraModel;
     final: CameraModel;
 }
 
-export interface Image {
-    name: string;
-    url: string;
-    camera: Camera;
-}
-
 interface DataStore {
     tracks: Track[];
-    images: Image[];
+    cameras: Camera[];
     vicar: VICAR;
 
-    cameraImageMap: CameraImageMap;
+    cameraMap: CameraImageMap;
     cameraTrackMap: CameraTrackMap;
     cameraPointMap: CameraPointMap;
     points: Point[];
@@ -68,7 +63,7 @@ interface DataStore {
     parseVICARField: (metadata: string[], fieldName: string) => number[];
 
     setTracks: React.Dispatch<React.SetStateAction<Track[]>>;
-    setImages: React.Dispatch<React.SetStateAction<Image[]>>;
+    setCameras: React.Dispatch<React.SetStateAction<Camera[]>>;
     setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
 }
 
@@ -84,40 +79,40 @@ export function useData() {
 
 export default function ProvideData({ children }: ProvideDataProps) {
     const [tracks, setTracks] = useState<Track[]>([]);
-    const [images, setImages] = useState<Image[]>([]);
+    const [cameras, setCameras] = useState<Camera[]>([]);
     const [vicar, setVICAR] = useState<VICAR>({});
 
     // Provide a LUT for images by camera ID. This improves the rendering
     // significantly because images can be 100s of entries and we often
     // need specific cameras while knowing the ID.
-    const cameraImageMap = useMemo(() => {
-        return images.reduce<CameraImageMap>((result, v) => {
-            if (!(v.camera.id in result)) {
-                result[v.camera.id] = v;
+    const cameraMap = useMemo(() => {
+        return cameras.reduce<CameraImageMap>((map, camera) => {
+            if (!(camera.id in map)) {
+                map[camera.id] = camera;
             }
-            return result;
+            return map;
         }, {});
-    }, [images]);
+    }, [cameras]);
 
     // Same reasoning — we can map cameras to tracks to improve performance.
     const cameraTrackMap = useMemo(() => {
-        return tracks.reduce<CameraTrackMap>((result, track) => {
+        return tracks.reduce<CameraTrackMap>((map, track) => {
             for (const point of track.points) {
-                if (point.cameraId in result) {
-                    result[point.cameraId].push(track);
+                if (point.cameraId in map) {
+                    map[point.cameraId].push(track);
                 } else {
-                    result[point.cameraId] = [track];
+                    map[point.cameraId] = [track];
                 }
             }
-            return result;
+            return map;
         }, {});
-    }, [images, tracks]);
+    }, [cameras, tracks]);
 
     const cameraPointMap = useMemo(() => {
-        return images.reduce<CameraPointMap>((result, image) => {
-            const tracks = cameraTrackMap[image.camera.id];
-            result[image.camera.id] = tracks.map((track) => track.points).flat();
-            return result;
+        return cameras.reduce<CameraPointMap>((map, camera) => {
+            const tracks = cameraTrackMap[camera.id];
+            map[camera.id] = tracks.map((track) => track.points).flat();
+            return map;
         }, {});
     }, [cameraTrackMap]);
 
@@ -165,10 +160,10 @@ export default function ProvideData({ children }: ProvideDataProps) {
         <DataContext.Provider
             value={{
                 tracks,
-                images,
+                cameras,
                 vicar,
 
-                cameraImageMap,
+                cameraMap,
                 cameraTrackMap,
                 cameraPointMap,
                 points,
@@ -183,7 +178,7 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 parseVICARField,
 
                 setTracks,
-                setImages,
+                setCameras,
                 setVICAR,
             }}
         >

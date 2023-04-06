@@ -3,14 +3,19 @@ import { useParams } from 'react-router-dom';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import { Track, CameraModel, Camera, useData } from '@/stores/DataContext';
+import { Track, Camera, useData } from '@/stores/DataContext';
 import { useFilters } from '@/stores/FiltersContext';
+
+import CameraModel from '@/models/Camera';
+import Vec3Utils, { Vec3 } from '@/models/Vec3';
+import { Quat } from '@/models/Quat';
 
 import { theme } from '@/theme.css';
 
 // Set proper axis to match SITE frame.
 THREE.Object3D.DefaultUp.set(0, 0, -1);
 
+const tempVector = new THREE.Vector3();
 const object3D = new THREE.Object3D();
 
 const sphereGeometry = new THREE.SphereGeometry(0.05);
@@ -27,7 +32,7 @@ export default function CameraViewport() {
 
     const { filterState } = useFilters();
 
-    const { tracks, cameraImageMap, getVICARFile, parseVICARField } = useData();
+    const { tracks, cameraMap: cameraImageMap, getVICARFile, parseVICARField } = useData();
 
     const sceneRef = useRef<THREE.Scene>(new THREE.Scene());
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -114,7 +119,7 @@ export default function CameraViewport() {
         for (const track of activeTracks) {
             for (const point of track.points) {
                 if (!(point.cameraId in cameras)) {
-                    cameras[point.cameraId] = cameraImageMap[point.cameraId].camera;
+                    cameras[point.cameraId] = cameraImageMap[point.cameraId];
                 }
             }
         }
@@ -136,43 +141,42 @@ export default function CameraViewport() {
         for (const [i, camera] of Object.values(cameras).entries()) {
             const metadata = getVICARFile(camera.id);
 
-            const originOffset = new THREE.Vector3(...parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR'));
-            const originRotation = new THREE.Quaternion(
+            const originOffset = parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR') as Vec3;
+            const originRotation = [
                 ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(1, 4),
                 ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(0, 1),
-            );
+            ] as Quat;
 
             // Apply coordinate transformation to SITE frame.
-            initCamera(i, camera.initial, originOffset, originRotation, true);
-            initCamera(i, camera.final, originOffset, originRotation, false);
+            initCamera(i, camera, camera.initial, originOffset, originRotation, true);
+            initCamera(i, camera, camera.final, originOffset, originRotation, false);
         }
     };
 
     const initCamera = (
         i: number,
-        model: CameraModel,
-        originOffset: THREE.Vector3,
-        originRotation: THREE.Quaternion,
+        camera: Camera,
+        cameraModel: CameraModel,
+        originOffset: Vec3,
+        originRotation: Quat,
         isInitial: boolean,
     ) => {
-        const C = new THREE.Vector3(...model.center).applyQuaternion(originRotation).add(originOffset);
-        const A = new THREE.Vector3(...model.axis);
+        const center = Vec3Utils.add(Vec3Utils.applyQuat(cameraModel.getCenter(), originRotation), originOffset);
+        object3D.position.fromArray(center);
 
-        A.applyQuaternion(originRotation);
-
-        // Render camera plane.
-        object3D.position.copy(C);
-        object3D.lookAt(C.clone().add(A.clone().multiplyScalar(-1)));
-        object3D.updateMatrix();
+        const ray = cameraModel.getForwardVector(camera.imageWidth, camera.imageHeight);
+        object3D.lookAt(tempVector.fromArray(Vec3Utils.add(center, ray[1])));
 
         const instancedMesh = isInitial ? initialCameras.current : finalCameras.current;
         if (!instancedMesh) throw new Error('Instanced camera meshes are undefined');
 
+        object3D.updateMatrix();
         instancedMesh.setMatrixAt(i, object3D.matrix);
 
-        // Render camera look direction.
-        const points = [C, C.clone().add(A)];
-        const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+            new THREE.Vector3().fromArray(center),
+            new THREE.Vector3().copy(tempVector),
+        ]);
         const lineMaterial = isInitial ? initialLineMaterial : finalLineMaterial;
         const line = new THREE.Line(lineGeometry, lineMaterial);
         line.userData.isLine = true;

@@ -19,7 +19,7 @@ type CameraPointMap = Record<string, SlopeChartPoint[]>;
 export default function Images() {
     const navigate = useNavigate();
 
-    const { images, setImages, cameraPointMap, maxResidualLength } = useData();
+    const { cameras, setCameras, cameraPointMap, maxResidualLength } = useData();
     const { filterState, guardInitialPoint, guardFinalPoint, guardPoint } = useFilters();
 
     const [residualAngles, setResidualAngles] = useState<CameraAngleMap>({});
@@ -38,21 +38,21 @@ export default function Images() {
         // TODO: Cache this?
         const maxResiduals: { [key: string]: number } = {};
 
-        for (const image of images) {
-            const imageAngles: RadialChartPoint[] = [];
-            const imageLengths: HistogramChartPoint[][] = [[], []];
-            const imagePoints: SlopeChartPoint[] = [];
+        for (const camera of cameras) {
+            const cameraAngles: RadialChartPoint[] = [];
+            const cameraLengths: HistogramChartPoint[][] = [[], []];
+            const cameraPoints: SlopeChartPoint[] = [];
 
             const imageResiduals: number[] = [];
 
-            for (const point of cameraPointMap[image.camera.id]) {
+            for (const point of cameraPointMap[camera.id]) {
                 if (guardInitialPoint(point)) {
-                    imageAngles.push({
+                    cameraAngles.push({
                         radius: point.initialResidualLength,
                         angle: point.initialResidualAngle,
                         type: ResidualType.INITIAL,
                     });
-                    imageLengths[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
+                    cameraLengths[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
 
                     if (filterState.residualSortField === ResidualSortField.INITIAL) {
                         imageResiduals.push(point.initialResidualLength);
@@ -60,12 +60,12 @@ export default function Images() {
                 }
 
                 if (guardFinalPoint(point)) {
-                    imageAngles.push({
+                    cameraAngles.push({
                         radius: point.finalResidualLength,
                         angle: point.finalResidualAngle,
                         type: ResidualType.FINAL,
                     });
-                    imageLengths[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
+                    cameraLengths[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
 
                     if (filterState.residualSortField === ResidualSortField.FINAL) {
                         imageResiduals.push(point.finalResidualLength);
@@ -73,25 +73,25 @@ export default function Images() {
                 }
 
                 if (guardPoint(point)) {
-                    imagePoints.push(
+                    cameraPoints.push(
                         { type: ResidualType.INITIAL, index: point.index, value: point.initialResidualLength },
                         { type: ResidualType.FINAL, index: point.index, value: point.finalResidualLength },
                     );
                 }
             }
 
-            newAngles[image.camera.id] = imageAngles;
-            newLengths[image.camera.id] = imageLengths.filter((v) => v.length > 0);
-            newPoints[image.camera.id] = imagePoints;
+            newAngles[camera.id] = cameraAngles;
+            newLengths[camera.id] = cameraLengths.filter((v) => v.length > 0);
+            newPoints[camera.id] = cameraPoints;
 
-            maxResiduals[image.camera.id] = Math.max.apply(Math, imageResiduals);
+            maxResiduals[camera.id] = Math.max.apply(Math, imageResiduals);
         }
 
-        const newImages = images.slice(0);
+        const newCameras = cameras.slice(0);
         if (filterState.residualSortField === ResidualSortField.ACQUISITION_ORDER) {
-            newImages.sort((a, b) => {
-                const aId = a.camera.id;
-                const bId = b.camera.id;
+            newCameras.sort((a, b) => {
+                const aId = a.id;
+                const bId = b.id;
 
                 if (filterState.residualSortDirection === ResidualSortDirection.DECREASING) {
                     if (aId > bId) {
@@ -112,9 +112,9 @@ export default function Images() {
                 return 0;
             });
         } else {
-            newImages.sort((a, b) => {
-                const aResiduals = maxResiduals[a.camera.id];
-                const bResiduals = maxResiduals[b.camera.id];
+            newCameras.sort((a, b) => {
+                const aResiduals = maxResiduals[a.id];
+                const bResiduals = maxResiduals[b.id];
 
                 if (filterState.residualSortDirection === ResidualSortDirection.DECREASING) {
                     if (aResiduals > bResiduals) {
@@ -136,7 +136,7 @@ export default function Images() {
             });
         }
 
-        setImages(newImages);
+        setCameras(newCameras);
 
         setResidualAngles(newAngles);
         setResidualLengths(newLengths);
@@ -145,28 +145,26 @@ export default function Images() {
 
     return (
         <section className={styles.container}>
-            {images.map((image) => (
-                <div key={image.camera.id} className={styles.panel} onClick={() => handleClick(image.camera.id)}>
+            {cameras.map((camera) => (
+                <div key={camera.id} className={styles.panel} onClick={() => handleClick(camera.id)}>
                     <div className={styles.item}>
-                        <h2 className={cn(H2, styles.header)}>{image.camera.id}</h2>
-                        <img className={styles.image} src={image.url} alt={`Image Name: ${image.name}`} />
+                        <h2 className={cn(H2, styles.header)}>{camera.id}</h2>
+                        <img className={styles.image} src={camera.imageURL} alt={`Image Name: ${camera.imageName}`} />
                     </div>
                     <div className={styles.item}>
-                        {image.camera.id in residualAngles && (
+                        {camera.id in residualAngles && (
                             <RadialChart
-                                data={residualAngles[image.camera.id]}
+                                data={residualAngles[camera.id]}
                                 maxRadius={filterState.axesType === AxesType.ABSOLUTE ? maxResidualLength : null}
                             />
                         )}
                     </div>
                     <div className={styles.item}>
-                        {image.camera.id in residualLengths && (
-                            <HistogramChart data={residualLengths[image.camera.id]} hideAxes />
-                        )}
+                        {camera.id in residualLengths && <HistogramChart data={residualLengths[camera.id]} hideAxes />}
                     </div>
-                    {image.camera.id in residualPoints && (
+                    {camera.id in residualPoints && (
                         <SlopeChart
-                            data={residualPoints[image.camera.id]}
+                            data={residualPoints[camera.id]}
                             yDomain={filterState.axesType === AxesType.ABSOLUTE ? [0, maxResidualLength] : null}
                         />
                     )}

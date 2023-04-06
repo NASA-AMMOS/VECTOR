@@ -1,30 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFilesFromDataTransferItems } from '@placemarkio/flat-drop-files';
 import { fileOpen } from 'browser-fs-access';
 
-import { Track, Point, useData, Image, Camera, VICAR } from '@/stores/DataContext';
+import { Track, Point, useData, Camera, VICAR } from '@/stores/DataContext';
+
+import CAHVORECamera from '@/models/CAHVORE';
 
 import * as styles from '@/routes/landing.css';
+import { LinearityMode } from '@/models/Camera';
 
 const parser = new DOMParser();
-
-interface ImageFile {
-    name: string;
-    url: string;
-}
 
 export default function Landing() {
     const navigate = useNavigate();
 
-    const { tracks, setTracks, images, setImages, vicar, setVICAR } = useData();
+    const { tracks, setTracks, cameras, setCameras, vicar, setVICAR } = useData();
 
     const [files, setFiles] = useState<File[]>([]);
-    const [cameras, setCameras] = useState<Camera[]>([]);
-    const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
+
+    const newCameras = useRef<Pick<Camera, 'id' | 'initial' | 'final'>[]>([]);
+    const newImages = useRef<Pick<Camera, 'imageName' | 'imageURL' | 'imageWidth' | 'imageHeight'>[]>([]);
 
     const parseFiles = async () => {
-        const newImages: ImageFile[] = [];
         const newVICAR: VICAR = {};
 
         await Promise.all(
@@ -35,18 +33,43 @@ export default function Landing() {
                     if (xml.querySelector('tiepoint_file')) {
                         return handleTracks(xml);
                     } else {
-                        return handleNavigation(xml);
+                        return handleNavigation(xml, newCameras.current);
                     }
                 } else if (file.type === 'image/png' || file.type === 'image/jpeg') {
-                    return handleImage(file, newImages);
+                    return handleImage(file, newImages.current);
                 } else {
                     return handleVICAR(file, newVICAR);
                 }
             }),
         );
 
-        setImageFiles(newImages);
-        setVICAR(newVICAR);
+        if (Object.keys(newVICAR).length > 0) {
+            setVICAR(newVICAR);
+        }
+
+        if (newCameras.current.length > 0 && newCameras.current.length === newImages.current.length) {
+            const completeCameras: Camera[] = [];
+
+            for (const image of newImages.current) {
+                const camera = newCameras.current.find((v) => image.imageName!.includes(v.id!.slice(6)));
+                if (!camera) {
+                    console.error('Failed to find camera tied to image:', image.imageName);
+                    continue;
+                }
+
+                completeCameras.push({
+                    id: camera.id,
+                    imageName: image.imageName,
+                    imageURL: image.imageURL,
+                    imageWidth: image.imageWidth,
+                    imageHeight: image.imageHeight,
+                    initial: camera.initial,
+                    final: camera.final,
+                });
+            }
+
+            setCameras(completeCameras);
+        }
     };
 
     const handleTracks = (xml: XMLDocument) => {
@@ -229,9 +252,8 @@ export default function Landing() {
         setTracks(newTracks);
     };
 
-    const handleNavigation = (xml: XMLDocument) => {
+    const handleNavigation = (xml: XMLDocument, container: Pick<Camera, 'id' | 'initial' | 'final'>[]) => {
         const solutions = xml.querySelectorAll('solution');
-        const newCameras: Camera[] = [];
 
         for (const image of solutions) {
             const id = image.querySelector('image')!.getAttribute('unique_id')!;
@@ -239,48 +261,124 @@ export default function Landing() {
             const initialCamera = image.querySelector('original_camera_model');
             const initialC = initialCamera!.querySelector('parameter[id="C"]')!;
             const initialA = initialCamera!.querySelector('parameter[id="A"]')!;
+            const initialH = initialCamera!.querySelector('parameter[id="H"]')!;
+            const initialV = initialCamera!.querySelector('parameter[id="V"]')!;
+            const initialO = initialCamera!.querySelector('parameter[id="O"]')!;
+            const initialR = initialCamera!.querySelector('parameter[id="R"]')!;
+            const initialE = initialCamera!.querySelector('parameter[id="E"]')!;
+
+            const initialCameraModel = new CAHVORECamera(
+                [
+                    Number(initialC.getAttribute('value1')),
+                    Number(initialC.getAttribute('value2')),
+                    Number(initialC.getAttribute('value3')),
+                ],
+                [
+                    Number(initialA.getAttribute('value1')),
+                    Number(initialA.getAttribute('value2')),
+                    Number(initialA.getAttribute('value3')),
+                ],
+                [
+                    Number(initialH.getAttribute('value1')),
+                    Number(initialH.getAttribute('value2')),
+                    Number(initialH.getAttribute('value3')),
+                ],
+                [
+                    Number(initialV.getAttribute('value1')),
+                    Number(initialV.getAttribute('value2')),
+                    Number(initialV.getAttribute('value3')),
+                ],
+                [
+                    Number(initialO.getAttribute('value1')),
+                    Number(initialO.getAttribute('value2')),
+                    Number(initialO.getAttribute('value3')),
+                ],
+                [
+                    Number(initialR.getAttribute('value1')),
+                    Number(initialR.getAttribute('value2')),
+                    Number(initialR.getAttribute('value3')),
+                ],
+                [
+                    Number(initialE.getAttribute('value1')),
+                    Number(initialE.getAttribute('value2')),
+                    Number(initialE.getAttribute('value3')),
+                ],
+                LinearityMode.PERSPECTIVE,
+            );
 
             const finalCamera = image.querySelector('camera_model');
             const finalC = finalCamera!.querySelector('parameter[id="C"]')!;
             const finalA = finalCamera!.querySelector('parameter[id="A"]')!;
+            const finalH = finalCamera!.querySelector('parameter[id="H"]')!;
+            const finalV = finalCamera!.querySelector('parameter[id="V"]')!;
+            const finalO = finalCamera!.querySelector('parameter[id="O"]')!;
+            const finalR = finalCamera!.querySelector('parameter[id="R"]')!;
+            const finalE = finalCamera!.querySelector('parameter[id="E"]')!;
 
-            newCameras.push({
+            const finalCameraModel = new CAHVORECamera(
+                [
+                    Number(finalC.getAttribute('value1')),
+                    Number(finalC.getAttribute('value2')),
+                    Number(finalC.getAttribute('value3')),
+                ],
+                [
+                    Number(finalA.getAttribute('value1')),
+                    Number(finalA.getAttribute('value2')),
+                    Number(finalA.getAttribute('value3')),
+                ],
+                [
+                    Number(finalH.getAttribute('value1')),
+                    Number(finalH.getAttribute('value2')),
+                    Number(finalH.getAttribute('value3')),
+                ],
+                [
+                    Number(finalV.getAttribute('value1')),
+                    Number(finalV.getAttribute('value2')),
+                    Number(finalV.getAttribute('value3')),
+                ],
+                [
+                    Number(finalO.getAttribute('value1')),
+                    Number(finalO.getAttribute('value2')),
+                    Number(finalO.getAttribute('value3')),
+                ],
+                [
+                    Number(finalR.getAttribute('value1')),
+                    Number(finalR.getAttribute('value2')),
+                    Number(finalR.getAttribute('value3')),
+                ],
+                [
+                    Number(finalE.getAttribute('value1')),
+                    Number(finalE.getAttribute('value2')),
+                    Number(finalE.getAttribute('value3')),
+                ],
+                LinearityMode.PERSPECTIVE,
+            );
+
+            container.push({
                 id,
-                initial: {
-                    center: [
-                        Number(initialC.getAttribute('value1')),
-                        Number(initialC.getAttribute('value2')),
-                        Number(initialC.getAttribute('value3')),
-                    ],
-                    axis: [
-                        Number(initialA.getAttribute('value1')),
-                        Number(initialA.getAttribute('value2')),
-                        Number(initialA.getAttribute('value3')),
-                    ],
-                },
-                final: {
-                    center: [
-                        Number(finalC.getAttribute('value1')),
-                        Number(finalC.getAttribute('value2')),
-                        Number(finalC.getAttribute('value3')),
-                    ],
-                    axis: [
-                        Number(finalA.getAttribute('value1')),
-                        Number(finalA.getAttribute('value2')),
-                        Number(finalA.getAttribute('value3')),
-                    ],
-                },
+                initial: initialCameraModel,
+                final: finalCameraModel,
             });
         }
-
-        setCameras(newCameras);
     };
 
-    const handleImage = (file: File, container: ImageFile[]) => {
-        const url = URL.createObjectURL(file);
-        container.push({
-            name: file.name,
-            url,
+    const handleImage = async (
+        file: File,
+        container: Pick<Camera, 'imageName' | 'imageURL' | 'imageWidth' | 'imageHeight'>[],
+    ) => {
+        return new Promise((resolve) => {
+            const url = URL.createObjectURL(file);
+            const image = new Image();
+            image.onload = () => {
+                container.push({
+                    imageName: file.name,
+                    imageURL: URL.createObjectURL(file),
+                    imageWidth: image.width,
+                    imageHeight: image.height,
+                });
+                resolve(true);
+            };
+            image.src = url;
         });
     };
 
@@ -320,33 +418,10 @@ export default function Landing() {
     }, [files]);
 
     useEffect(() => {
-        if (tracks.length > 0 && images.length > 0 && Object.keys(vicar).length > 0) {
+        if (tracks.length > 0 && cameras.length > 0 && Object.keys(vicar).length > 0) {
             navigate('/overview');
         }
-    }, [tracks, images, vicar]);
-
-    useEffect(() => {
-        if (imageFiles.length === cameras.length && imageFiles.length > 0) {
-            const newImages: Image[] = [];
-
-            for (const imageFile of imageFiles) {
-                const camera = cameras.find((v) => imageFile.name.includes(v.id.slice(6)));
-                if (!camera) {
-                    console.error('Failed to find camera tied to image:', imageFile);
-                    continue;
-                }
-
-                const image: Image = {
-                    ...imageFile,
-                    camera,
-                };
-
-                newImages.push(image);
-            }
-
-            setImages(newImages);
-        }
-    }, [cameras, imageFiles]);
+    }, [tracks, cameras, vicar]);
 
     return (
         <main className={styles.container}>

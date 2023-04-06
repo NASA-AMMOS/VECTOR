@@ -23,7 +23,7 @@ const offset = 15;
 export default function Track({ trackId, isGrouped = false }: TrackProps) {
     const navigate = useNavigate();
 
-    const { tracks, cameraImageMap } = useData();
+    const { tracks, cameraMap } = useData();
     const { filterState } = useFilters();
 
     const track = useMemo(() => tracks.find((t) => t.id === trackId) ?? null, [trackId, tracks]);
@@ -35,14 +35,14 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
     const [points, setPoints] = useState<SlopeChartPoint[]>([]);
 
     const imageURLs = useMemo(() => {
-        const result: { [key: string]: string | null } = {};
+        const map: { [key: string]: string | null } = {};
         for (const point of track.points) {
-            if (!(point.cameraId in result)) {
-                result[point.cameraId] = cameraImageMap[point.cameraId].url;
+            if (!(point.cameraId in map)) {
+                map[point.cameraId] = cameraMap[point.cameraId].imageURL;
             }
         }
-        return result;
-    }, [track, cameraImageMap]);
+        return map;
+    }, [track, cameraMap]);
 
     const handleClick = () => {
         navigate(`/tracks/${trackId}`);
