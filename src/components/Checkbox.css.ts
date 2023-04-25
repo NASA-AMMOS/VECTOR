@@ -61,3 +61,7 @@ export const final = style({
         },
     },
 });
+
+export const disabled = style({
+    cursor: 'initial',
+});

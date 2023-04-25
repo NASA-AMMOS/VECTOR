@@ -1,60 +1,91 @@
-import { useRef, useMemo, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import * as THREE from 'three';
+import {
+    ArrowHelper,
+    BufferGeometry,
+    Float32BufferAttribute,
+    Group,
+    PerspectiveCamera,
+    Points,
+    PointsMaterial,
+    Scene,
+    Texture,
+    TextureLoader,
+    Vector2,
+    Vector3,
+    WebGLRenderer,
+} from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-import { Track, Camera, useData } from '@/stores/DataContext';
+import { Camera, ImageFile, Point, ResidualType, Track, useData } from '@/stores/DataContext';
 import { useFilters } from '@/stores/FiltersContext';
 
-import CameraModel from '@/models/Camera';
-import Vec3Utils, { Vec3 } from '@/models/Vec3';
-import { Quat } from '@/models/Quat';
+import InfiniteGrid from '@/components/InfiniteGrid';
 
 import { theme } from '@/theme.css';
+import * as styles from '@/components/CameraViewport.css';
 
-// Set proper axis to match SITE frame.
-THREE.Object3D.DefaultUp.set(0, 0, -1);
+import discAsset from '@/assets/disc.png';
 
-const tempVector = new THREE.Vector3();
-const object3D = new THREE.Object3D();
-
-const sphereGeometry = new THREE.SphereGeometry(0.05);
-const planeGeometry = new THREE.PlaneGeometry(0.5, 0.5);
-
-const initialMaterial = new THREE.MeshBasicMaterial({ color: theme.color.initialHex, side: THREE.DoubleSide });
-const finalMaterial = new THREE.MeshBasicMaterial({ color: theme.color.finalHex, side: THREE.DoubleSide });
-
-const initialLineMaterial = new THREE.LineBasicMaterial({ color: theme.color.initialHex });
-const finalLineMaterial = new THREE.LineBasicMaterial({ color: theme.color.finalHex });
+const tempVec2 = new Vector2();
 
 export default function CameraViewport() {
-    const { trackId: activeTrack } = useParams();
+    const { trackId } = useParams();
 
     const { filterState } = useFilters();
 
-    const { tracks, cameraMap: cameraImageMap, getVICARFile, parseVICARField } = useData();
+    const { tracks, cameraMap, cameraImageMap } = useData();
 
-    const sceneRef = useRef<THREE.Scene>(new THREE.Scene());
-    const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+    const sceneRef = useRef<Scene>(new Scene());
+    const cameraRef = useRef<PerspectiveCamera | null>(null);
     const controlsRef = useRef<OrbitControls | null>(null);
 
     const rAFRef = useRef<number | null>(null);
-    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+    const rendererRef = useRef<WebGLRenderer | null>(null);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-    const initialPoints = useRef<THREE.InstancedMesh | null>(null);
-    const finalPoints = useRef<THREE.InstancedMesh | null>(null);
+    const infiniteGrid = useRef<InfiniteGrid>(new InfiniteGrid());
 
-    const initialCameras = useRef<THREE.InstancedMesh | null>(null);
-    const finalCameras = useRef<THREE.InstancedMesh | null>(null);
+    const spriteTexture = useRef<Texture>(new TextureLoader().load(discAsset));
+
+    const initialPoints = useRef<Points | null>(null);
+    const initialPointsGeometry = useRef<BufferGeometry>(new BufferGeometry());
+    const initialPointsMaterial = useRef<PointsMaterial>(
+        new PointsMaterial({
+            color: theme.color.initialHex,
+            sizeAttenuation: true,
+            map: spriteTexture.current,
+            alphaTest: 0.25,
+            transparent: true,
+        }),
+    );
+
+    const finalPoints = useRef<Points | null>(null);
+    const finalPointsGeometry = useRef<BufferGeometry>(new BufferGeometry());
+    const finalPointsMaterial = useRef<PointsMaterial>(
+        new PointsMaterial({
+            color: theme.color.finalHex,
+            sizeAttenuation: true,
+            map: spriteTexture.current,
+            alphaTest: 0.25,
+            transparent: true,
+        }),
+    );
+
+    const initialCameras = useRef<Group>(new Group());
+    const finalCameras = useRef<Group>(new Group());
 
     const activeTracks = useMemo<Track[]>(() => {
-        if (!activeTrack) {
+        if (!trackId) {
             return tracks;
         }
-        return tracks.filter((track) => track.id === activeTrack);
-    }, [tracks, activeTrack]);
+        return tracks.filter((track) => track.id === trackId);
+    }, [tracks, trackId]);
+
+    const activePoints = useMemo<Point[]>(() => {
+        return activeTracks.map((t) => t.points).flat();
+    }, [activeTracks]);
 
     const animate = () => {
         if (rendererRef.current && controlsRef.current && cameraRef.current) {
@@ -65,21 +96,18 @@ export default function CameraViewport() {
         rAFRef.current = requestAnimationFrame(animate);
     };
 
-    const initPoints = () => {
-        if (!initialPoints.current) {
-            initialPoints.current = new THREE.InstancedMesh(sphereGeometry, initialMaterial, activeTracks.length);
-            sceneRef.current.add(initialPoints.current);
-        }
-
-        if (!finalPoints.current) {
-            finalPoints.current = new THREE.InstancedMesh(sphereGeometry, finalMaterial, activeTracks.length);
-            sceneRef.current.add(finalPoints.current);
-        }
+    const initPoints = async () => {
+        disposePoints();
+        if (activeTracks.length < 1) return;
 
         let xAverage = 0;
         let yAverage = 0;
         let zAverage = 0;
-        for (const [i, track] of activeTracks.entries()) {
+
+        const initialVertices = [];
+        const finalVertices = [];
+
+        for (const track of activeTracks) {
             const initialPoint = track.initialXYZ;
             const finalPoint = track.finalXYZ;
 
@@ -87,13 +115,8 @@ export default function CameraViewport() {
             yAverage += initialPoint[1];
             zAverage += initialPoint[2];
 
-            object3D.position.set(initialPoint[0], initialPoint[1], initialPoint[2]);
-            object3D.updateMatrix();
-            initialPoints.current.setMatrixAt(i, object3D.matrix);
-
-            object3D.position.set(finalPoint[0], finalPoint[1], finalPoint[2]);
-            object3D.updateMatrix();
-            finalPoints.current.setMatrixAt(i, object3D.matrix);
+            initialVertices.push(initialPoint[0], initialPoint[1], initialPoint[2]);
+            finalVertices.push(finalPoint[0], finalPoint[1], finalPoint[2]);
         }
 
         // Add a minor offset to prevent division by one.
@@ -106,82 +129,68 @@ export default function CameraViewport() {
         if (cameraRef.current && controlsRef.current) {
             cameraRef.current.position.set(xAverage, yAverage, zAverage);
 
-            controlsRef.current.target.set(...activeTracks[0].initialXYZ);
+            const firstXYZ = activeTracks[0].initialXYZ;
+            controlsRef.current.target.set(firstXYZ[0], firstXYZ[1], firstXYZ[2]);
             controlsRef.current.update();
         }
 
-        initialPoints.current.instanceMatrix.needsUpdate = true;
-        finalPoints.current.instanceMatrix.needsUpdate = true;
+        initialPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(initialVertices, 3));
+        finalPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(finalVertices, 3));
+
+        initialPoints.current = new Points(initialPointsGeometry.current, initialPointsMaterial.current);
+        sceneRef.current.add(initialPoints.current);
+
+        finalPoints.current = new Points(finalPointsGeometry.current, finalPointsMaterial.current);
+        sceneRef.current.add(finalPoints.current);
     };
 
-    const initCameras = () => {
-        const cameras: { [key: string]: Camera } = {};
-        for (const track of activeTracks) {
-            for (const point of track.points) {
-                if (!(point.cameraId in cameras)) {
-                    cameras[point.cameraId] = cameraImageMap[point.cameraId];
-                }
+    const initCameras = async () => {
+        const data: { [key: string]: { image: ImageFile; camera: Camera } } = {};
+        for (const point of activePoints) {
+            if (!(point.cameraId in data)) {
+                data[point.cameraId] = { image: cameraImageMap[point.cameraId], camera: cameraMap[point.cameraId] };
             }
         }
 
-        if (!initialCameras.current) {
-            initialCameras.current = new THREE.InstancedMesh(
-                planeGeometry,
-                initialMaterial,
-                Object.keys(cameras).length,
-            );
-            sceneRef.current.add(initialCameras.current);
-        }
+        disposeCameras();
 
-        if (!finalCameras.current) {
-            finalCameras.current = new THREE.InstancedMesh(planeGeometry, finalMaterial, Object.keys(cameras).length);
-            sceneRef.current.add(finalCameras.current);
-        }
+        for (const { image, camera } of Object.values(data)) {
+            tempVec2.set(image.width, image.height);
 
-        for (const [i, camera] of Object.values(cameras).entries()) {
-            const metadata = getVICARFile(camera.id);
+            const initialFrustum = camera.initial.getFrustumMesh(tempVec2, ResidualType.INITIAL);
+            initialCameras.current.add(initialFrustum);
 
-            const originOffset = parseVICARField(metadata, 'ORIGIN_OFFSET_VECTOR') as Vec3;
-            const originRotation = [
-                ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(1, 4),
-                ...parseVICARField(metadata, 'ORIGIN_ROTATION_QUATERNION').slice(0, 1),
-            ] as Quat;
-
-            // Apply coordinate transformation to SITE frame.
-            initCamera(i, camera, camera.initial, originOffset, originRotation, true);
-            initCamera(i, camera, camera.final, originOffset, originRotation, false);
+            const finalFrustum = camera.final.getFrustumMesh(tempVec2, ResidualType.FINAL);
+            finalCameras.current.add(finalFrustum);
         }
     };
 
-    const initCamera = (
-        i: number,
-        camera: Camera,
-        cameraModel: CameraModel,
-        originOffset: Vec3,
-        originRotation: Quat,
-        isInitial: boolean,
-    ) => {
-        const center = Vec3Utils.add(Vec3Utils.applyQuat(cameraModel.getCenter(), originRotation), originOffset);
-        object3D.position.fromArray(center);
+    const disposePoints = () => {
+        initialPointsGeometry.current.dispose();
+        initialPointsMaterial.current.dispose();
 
-        const ray = cameraModel.getForwardVector(camera.imageWidth, camera.imageHeight);
-        object3D.lookAt(tempVector.fromArray(Vec3Utils.add(center, ray[1])));
+        finalPointsGeometry.current.dispose();
+        finalPointsMaterial.current.dispose();
 
-        const instancedMesh = isInitial ? initialCameras.current : finalCameras.current;
-        if (!instancedMesh) throw new Error('Instanced camera meshes are undefined');
+        spriteTexture.current.dispose();
+    };
 
-        object3D.updateMatrix();
-        instancedMesh.setMatrixAt(i, object3D.matrix);
+    const disposeCameras = () => {
+        while (initialCameras.current.children.length > 0) {
+            const child = initialCameras.current.children[0];
+            initialCameras.current.remove(child);
+            if (child instanceof ArrowHelper) {
+                child.dispose();
+            }
+        }
 
-        const lineGeometry = new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3().fromArray(center),
-            new THREE.Vector3().copy(tempVector),
-        ]);
-        const lineMaterial = isInitial ? initialLineMaterial : finalLineMaterial;
-        const line = new THREE.Line(lineGeometry, lineMaterial);
-        line.userData.isLine = true;
-        line.userData.isInitial = isInitial;
-        sceneRef.current.add(line);
+        while (finalCameras.current.children.length > 0) {
+            const child = finalCameras.current.children[0];
+            finalCameras.current.remove(child);
+            if (child instanceof ArrowHelper) {
+                child.dispose();
+            }
+        }
     };
 
     const handleResize = () => {
@@ -210,18 +219,13 @@ export default function CameraViewport() {
         if (!canvas || !canvas.parentElement) {
             if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
 
-            if (initialPoints.current) initialPoints.current.dispose();
-            if (finalPoints.current) finalPoints.current.dispose();
-
-            if (initialCameras.current) initialCameras.current.dispose();
-            if (finalCameras.current) finalCameras.current.dispose();
-
-            for (const child of sceneRef.current.children) {
-                if (child instanceof THREE.Line) {
-                    sceneRef.current.remove(child);
-                    child.geometry.dispose();
-                }
+            while (sceneRef.current.children.length > 0) {
+                const child = sceneRef.current.children[0];
+                sceneRef.current.remove(child);
             }
+
+            disposePoints();
+            disposeCameras();
 
             return;
         }
@@ -237,23 +241,23 @@ export default function CameraViewport() {
         canvas.width = width;
         canvas.height = height;
 
-        if (!cameraRef.current) {
-            cameraRef.current = new THREE.PerspectiveCamera(45.0, width / height, 0.1, 1000);
-        }
+        cameraRef.current = new PerspectiveCamera(45.0, width / height, 0.1, 1000);
+        cameraRef.current.position.set(5, 5, 5);
+        cameraRef.current.lookAt(new Vector3());
 
-        if (!rendererRef.current) {
-            rendererRef.current = new THREE.WebGLRenderer({ canvas });
-        }
+        rendererRef.current = new WebGLRenderer({ canvas });
         rendererRef.current.setSize(width, height);
         rendererRef.current.setPixelRatio(Math.min(2, window.devicePixelRatio));
         rendererRef.current.setClearColor(theme.color.white);
 
-        if (!controlsRef.current) {
-            controlsRef.current = new OrbitControls(cameraRef.current, rendererRef.current.domElement);
-            controlsRef.current.panSpeed = 0.5;
-            controlsRef.current.rotateSpeed = 0.5;
-            controlsRef.current.zoomSpeed = 0.5;
-        }
+        controlsRef.current = new OrbitControls(cameraRef.current, rendererRef.current.domElement);
+        controlsRef.current.panSpeed = 0.25;
+        controlsRef.current.zoomSpeed = 0.25;
+        controlsRef.current.rotateSpeed = 0.25;
+
+        sceneRef.current.add(infiniteGrid.current);
+        sceneRef.current.add(initialCameras.current);
+        sceneRef.current.add(finalCameras.current);
 
         initPoints();
         initCameras();
@@ -276,38 +280,14 @@ export default function CameraViewport() {
 
         if (filterState.viewCameras && filterState.viewInitialResiduals && initialCameras.current) {
             initialCameras.current.visible = true;
-            sceneRef.current.traverse((object) => {
-                const userData = object.userData;
-                if (userData.isLine && userData.isInitial) {
-                    object.visible = true;
-                }
-            });
         } else if (initialCameras.current) {
             initialCameras.current.visible = false;
-            sceneRef.current.traverse((object) => {
-                const userData = object.userData;
-                if (userData.isLine && userData.isInitial) {
-                    object.visible = false;
-                }
-            });
         }
 
         if (filterState.viewCameras && filterState.viewFinalResiduals && finalCameras.current) {
             finalCameras.current.visible = true;
-            sceneRef.current.traverse((object) => {
-                const userData = object.userData;
-                if (userData.isLine && !userData.isInitial) {
-                    object.visible = true;
-                }
-            });
         } else if (finalCameras.current) {
             finalCameras.current.visible = false;
-            sceneRef.current.traverse((object) => {
-                const userData = object.userData;
-                if (userData.isLine && !userData.isInitial) {
-                    object.visible = false;
-                }
-            });
         }
     }, [filterState]);
 
@@ -318,5 +298,9 @@ export default function CameraViewport() {
         };
     }, []);
 
-    return <canvas ref={initCanvas} />;
+    return (
+        <div className={styles.canvas}>
+            <canvas ref={initCanvas} />
+        </div>
+    );
 }

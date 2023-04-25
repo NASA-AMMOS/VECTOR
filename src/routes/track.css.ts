@@ -29,12 +29,6 @@ export const track = style({
     marginBottom: '1rem',
 });
 
-export const canvas = style({
-    height: '100%',
-    border: vars.border.standard,
-    borderRadius: vars.border.radius,
-});
-
 export const charts = style({
     gridColumn: '5 / -1',
     display: 'grid',

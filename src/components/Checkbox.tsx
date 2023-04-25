@@ -11,9 +11,11 @@ interface CheckboxProps {
     checked: boolean;
     children: React.ReactNode;
     type?: ResidualType;
+    className?: string;
+    disabled?: boolean;
 }
 
-export default function Checkbox({ name, checked, children, type }: CheckboxProps) {
+export default function Checkbox({ name, checked, children, type, className, disabled }: CheckboxProps) {
     const { dispatchFilter } = useFilters();
 
     const inputStyles: { [key: string]: boolean } = {};
@@ -23,12 +25,16 @@ export default function Checkbox({ name, checked, children, type }: CheckboxProp
         inputStyles[styles.final] = true;
     }
 
+    if (disabled) {
+        inputStyles[styles.disabled] = true;
+    }
+
     const onChange = () => {
         dispatchFilter({ type: name });
     };
 
     return (
-        <div className={styles.container}>
+        <div className={cn(styles.container, className)}>
             <input
                 className={cn(styles.input, inputStyles)}
                 id={name}
@@ -37,8 +43,9 @@ export default function Checkbox({ name, checked, children, type }: CheckboxProp
                 value={name}
                 checked={checked}
                 onChange={onChange}
+                disabled={disabled}
             />
-            <label className={cn(Body, styles.label)} htmlFor={name}>
+            <label className={cn(Body, styles.label, { [styles.disabled]: disabled })} htmlFor={name}>
                 {children}
             </label>
         </div>

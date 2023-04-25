@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, useMemo } from 'react';
 
-import CameraModel from '@/models/Camera';
+import CameraModel from '@/cameras/CameraModel';
 
-export type CameraImageMap = Record<string, Camera>;
+export type CameraMap = Record<string, Camera>;
+export type CameraImageMap = Record<string, ImageFile>;
 export type CameraTrackMap = Record<string, Track[]>;
 export type CameraPointMap = Record<string, Point[]>;
 
@@ -13,10 +14,16 @@ export enum ResidualType {
     FINAL = 'FINAL',
 }
 
+export interface ImageFile {
+    name: string;
+    url: string;
+    width: number;
+    height: number;
+}
+
 export interface Point {
-    index: number;
+    id: string;
     cameraId: string;
-    key: number;
     pixel: [number, number];
     initialResidual: [number, number];
     initialResidualLength: number;
@@ -36,19 +43,22 @@ export interface Track {
 export interface Camera {
     id: string;
     imageName: string;
-    imageURL: string;
-    imageWidth: number;
-    imageHeight: number;
     initial: CameraModel;
     final: CameraModel;
 }
 
 interface DataStore {
     tracks: Track[];
-    cameras: Camera[];
-    vicar: VICAR;
+    setTracks: React.Dispatch<React.SetStateAction<Track[]>>;
 
-    cameraMap: CameraImageMap;
+    cameras: Camera[];
+    setCameras: React.Dispatch<React.SetStateAction<Camera[]>>;
+
+    images: Record<string, ImageFile>;
+    setImages: React.Dispatch<React.SetStateAction<Record<string, ImageFile>>>;
+
+    cameraMap: CameraMap;
+    cameraImageMap: CameraImageMap;
     cameraTrackMap: CameraTrackMap;
     cameraPointMap: CameraPointMap;
     points: Point[];
@@ -58,13 +68,6 @@ interface DataStore {
 
     minResidualAngle: number;
     maxResidualAngle: number;
-
-    getVICARFile: (id: string) => string[];
-    parseVICARField: (metadata: string[], fieldName: string) => number[];
-
-    setTracks: React.Dispatch<React.SetStateAction<Track[]>>;
-    setCameras: React.Dispatch<React.SetStateAction<Camera[]>>;
-    setVICAR: React.Dispatch<React.SetStateAction<VICAR>>;
 }
 
 interface ProvideDataProps {
@@ -80,19 +83,29 @@ export function useData() {
 export default function ProvideData({ children }: ProvideDataProps) {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [cameras, setCameras] = useState<Camera[]>([]);
-    const [vicar, setVICAR] = useState<VICAR>({});
 
-    // Provide a LUT for images by camera ID. This improves the rendering
-    // significantly because images can be 100s of entries and we often
-    // need specific cameras while knowing the ID.
+    const [images, setImages] = useState<Record<string, ImageFile>>({});
+
     const cameraMap = useMemo(() => {
-        return cameras.reduce<CameraImageMap>((map, camera) => {
+        return cameras.reduce<CameraMap>((map, camera) => {
             if (!(camera.id in map)) {
                 map[camera.id] = camera;
             }
             return map;
         }, {});
     }, [cameras]);
+
+    // Provide a LUT for images by camera ID. This improves the rendering
+    // significantly because images can be 100s of entries and we often
+    // need specific cameras while knowing the ID.
+    const cameraImageMap = useMemo(() => {
+        return cameras.reduce<CameraImageMap>((map, camera) => {
+            if (!(camera.id in map) && camera.imageName in images) {
+                map[camera.id] = images[camera.imageName];
+            }
+            return map;
+        }, {});
+    }, [cameras, images]);
 
     // Same reasoning — we can map cameras to tracks to improve performance.
     const cameraTrackMap = useMemo(() => {
@@ -109,12 +122,17 @@ export default function ProvideData({ children }: ProvideDataProps) {
     }, [cameras, tracks]);
 
     const cameraPointMap = useMemo(() => {
-        return cameras.reduce<CameraPointMap>((map, camera) => {
-            const tracks = cameraTrackMap[camera.id];
-            map[camera.id] = tracks.map((track) => track.points).flat();
+        return tracks.reduce<CameraPointMap>((map, track) => {
+            for (const point of track.points) {
+                if (point.cameraId in map) {
+                    map[point.cameraId].push(point);
+                } else {
+                    map[point.cameraId] = [point];
+                }
+            }
             return map;
         }, {});
-    }, [cameraTrackMap]);
+    }, [cameras, tracks]);
 
     // Another one — useful for processing global residual information.
     const points = useMemo(() => tracks.map((track) => track.points).flat(), [tracks]);
@@ -138,32 +156,20 @@ export default function ProvideData({ children }: ProvideDataProps) {
         ];
     }, [tracks]);
 
-    const getVICARFile = useCallback(
-        (id: string) => {
-            const fileId = id.slice(6);
-            const key = Object.keys(vicar).find((v: string) => v.includes(fileId));
-            if (!key) return [];
-            return vicar[key];
-        },
-        [vicar],
-    );
-
-    const parseVICARField = useCallback((metadata: string[], fieldName: string) => {
-        const field = metadata.find((f: string) => f.startsWith(fieldName));
-        if (!field) return [];
-        const [_, vector] = field.replace(/[\(\)]/g, '').split('=');
-        const values = vector.split(',');
-        return values.map(Number);
-    }, []);
-
     return (
         <DataContext.Provider
             value={{
                 tracks,
+                setTracks,
+
                 cameras,
-                vicar,
+                setCameras,
+
+                images,
+                setImages,
 
                 cameraMap,
+                cameraImageMap,
                 cameraTrackMap,
                 cameraPointMap,
                 points,
@@ -173,13 +179,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
 
                 minResidualAngle,
                 maxResidualAngle,
-
-                getVICARFile,
-                parseVICARField,
-
-                setTracks,
-                setCameras,
-                setVICAR,
             }}
         >
             {children}

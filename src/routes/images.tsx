@@ -19,7 +19,7 @@ type CameraPointMap = Record<string, SlopeChartPoint[]>;
 export default function Images() {
     const navigate = useNavigate();
 
-    const { cameras, setCameras, cameraPointMap, maxResidualLength } = useData();
+    const { cameras, images, cameraPointMap, maxResidualLength } = useData();
     const { filterState, guardInitialPoint, guardFinalPoint, guardPoint } = useFilters();
 
     const [residualAngles, setResidualAngles] = useState<CameraAngleMap>({});
@@ -74,8 +74,8 @@ export default function Images() {
 
                 if (guardPoint(point)) {
                     cameraPoints.push(
-                        { type: ResidualType.INITIAL, index: point.index, value: point.initialResidualLength },
-                        { type: ResidualType.FINAL, index: point.index, value: point.finalResidualLength },
+                        { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
+                        { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
                     );
                 }
             }
@@ -136,7 +136,7 @@ export default function Images() {
             });
         }
 
-        setCameras(newCameras);
+        // setCameras(newCameras);
 
         setResidualAngles(newAngles);
         setResidualLengths(newLengths);
@@ -149,7 +149,11 @@ export default function Images() {
                 <div key={camera.id} className={styles.panel} onClick={() => handleClick(camera.id)}>
                     <div className={styles.item}>
                         <h2 className={cn(H2, styles.header)}>{camera.id}</h2>
-                        <img className={styles.image} src={camera.imageURL} alt={`Image Name: ${camera.imageName}`} />
+                        <img
+                            className={styles.image}
+                            src={images[camera.imageName].url}
+                            alt={`Camera ID: ${camera.id}`}
+                        />
                     </div>
                     <div className={styles.item}>
                         {camera.id in residualAngles && (

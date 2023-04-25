@@ -10,16 +10,53 @@ export const container = style({
     backgroundColor: vars.color.background,
 });
 
-export const zone = style({
+export const content = style({
     gridRow: '2 / 3',
+    display: 'flex',
+    flexDirection: 'column',
+});
+
+export const zone = style({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     height: '100%',
     width: '100%',
     backgroundColor: vars.color.white,
-    borderRadius: '0.4rem',
+    borderRadius: vars.border.radius,
     cursor: 'pointer',
+});
+
+export const details = style({
+    padding: '1rem 0rem',
+    display: 'flex',
+    justifyContent: 'space-between',
+});
+
+export const indicators = style({
+    display: 'flex',
+});
+
+export const indicator = style({
+    selectors: {
+        '&:not(:last-child)': {
+            paddingRight: '1rem',
+        },
+    },
+});
+
+export const button = style({
+    backgroundColor: vars.color.gray,
+    color: vars.color.white,
+    borderRadius: vars.border.radius,
+    padding: '1rem',
+
+    selectors: {
+        '&:disabled': {
+            opacity: 0.25,
+            cursor: 'not-allowed',
+        },
+    },
 });
 
 export const header = style({

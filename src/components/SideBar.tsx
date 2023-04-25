@@ -34,14 +34,6 @@ export default function SideBar() {
                 <div className={styles.section}>
                     <Link
                         className={cn(link, {
-                            [styles.active]: location.pathname.includes('overview'),
-                        })}
-                        to="/overview"
-                    >
-                        Overview
-                    </Link>
-                    <Link
-                        className={cn(link, {
                             [styles.active]: location.pathname.includes('scene'),
                         })}
                         to="/scene"

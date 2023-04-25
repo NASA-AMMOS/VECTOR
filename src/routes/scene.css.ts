@@ -23,6 +23,8 @@ export const canvas = style({
     gridColumn: '1 / 9',
     height: '100%',
     width: '100%',
+    padding: '1rem',
+    backgroundColor: vars.color.white,
     borderRadius: vars.border.radius,
     overflow: 'hidden',
 });

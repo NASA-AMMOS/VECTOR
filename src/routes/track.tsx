@@ -56,8 +56,8 @@ export default function TrackView() {
             }
 
             newPoints.push(
-                { type: ResidualType.INITIAL, index: point.index, value: point.initialResidualLength },
-                { type: ResidualType.FINAL, index: point.index, value: point.finalResidualLength },
+                { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
+                { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
             );
         }
 
@@ -73,9 +73,7 @@ export default function TrackView() {
                 <div className={styles.track}>
                     <Track trackId={trackId} />
                 </div>
-                <div className={styles.canvas}>
-                    <CameraViewport />
-                </div>
+                <CameraViewport />
             </div>
             <div className={styles.charts}>
                 <div className={styles.chart}>

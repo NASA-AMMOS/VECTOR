@@ -23,7 +23,7 @@ const offset = 15;
 export default function Track({ trackId, isGrouped = false }: TrackProps) {
     const navigate = useNavigate();
 
-    const { tracks, cameraMap } = useData();
+    const { tracks, cameraImageMap } = useData();
     const { filterState } = useFilters();
 
     const track = useMemo(() => tracks.find((t) => t.id === trackId) ?? null, [trackId, tracks]);
@@ -38,11 +38,11 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         const map: { [key: string]: string | null } = {};
         for (const point of track.points) {
             if (!(point.cameraId in map)) {
-                map[point.cameraId] = cameraMap[point.cameraId].imageURL;
+                map[point.cameraId] = cameraImageMap[point.cameraId].url;
             }
         }
         return map;
-    }, [track, cameraMap]);
+    }, [track, cameraImageMap]);
 
     const handleClick = () => {
         navigate(`/tracks/${trackId}`);
@@ -52,8 +52,8 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         setPoints(
             track.points
                 .map((point) => [
-                    { type: ResidualType.INITIAL, index: point.index, value: point.initialResidualLength },
-                    { type: ResidualType.FINAL, index: point.index, value: point.finalResidualLength },
+                    { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
+                    { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
                 ])
                 .flat(),
         );

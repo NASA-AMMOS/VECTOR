@@ -12,7 +12,7 @@ import * as styles from '@/components/TiepointImage.css';
 export default function TiepointImage() {
     const { cameraId } = useParams();
 
-    const { cameraMap: cameraImageMap, cameraTrackMap } = useData();
+    const { cameraImageMap, cameraTrackMap } = useData();
     const { filterState } = useFilters();
 
     if (!cameraId || !(cameraId in cameraImageMap)) {
@@ -21,7 +21,7 @@ export default function TiepointImage() {
 
     const image = useMemo<HTMLImageElement>(() => {
         const element = new Image();
-        element.src = cameraImageMap[cameraId].imageURL;
+        element.src = cameraImageMap[cameraId].url;
         return element;
     }, [cameraId]);
 

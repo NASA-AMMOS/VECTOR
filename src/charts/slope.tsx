@@ -7,7 +7,7 @@ import * as styles from '@/charts/chart.css';
 
 export interface SlopeChartPoint {
     type: ResidualType;
-    index: number;
+    index: string;
     value: number;
 }
 
