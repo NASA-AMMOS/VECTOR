@@ -19,7 +19,7 @@ export default function Image() {
     if (!cameraId) return null;
 
     const { cameraPointMap, maxResidualLength } = useData();
-    const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
+    const { filterState, guardInitialPoint, guardFinalPoint, roundToPrecision } = useFilters();
 
     const [residualAngles, setResidualAngles] = useState<RadialChartPoint[]>([]);
     const [residualCounts, setResidualCounts] = useState<HistogramChartPoint[][]>([]);
@@ -30,21 +30,25 @@ export default function Image() {
 
         for (const point of cameraPointMap[cameraId]) {
             if (guardInitialPoint(point)) {
+                const initialResidualLength = roundToPrecision(point.initialResidualLength);
+
                 newAngles.push({
-                    radius: point.initialResidualLength,
-                    angle: point.initialResidualAngle,
+                    radius: initialResidualLength,
+                    angle: roundToPrecision(point.initialResidualAngle),
                     type: ResidualType.INITIAL,
                 });
-                newCounts[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
+                newCounts[0].push({ x: initialResidualLength, type: ResidualType.INITIAL });
             }
 
             if (guardFinalPoint(point)) {
+                const finalResidualLength = roundToPrecision(point.finalResidualLength);
+
                 newAngles.push({
-                    radius: point.finalResidualLength,
-                    angle: point.finalResidualAngle,
+                    radius: finalResidualLength,
+                    angle: roundToPrecision(point.finalResidualAngle),
                     type: ResidualType.FINAL,
                 });
-                newCounts[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
+                newCounts[1].push({ x: finalResidualLength, type: ResidualType.FINAL });
             }
         }
 

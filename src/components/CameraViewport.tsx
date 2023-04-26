@@ -299,8 +299,8 @@ export default function CameraViewport() {
     }, []);
 
     return (
-        <div className={styles.canvas}>
-            <canvas ref={initCanvas} />
+        <div className={styles.stage}>
+            <canvas className={styles.canvas} ref={initCanvas} />
         </div>
     );
 }

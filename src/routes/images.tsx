@@ -19,8 +19,8 @@ type CameraPointMap = Record<string, SlopeChartPoint[]>;
 export default function Images() {
     const navigate = useNavigate();
 
-    const { cameras, images, cameraPointMap, maxResidualLength } = useData();
-    const { filterState, guardInitialPoint, guardFinalPoint, guardPoint } = useFilters();
+    const { cameras, setCameras, images, cameraPointMap, maxResidualLength } = useData();
+    const { filterState, guardInitialPoint, guardFinalPoint, guardPoint, roundToPrecision } = useFilters();
 
     const [residualAngles, setResidualAngles] = useState<CameraAngleMap>({});
     const [residualLengths, setResidualLengths] = useState<CameraLengthMap>({});
@@ -47,35 +47,47 @@ export default function Images() {
 
             for (const point of cameraPointMap[camera.id]) {
                 if (guardInitialPoint(point)) {
+                    const initialResidualLength = roundToPrecision(point.initialResidualLength);
+
                     cameraAngles.push({
-                        radius: point.initialResidualLength,
-                        angle: point.initialResidualAngle,
+                        radius: initialResidualLength,
+                        angle: roundToPrecision(point.initialResidualAngle),
                         type: ResidualType.INITIAL,
                     });
-                    cameraLengths[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
+                    cameraLengths[0].push({ x: initialResidualLength, type: ResidualType.INITIAL });
 
                     if (filterState.residualSortField === ResidualSortField.INITIAL) {
-                        imageResiduals.push(point.initialResidualLength);
+                        imageResiduals.push(initialResidualLength);
                     }
                 }
 
                 if (guardFinalPoint(point)) {
+                    const finalResidualLength = roundToPrecision(point.finalResidualLength);
+
                     cameraAngles.push({
-                        radius: point.finalResidualLength,
-                        angle: point.finalResidualAngle,
+                        radius: finalResidualLength,
+                        angle: roundToPrecision(point.finalResidualAngle),
                         type: ResidualType.FINAL,
                     });
-                    cameraLengths[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
+                    cameraLengths[1].push({ x: finalResidualLength, type: ResidualType.FINAL });
 
                     if (filterState.residualSortField === ResidualSortField.FINAL) {
-                        imageResiduals.push(point.finalResidualLength);
+                        imageResiduals.push(finalResidualLength);
                     }
                 }
 
                 if (guardPoint(point)) {
                     cameraPoints.push(
-                        { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
-                        { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
+                        {
+                            type: ResidualType.INITIAL,
+                            index: point.id,
+                            value: roundToPrecision(point.initialResidualLength),
+                        },
+                        {
+                            type: ResidualType.FINAL,
+                            index: point.id,
+                            value: roundToPrecision(point.finalResidualLength),
+                        },
                     );
                 }
             }
@@ -136,7 +148,7 @@ export default function Images() {
             });
         }
 
-        // setCameras(newCameras);
+        setCameras(newCameras);
 
         setResidualAngles(newAngles);
         setResidualLengths(newLengths);

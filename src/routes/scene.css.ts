@@ -31,13 +31,15 @@ export const canvas = style({
 
 export const charts = style({
     gridColumn: '9 / -1',
+    display: 'grid',
+    gridTemplateRows: 'repeat(2, 1fr)',
     height: '100%',
     width: '100%',
     backgroundColor: vars.color.white,
     borderRadius: vars.border.radius,
 });
 
-export const item = style({
+export const chart = style({
     padding: '2rem',
 
     selectors: {

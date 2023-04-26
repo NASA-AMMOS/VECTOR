@@ -14,11 +14,9 @@ export interface ScatterChartPoint {
 interface ScatterChartProps {
     data: ScatterChartPoint[];
     xDomain?: [number, number];
-    dispatch?: d3.Dispatch<object>;
-    dispatchName?: string;
 }
 
-export default function ScatterChart({ data, xDomain, dispatch, dispatchName }: ScatterChartProps) {
+export default function ScatterChart({ data, xDomain }: ScatterChartProps) {
     const plot = (element: HTMLDivElement) => {
         if (element) {
             while (element.lastChild) {
@@ -120,10 +118,6 @@ export default function ScatterChart({ data, xDomain, dispatch, dispatchName }: 
 
                 gX.call(xAxis.scale(scaledX));
                 circle.attr('cx', (i: number) => scaledX(X[i]));
-
-                if (dispatch) {
-                    dispatch.call('zoom', undefined, { scaledX });
-                }
             };
 
             const zoom = d3
@@ -140,17 +134,6 @@ export default function ScatterChart({ data, xDomain, dispatch, dispatchName }: 
                 .on('zoom', zoomed);
 
             svg.call(zoom);
-
-            if (dispatch && dispatchName) {
-                dispatch.on(`zoom.${dispatchName}`, (data) => {
-                    if (data && data.scaledX) {
-                        const scaledX = data.scaledX;
-
-                        gX.call(xAxis.scale(scaledX));
-                        circle.attr('cx', (i: number) => scaledX(X[i]));
-                    }
-                });
-            }
 
             element.appendChild(svg.node()!);
         }

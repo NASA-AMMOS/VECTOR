@@ -2,7 +2,14 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import cn from 'classnames';
 
 import { ResidualType, useData } from '@/stores/DataContext';
-import { Filter, ResidualSortField, ResidualSortDirection, useFilters, AxesType } from '@/stores/FiltersContext';
+import {
+    Filter,
+    ResidualSortField,
+    ResidualSortDirection,
+    useFilters,
+    AxesType,
+    ResidualPrecision,
+} from '@/stores/FiltersContext';
 
 import Checkbox from '@/components/Checkbox';
 import NumberInput from '@/components/NumberInput';
@@ -118,6 +125,15 @@ export default function SideBar() {
                         <NumberInput name={Filter.MAX_RESIDUAL_ANGLE} value={filterState.maxResidualAngle}>
                             Max
                         </NumberInput>
+                    </div>
+                    <div className={styles.item}>
+                        <h3 className={label}>Precision</h3>
+                        <Select name={Filter.RESIDUAL_PRECISION} value={filterState.residualPrecision}>
+                            <option value={ResidualPrecision.ONES}>1</option>
+                            <option value={ResidualPrecision.TENTHS}>0.1</option>
+                            <option value={ResidualPrecision.HUNDREDTHS}>0.01</option>
+                            <option value={ResidualPrecision.THOUSANDTHS}>0.001</option>
+                        </Select>
                     </div>
                     {location.pathname.includes('images') && (
                         <div className={styles.item}>

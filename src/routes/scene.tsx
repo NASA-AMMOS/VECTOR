@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import * as d3 from 'd3';
+import { useEffect, useState } from 'react';
 
 import { ResidualType, useData } from '@/stores/DataContext';
 import { useFilters } from '@/stores/FiltersContext';
 
-import LineChart, { LineChartPoint } from '@/charts/line';
-import ScatterChart, { ScatterChartPoint } from '@/charts/scatter';
+import RadialChart, { RadialChartPoint } from '@/charts/radial';
+import HistogramChart, { HistogramChartPoint } from '@/charts/histogram';
 
 import CameraViewport from '@/components/CameraViewport';
 
@@ -13,81 +12,41 @@ import * as styles from '@/routes/scene.css';
 
 export default function Scene() {
     const { points } = useData();
-    const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
+    const { filterState, guardInitialPoint, guardFinalPoint, roundToPrecision } = useFilters();
 
-    const [residualCounts, setResidualCounts] = useState<LineChartPoint[]>([]);
-    const [residualAngles, setResidualAngles] = useState<ScatterChartPoint[]>([]);
-
-    const dispatch = useMemo(() => d3.dispatch('zoom'), []);
-    const xDomain = useMemo<[number, number]>(
-        () => [
-            0,
-            Math.max.apply(
-                Math,
-                residualCounts.map((v) => v.x),
-            ),
-        ],
-        [residualCounts],
-    );
+    const [residualAngles, setResidualAngles] = useState<RadialChartPoint[]>([]);
+    const [residualLengths, setResidualLengths] = useState<HistogramChartPoint[][]>([]);
 
     useEffect(() => {
-        const newCounts: LineChartPoint[] = [];
-        const newAngles: ScatterChartPoint[] = [];
+        const newAngles: RadialChartPoint[] = [];
+        const newLengths: HistogramChartPoint[][] = [[], []];
 
         for (const point of points) {
             if (guardInitialPoint(point)) {
-                const x = Math.round(point.initialResidualLength);
+                const initialResidualLength = roundToPrecision(point.initialResidualLength);
 
-                const count = newCounts.find((v) => v.x === x && v.z === ResidualType.INITIAL);
-                const angle = newAngles.find((v) => v.x === x && v.z === ResidualType.INITIAL);
-
-                if (count) {
-                    count.y += 1;
-                } else {
-                    newCounts.push({
-                        x,
-                        y: 1,
-                        z: ResidualType.INITIAL,
-                    });
-                }
-
-                if (!angle) {
-                    newAngles.push({
-                        x,
-                        y: Math.round(point.initialResidualAngle),
-                        z: ResidualType.INITIAL,
-                    });
-                }
+                newLengths[0].push({ x: initialResidualLength, type: ResidualType.INITIAL });
+                newAngles.push({
+                    radius: initialResidualLength,
+                    angle: roundToPrecision(point.initialResidualAngle),
+                    type: ResidualType.INITIAL,
+                });
             }
 
             if (guardFinalPoint(point)) {
-                const x = Math.round(point.finalResidualLength);
+                const finalResidualLength = roundToPrecision(point.finalResidualLength);
 
-                const count = newCounts.find((v) => v.x === x && v.z === ResidualType.FINAL);
-                const angle = newAngles.find((v) => v.x === x && v.z === ResidualType.FINAL);
-
-                if (count) {
-                    count.y += 1;
-                } else {
-                    newCounts.push({
-                        x,
-                        y: 1,
-                        z: ResidualType.FINAL,
-                    });
-                }
-
-                if (!angle) {
-                    newAngles.push({
-                        x,
-                        y: Math.round(point.finalResidualAngle),
-                        z: ResidualType.FINAL,
-                    });
-                }
+                newLengths[1].push({ x: finalResidualLength, type: ResidualType.FINAL });
+                newAngles.push({
+                    radius: finalResidualLength,
+                    angle: roundToPrecision(point.finalResidualAngle),
+                    type: ResidualType.FINAL,
+                });
             }
         }
 
-        setResidualCounts(newCounts);
         setResidualAngles(newAngles);
+        setResidualLengths(newLengths.filter((v) => v.length > 0));
     }, [points, filterState]);
 
     return (
@@ -96,13 +55,13 @@ export default function Scene() {
                 <CameraViewport />
             </section>
             <section className={styles.charts}>
-                <div className={styles.item}>
+                <div className={styles.chart}>
                     <h2 className={styles.header}>Residual Length vs. Pixels</h2>
-                    <LineChart data={residualCounts} xDomain={xDomain} dispatch={dispatch} dispatchName="count" />
+                    <HistogramChart data={residualLengths} />
                 </div>
-                <div className={styles.item}>
+                <div className={styles.chart}>
                     <h2 className={styles.header}>Residual Angle vs. Pixels</h2>
-                    <ScatterChart data={residualAngles} xDomain={xDomain} dispatch={dispatch} dispatchName="angle" />
+                    <RadialChart data={residualAngles} maxRadius={null} />
                 </div>
             </section>
         </section>

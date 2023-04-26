@@ -12,10 +12,13 @@ export const container = style({
     },
 });
 
+export const label = style({
+    marginRight: '0.5rem',
+});
+
 export const select = style({
     outline: 'none',
     height: '2rem',
-    marginLeft: '0.5rem',
     padding: '0.2rem',
     border: `0.1rem solid ${vars.color.gray}`,
     borderRadius: vars.border.inputRadius,

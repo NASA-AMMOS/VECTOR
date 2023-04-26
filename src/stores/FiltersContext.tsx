@@ -20,6 +20,8 @@ export enum Filter {
     RESIDUAL_SORT_FIELD = 'RESIDUAL_SORT_FIELD',
     RESIDUAL_SORT_DIRECTION = 'RESIDUAL_SORT_DIRECTION',
 
+    RESIDUAL_PRECISION = 'RESIDUAL_PRECISION',
+
     VIEW_CAMERAS = 'VIEW_CAMERAS',
     VIEW_POINTS = 'VIEW_POINTS',
 }
@@ -40,6 +42,13 @@ export enum ResidualSortDirection {
     DECREASING = 'DECREASING',
 }
 
+export enum ResidualPrecision {
+    ONES = 1,
+    TENTHS = 10,
+    HUNDREDTHS = 100,
+    THOUSANDTHS = 1000,
+}
+
 interface FilterState {
     viewInitialResiduals: boolean;
     viewFinalResiduals: boolean;
@@ -54,6 +63,8 @@ interface FilterState {
 
     residualSortField: ResidualSortField;
     residualSortDirection: ResidualSortDirection;
+
+    residualPrecision: ResidualPrecision;
 
     viewCameras: boolean;
     viewPoints: boolean;
@@ -70,6 +81,7 @@ interface Filters {
     guardInitialPoint: (point: Point) => boolean;
     guardFinalPoint: (point: Point) => boolean;
     guardPoint: (point: Point) => boolean;
+    roundToPrecision: (v: number) => number;
 }
 
 const initialState: FilterState = {
@@ -86,6 +98,8 @@ const initialState: FilterState = {
 
     residualSortField: ResidualSortField.FINAL,
     residualSortDirection: ResidualSortDirection.DECREASING,
+
+    residualPrecision: ResidualPrecision.TENTHS,
 
     viewCameras: true,
     viewPoints: true,
@@ -132,6 +146,11 @@ function reducer(state: FilterState, action: FilterAction): FilterState {
         case Filter.RESIDUAL_SORT_DIRECTION:
             if (typeof action.data === 'string') {
                 return { ...state, residualSortDirection: action.data as ResidualSortDirection };
+            }
+
+        case Filter.RESIDUAL_PRECISION:
+            if (typeof action.data === 'string') {
+                return { ...state, residualPrecision: Number(action.data) as ResidualPrecision };
             }
 
         case Filter.VIEW_CAMERAS:
@@ -188,6 +207,11 @@ export default function ProvideFilters({ children }: { children: React.ReactNode
         [filterState],
     );
 
+    const roundToPrecision = useCallback(
+        (v: number) => Math.round((v + Number.EPSILON) * filterState.residualPrecision) / filterState.residualPrecision,
+        [filterState],
+    );
+
     useEffect(() => {
         dispatchFilter({
             type: Filter.MIN_RESIDUAL_LENGTH,
@@ -201,7 +225,7 @@ export default function ProvideFilters({ children }: { children: React.ReactNode
 
     return (
         <FiltersContext.Provider
-            value={{ filterState, dispatchFilter, guardInitialPoint, guardFinalPoint, guardPoint }}
+            value={{ filterState, dispatchFilter, guardInitialPoint, guardFinalPoint, guardPoint, roundToPrecision }}
         >
             {children}
         </FiltersContext.Provider>

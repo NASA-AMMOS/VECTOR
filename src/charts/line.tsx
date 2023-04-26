@@ -14,11 +14,9 @@ export interface LineChartPoint {
 interface LineChartProps {
     data: LineChartPoint[];
     xDomain?: [number, number];
-    dispatch?: d3.Dispatch<object>;
-    dispatchName?: string;
 }
 
-export default function LineChart({ data, xDomain, dispatch, dispatchName }: LineChartProps) {
+export default function LineChart({ data, xDomain }: LineChartProps) {
     const plot = (element: HTMLDivElement) => {
         if (element) {
             while (element.lastChild) {
@@ -139,10 +137,6 @@ export default function LineChart({ data, xDomain, dispatch, dispatchName }: Lin
 
                 gX.call(xAxis.scale(scaledX));
                 path.attr('d', ([_, I]) => line(I, scaledX));
-
-                if (dispatch) {
-                    dispatch.call('zoom', undefined, { scaledX });
-                }
             };
 
             const zoom = d3
@@ -159,17 +153,6 @@ export default function LineChart({ data, xDomain, dispatch, dispatchName }: Lin
                 .on('zoom', zoomed);
 
             svg.call(zoom);
-
-            if (dispatch && dispatchName) {
-                dispatch.on(`zoom.${dispatchName}`, (data) => {
-                    if (data && data.scaledX) {
-                        const scaledX = data.scaledX;
-
-                        gX.call(xAxis.scale(scaledX));
-                        path.attr('d', ([_, I]) => line(I, scaledX));
-                    }
-                });
-            }
 
             element.appendChild(svg.node()!);
         }

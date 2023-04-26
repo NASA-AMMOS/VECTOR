@@ -19,7 +19,7 @@ export default function TrackView() {
     const { trackId } = useParams();
 
     const { tracks, maxResidualLength } = useData();
-    const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
+    const { filterState, guardInitialPoint, guardFinalPoint, guardPoint, roundToPrecision } = useFilters();
 
     const track = useMemo(() => tracks.find((t) => t.id === trackId), [trackId, tracks]);
 
@@ -38,27 +38,37 @@ export default function TrackView() {
 
         for (const point of track.points) {
             if (guardInitialPoint(point)) {
+                const initialResidualLength = roundToPrecision(point.initialResidualLength);
+
                 newAngles.push({
-                    radius: point.initialResidualLength,
-                    angle: point.initialResidualAngle,
+                    radius: initialResidualLength,
+                    angle: roundToPrecision(point.initialResidualAngle),
                     type: ResidualType.INITIAL,
                 });
-                newCounts[0].push({ x: point.initialResidualLength, type: ResidualType.INITIAL });
+                newCounts[0].push({ x: initialResidualLength, type: ResidualType.INITIAL });
             }
 
             if (guardFinalPoint(point)) {
+                const finalResidualLength = roundToPrecision(point.finalResidualLength);
+
                 newAngles.push({
-                    radius: point.finalResidualLength,
-                    angle: point.finalResidualAngle,
+                    radius: finalResidualLength,
+                    angle: roundToPrecision(point.finalResidualAngle),
                     type: ResidualType.FINAL,
                 });
-                newCounts[1].push({ x: point.finalResidualLength, type: ResidualType.FINAL });
+                newCounts[1].push({ x: finalResidualLength, type: ResidualType.FINAL });
             }
 
-            newPoints.push(
-                { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
-                { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
-            );
+            if (guardPoint(point)) {
+                newPoints.push(
+                    {
+                        type: ResidualType.INITIAL,
+                        index: point.id,
+                        value: roundToPrecision(point.initialResidualLength),
+                    },
+                    { type: ResidualType.FINAL, index: point.id, value: roundToPrecision(point.finalResidualLength) },
+                );
+            }
         }
 
         setResidualAngles(newAngles);

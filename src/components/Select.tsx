@@ -7,12 +7,12 @@ import * as styles from '@/components/Select.css';
 
 interface SelectProps {
     name: string;
-    label: string;
-    value: string;
+    value: string | number;
     children: React.ReactNode | React.ReactNode[];
+    label?: string;
 }
 
-export default function Select({ name, label, value, children }: SelectProps) {
+export default function Select({ name, value, children, label }: SelectProps) {
     const { dispatchFilter } = useFilters();
 
     const onChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -21,9 +21,11 @@ export default function Select({ name, label, value, children }: SelectProps) {
 
     return (
         <div className={styles.container}>
-            <label className={Body} htmlFor={name}>
-                {label}
-            </label>
+            {label && (
+                <label className={cn(Body, styles.label)} htmlFor={name}>
+                    {label}
+                </label>
+            )}
             <select className={cn(Body, styles.select)} id={name} name={name} value={value} onChange={onChange}>
                 {children}
             </select>
