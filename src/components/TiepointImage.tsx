@@ -25,8 +25,8 @@ export default function TiepointImage() {
 
             const image = new Image();
             image.src = cameraImageMap[cameraId].url;
-            canvas.width = image.width;
-            canvas.height = image.height;
+            canvas.width = cameraImageMap[cameraId].width;
+            canvas.height = cameraImageMap[cameraId].height;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
