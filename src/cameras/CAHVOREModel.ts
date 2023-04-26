@@ -112,7 +112,6 @@ export default class CAHVOREModel extends CameraModel {
                         Number(rotation.getAttribute('z')!),
                         Number(rotation.getAttribute('w')!),
                     );
-                    console.log(tempQuat.clone());
                     V.applyQuaternion(tempQuat);
                 }
             }

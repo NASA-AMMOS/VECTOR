@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import cn from 'classnames';
 
@@ -13,22 +12,21 @@ export default function TiepointImage() {
     const { cameraId } = useParams();
 
     const { cameraImageMap, cameraTrackMap } = useData();
-    const { filterState } = useFilters();
+    const { guardInitialPoint, guardFinalPoint } = useFilters();
 
     if (!cameraId || !(cameraId in cameraImageMap)) {
         return null;
     }
 
-    const image = useMemo<HTMLImageElement>(() => {
-        const element = new Image();
-        element.src = cameraImageMap[cameraId].url;
-        return element;
-    }, [cameraId]);
-
     const stage = (canvas: HTMLCanvasElement | null) => {
-        if (canvas && image) {
+        if (canvas) {
             const ctx = canvas.getContext('2d');
             if (!ctx) throw new Error('Failed to create 2D context for TiepointImage');
+
+            const image = new Image();
+            image.src = cameraImageMap[cameraId].url;
+            canvas.width = image.width;
+            canvas.height = image.height;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.save();
@@ -49,11 +47,7 @@ export default function TiepointImage() {
                         let isResidualDrawn = false;
 
                         // Draw initial residual.
-                        if (
-                            filterState.viewInitialResiduals &&
-                            filterState.minResidualLength <= point.initialResidualLength &&
-                            filterState.maxResidualLength >= point.initialResidualLength
-                        ) {
+                        if (guardInitialPoint(point)) {
                             ctx.beginPath();
                             ctx.strokeStyle = theme.color.initialHex;
                             ctx.lineWidth = 2;
@@ -67,11 +61,7 @@ export default function TiepointImage() {
                         }
 
                         // Draw final residual.
-                        if (
-                            filterState.viewFinalResiduals &&
-                            filterState.minResidualLength <= point.finalResidualLength &&
-                            filterState.maxResidualLength >= point.finalResidualLength
-                        ) {
+                        if (guardFinalPoint(point)) {
                             ctx.beginPath();
                             ctx.strokeStyle = theme.color.finalHex;
                             ctx.lineWidth = 2;
@@ -100,7 +90,7 @@ export default function TiepointImage() {
         <section className={styles.container}>
             <h2 className={cn(H2, styles.header)}>Image ID: {cameraId}</h2>
             <div className={styles.image}>
-                <canvas ref={stage} className={styles.canvas} width={image?.width} height={image?.height} />
+                <canvas ref={stage} className={styles.canvas} />
             </div>
         </section>
     );

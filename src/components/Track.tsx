@@ -24,25 +24,14 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
     const navigate = useNavigate();
 
     const { tracks, cameraImageMap } = useData();
-    const { filterState } = useFilters();
+    const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
 
     const track = useMemo(() => tracks.find((t) => t.id === trackId) ?? null, [trackId, tracks]);
     if (!track) {
         return null;
     }
 
-    const [images, setImages] = useState<{ [key: string]: HTMLImageElement }>({});
     const [points, setPoints] = useState<SlopeChartPoint[]>([]);
-
-    const imageURLs = useMemo(() => {
-        const map: { [key: string]: string | null } = {};
-        for (const point of track.points) {
-            if (!(point.cameraId in map)) {
-                map[point.cameraId] = cameraImageMap[point.cameraId].url;
-            }
-        }
-        return map;
-    }, [track, cameraImageMap]);
 
     const handleClick = () => {
         navigate(`/tracks/${trackId}`);
@@ -66,11 +55,7 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         let isResidualDrawn = false;
 
         // Draw initial residual.
-        if (
-            filterState.viewInitialResiduals &&
-            filterState.minResidualLength <= point.initialResidualLength &&
-            filterState.maxResidualLength >= point.initialResidualLength
-        ) {
+        if (guardInitialPoint(point)) {
             ctx.beginPath();
 
             ctx.strokeStyle = theme.color.initialHex;
@@ -84,11 +69,7 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         }
 
         // Draw final residual.
-        if (
-            filterState.viewFinalResiduals &&
-            filterState.minResidualLength <= point.finalResidualLength &&
-            filterState.maxResidualLength >= point.finalResidualLength
-        ) {
+        if (guardFinalPoint(point)) {
             ctx.beginPath();
 
             ctx.strokeStyle = theme.color.finalHex;
@@ -109,29 +90,9 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         }
     };
 
-    useEffect(() => {
-        if (imageURLs) {
-            const newImages: { [key: string]: HTMLImageElement } = {};
-            for (const [name, url] of Object.entries(imageURLs)) {
-                if (name && url) {
-                    const image = new Image();
-                    image.onload = () => {
-                        newImages[name] = image;
-                        if (Object.keys(newImages).length === Object.keys(imageURLs).length) {
-                            setImages(newImages);
-                        }
-                    };
-                    image.src = url;
-                } else {
-                    throw new Error('Failed to load image in track');
-                }
-            }
-        }
-    }, [imageURLs]);
-
     const stage = useCallback(
         (canvas: HTMLCanvasElement) => {
-            if (canvas && Object.keys(images).length > 0) {
+            if (canvas) {
                 const ctx = canvas.getContext('2d');
                 if (!ctx) throw new Error();
 
@@ -155,7 +116,8 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
                 let count = 0;
 
                 for (const point of points) {
-                    const image = images[point.cameraId];
+                    const image = new Image();
+                    image.src = cameraImageMap[point.cameraId].url;
 
                     ctx.filter = 'contrast(2)';
 
@@ -184,7 +146,7 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
                 }
             }
         },
-        [track, images, filterState],
+        [track, filterState],
     );
 
     return (
