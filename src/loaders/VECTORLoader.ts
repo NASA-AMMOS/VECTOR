@@ -60,34 +60,34 @@ export default class VECTORLoader extends Loader {
             let initialXYZ: [number, number, number];
             if (cs) {
                 this.tempVec3.set(
-                    parseFloat(initial.getAttribute('x')!),
-                    parseFloat(initial.getAttribute('y')!),
-                    parseFloat(initial.getAttribute('z')!),
+                    Number(initial.getAttribute('x')!),
+                    Number(initial.getAttribute('y')!),
+                    Number(initial.getAttribute('z')!),
                 );
                 cs.convert(this.tempVec3);
                 initialXYZ = [this.tempVec3.x, this.tempVec3.y, this.tempVec3.z];
             } else {
                 initialXYZ = [
-                    parseFloat(initial.getAttribute('x')!),
-                    parseFloat(initial.getAttribute('y')!),
-                    parseFloat(initial.getAttribute('z')!),
+                    Number(initial.getAttribute('x')!),
+                    Number(initial.getAttribute('y')!),
+                    Number(initial.getAttribute('z')!),
                 ];
             }
 
             let finalXYZ: [number, number, number];
             if (cs) {
                 this.tempVec3.set(
-                    parseFloat(final.getAttribute('x')!),
-                    parseFloat(final.getAttribute('y')!),
-                    parseFloat(final.getAttribute('z')!),
+                    Number(final.getAttribute('x')!),
+                    Number(final.getAttribute('y')!),
+                    Number(final.getAttribute('z')!),
                 );
                 cs.convert(this.tempVec3);
                 finalXYZ = [this.tempVec3.x, this.tempVec3.y, this.tempVec3.z];
             } else {
                 finalXYZ = [
-                    parseFloat(final.getAttribute('x')!),
-                    parseFloat(final.getAttribute('y')!),
-                    parseFloat(final.getAttribute('z')!),
+                    Number(final.getAttribute('x')!),
+                    Number(final.getAttribute('y')!),
+                    Number(final.getAttribute('z')!),
                 ];
             }
 
@@ -163,16 +163,16 @@ export default class VECTORLoader extends Loader {
             const initialResidual = element.querySelector('initial_residual')!;
             const finalResidual = element.querySelector('final_residual')!;
 
-            const initialResidualX = parseFloat(initialResidual.getAttribute('x')!);
-            const initialResidualY = parseFloat(initialResidual.getAttribute('y')!);
+            const initialResidualX = Number(initialResidual.getAttribute('x')!);
+            const initialResidualY = Number(initialResidual.getAttribute('y')!);
 
-            const finalResidualX = parseFloat(finalResidual.getAttribute('x')!);
-            const finalResidualY = parseFloat(finalResidual.getAttribute('y')!);
+            const finalResidualX = Number(finalResidual.getAttribute('x')!);
+            const finalResidualY = Number(finalResidual.getAttribute('y')!);
 
             const point: Point = {
                 id,
                 cameraId,
-                pixel: [parseFloat(pixel.getAttribute('x')!), parseFloat(pixel.getAttribute('y')!)],
+                pixel: [Number(pixel.getAttribute('x')!), Number(pixel.getAttribute('y')!)],
                 initialResidual: [initialResidualX, initialResidualY],
                 initialResidualLength: Math.sqrt(
                     initialResidualX * initialResidualX + initialResidualY * initialResidualY,

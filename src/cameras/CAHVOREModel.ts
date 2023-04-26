@@ -69,7 +69,7 @@ export default class CAHVOREModel extends CameraModel {
 
     // Parameters for camera frustum.
     private near = 0.01;
-    private far = 2;
+    private far = 4;
     private widthSegments = 8;
     private heightSegments = 8;
     private planarProjectionFactor = 0;
@@ -87,58 +87,57 @@ export default class CAHVOREModel extends CameraModel {
     static process(element: Element, frame: string): CAHVOREModel {
         const ps = [];
 
-        let cs = null;
-        switch (frame) {
-            case SiteFrame.ID:
-                cs = SiteFrame;
-                break;
-        }
-
-        const offsets = element.querySelectorAll('origin_offset');
-        const rotations = element.querySelectorAll('origin_rotation');
-        if (offsets.length !== rotations.length) {
-            throw new Error('Origin offset count does not equal origin rotation count');
-        }
-
         const tempVec = new Vector3();
         const tempQuat = new Quaternion();
         for (const letter of CAHVOREModel.PARAMETERS) {
             const parameter = element.querySelector(`parameter[id="${letter}"]`)!;
 
-            const x = parseFloat(parameter.getAttribute('x')!);
-            const y = parseFloat(parameter.getAttribute('y')!);
-            const z = parseFloat(parameter.getAttribute('z')!);
+            const x = Number(parameter.getAttribute('x')!);
+            const y = Number(parameter.getAttribute('y')!);
+            const z = Number(parameter.getAttribute('z')!);
 
-            const V = new Vector3(x, y, z);
-            if (letter !== 'R' && letter !== 'E') {
-                for (let i = 0; i < offsets.length; ++i) {
-                    const rotation = rotations[i];
+            ps.push(new Vector3(x, y, z));
+        }
+
+        // Apply coordinate transformations.
+        let currentTransform = element.querySelector('transform');
+        while (currentTransform) {
+            const rotation = currentTransform.querySelector('rotation');
+            if (rotation) {
+                for (let i = 0, l = CAHVOREModel.PARAMETERS.slice(0, 5).length; i < l; ++i) {
+                    const V = ps[i];
                     tempQuat.set(
-                        parseFloat(rotation.getAttribute('x')!),
-                        parseFloat(rotation.getAttribute('y')!),
-                        parseFloat(rotation.getAttribute('z')!),
-                        parseFloat(rotation.getAttribute('w')!),
+                        Number(rotation.getAttribute('x')!),
+                        Number(rotation.getAttribute('y')!),
+                        Number(rotation.getAttribute('z')!),
+                        Number(rotation.getAttribute('w')!),
                     );
-
+                    console.log(tempQuat.clone());
                     V.applyQuaternion(tempQuat);
-
-                    if (letter === 'C') {
-                        const offset = offsets[i];
-                        tempVec.set(
-                            parseFloat(offset.getAttribute('x')!),
-                            parseFloat(offset.getAttribute('y')!),
-                            parseFloat(offset.getAttribute('z')!),
-                        );
-                        V.add(tempVec);
-                    }
                 }
             }
 
-            if (cs) {
-                cs.convert(V);
+            const offset = currentTransform.querySelector('offset');
+            if (offset) {
+                tempVec.set(
+                    Number(offset.getAttribute('x')!),
+                    Number(offset.getAttribute('y')!),
+                    Number(offset.getAttribute('z')!),
+                );
+                // C parameter.
+                ps[0].add(tempVec);
             }
 
-            ps.push(V);
+            currentTransform = currentTransform.querySelector('transform');
+        }
+
+        // Apply GL coordinate system rotation.
+        switch (frame) {
+            case SiteFrame.ID:
+                for (let i = 0, l = CAHVOREModel.PARAMETERS.slice(0, 5).length; i < l; ++i) {
+                    SiteFrame.convert(ps[i]);
+                }
+                break;
         }
 
         // Handle linearity term.
@@ -149,7 +148,7 @@ export default class CAHVOREModel extends CameraModel {
         } else if (T === '2') {
             linearity = 0;
         } else if (T === '3') {
-            linearity = parseFloat(element.querySelector(`parameter[id="P"]`)!.getAttribute('v')!);
+            linearity = Number(element.querySelector(`parameter[id="P"]`)!.getAttribute('v')!);
         }
 
         return new CAHVOREModel(ps[0], ps[1], ps[2], ps[3], ps[4], ps[5], ps[6], linearity);
