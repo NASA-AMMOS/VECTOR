@@ -8,7 +8,6 @@ import {
     LineSegments,
     Mesh,
     MeshBasicMaterial,
-    Quaternion,
     Ray,
     Vector2,
     Vector3,
@@ -17,8 +16,6 @@ import {
 import { ResidualType } from '@/stores/DataContext';
 
 import CameraModel from '@/cameras/CameraModel';
-
-import SiteFrame from '@/cs/SiteFrame';
 
 import { theme } from '@/theme.css';
 
@@ -84,11 +81,9 @@ export default class CAHVOREModel extends CameraModel {
     // Utilities for vector math.
     private tempVec3 = new Vector3();
 
-    static process(element: Element, frame: string): CAHVOREModel {
-        const ps = [];
+    static process(element: Element): CAHVOREModel {
+        const p = [];
 
-        const tempVec = new Vector3();
-        const tempQuat = new Quaternion();
         for (const letter of CAHVOREModel.PARAMETERS) {
             const parameter = element.querySelector(`parameter[id="${letter}"]`)!;
 
@@ -96,47 +91,7 @@ export default class CAHVOREModel extends CameraModel {
             const y = Number(parameter.getAttribute('y')!);
             const z = Number(parameter.getAttribute('z')!);
 
-            ps.push(new Vector3(x, y, z));
-        }
-
-        // Apply coordinate transformations.
-        let currentTransform = element.querySelector('transform');
-        while (currentTransform) {
-            const rotation = currentTransform.querySelector('rotation');
-            if (rotation) {
-                for (let i = 0, l = CAHVOREModel.PARAMETERS.slice(0, 5).length; i < l; ++i) {
-                    const V = ps[i];
-                    tempQuat.set(
-                        Number(rotation.getAttribute('x')!),
-                        Number(rotation.getAttribute('y')!),
-                        Number(rotation.getAttribute('z')!),
-                        Number(rotation.getAttribute('w')!),
-                    );
-                    V.applyQuaternion(tempQuat);
-                }
-            }
-
-            const offset = currentTransform.querySelector('offset');
-            if (offset) {
-                tempVec.set(
-                    Number(offset.getAttribute('x')!),
-                    Number(offset.getAttribute('y')!),
-                    Number(offset.getAttribute('z')!),
-                );
-                // C parameter.
-                ps[0].add(tempVec);
-            }
-
-            currentTransform = currentTransform.querySelector('transform');
-        }
-
-        // Apply GL coordinate system rotation.
-        switch (frame) {
-            case SiteFrame.ID:
-                for (let i = 0, l = CAHVOREModel.PARAMETERS.slice(0, 5).length; i < l; ++i) {
-                    SiteFrame.convert(ps[i]);
-                }
-                break;
+            p.push(new Vector3(x, y, z));
         }
 
         // Handle linearity term.
@@ -150,7 +105,7 @@ export default class CAHVOREModel extends CameraModel {
             linearity = Number(element.querySelector(`parameter[id="P"]`)!.getAttribute('v')!);
         }
 
-        return new CAHVOREModel(ps[0], ps[1], ps[2], ps[3], ps[4], ps[5], ps[6], linearity);
+        return new CAHVOREModel(p[0], p[1], p[2], p[3], p[4], p[5], p[6], linearity);
     }
 
     constructor(C: Vector3, A: Vector3, H: Vector3, V: Vector3, O: Vector3, R: Vector3, E: Vector3, linearity: number) {

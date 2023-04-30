@@ -2,8 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
+import { FormatType } from '@/format/Format';
+import JPLFormat from '@/format/JPLFormat';
+import VECTORFormat from '@/format/VECTORFormat';
+
 import { LoaderType } from '@/loaders/Loader';
-import VECTORLoader from '@/loaders/VECTORLoader';
+import XMLLoader from '@/loaders/XMLLoader';
+import ImageLoader from '@/loaders/ImageLoader';
 
 import { useData } from '@/stores/DataContext';
 
@@ -17,25 +22,57 @@ export default function Landing() {
 
     const { tracks, setTracks, cameras, setCameras, images, setImages } = useData();
 
-    const loader = new VECTORLoader();
-
     const [validImages, setValidImages] = useState(false);
 
     const validateFiles = async (files: File[]) => {
         await Promise.all(
             files.map(async (file) => {
-                if (file.type === 'text/xml') {
-                    const type = await loader.inferType(file);
-                    if (type === LoaderType.TRACKS) {
-                        const tracks = await loader.processTracks(file);
-                        setTracks(tracks);
-                    } else if (type === LoaderType.CAMERAS) {
-                        const cameras = await loader.processCameras(file);
-                        setCameras(cameras);
-                    }
-                } else if (file.type.startsWith('image')) {
-                    const image = await loader.processImage(file);
-                    setImages((prevState) => ({ ...prevState, [file.name]: image }));
+                switch (file.type) {
+                    case 'text/xml':
+                        const xml = await XMLLoader.load(file);
+
+                        const format = XMLLoader.inferFormat(xml);
+                        const type = XMLLoader.inferType(xml, format);
+
+                        let fileFormat;
+                        switch (format) {
+                            case FormatType.JPL:
+                                fileFormat = JPLFormat;
+                                break;
+
+                            case FormatType.VECTOR:
+                                fileFormat = VECTORFormat;
+                                break;
+
+                            default:
+                                throw new Error(`Unsupported XML Format: ${format}`);
+                        }
+
+                        switch (type) {
+                            case LoaderType.TRACKS:
+                                const tracks = await fileFormat.processTracks(xml);
+                                setTracks(tracks);
+                                break;
+
+                            case LoaderType.CAMERAS:
+                                const cameras = await fileFormat.processCameras(xml);
+                                setCameras(cameras);
+                                break;
+
+                            default:
+                                throw new Error(`Unsupported Loader Type: ${type}`);
+                        }
+
+                        break;
+
+                    case 'image/png':
+                    case 'image/jpeg':
+                        const image = await ImageLoader.load(file);
+                        setImages((prevState) => ({ ...prevState, [file.name]: image }));
+                        break;
+
+                    default:
+                        throw new Error(`Unsupported File Type: ${file.type}`);
                 }
             }),
         );

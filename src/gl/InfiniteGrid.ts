@@ -3,6 +3,9 @@ import { DoubleSide, Mesh, PlaneGeometry, ShaderMaterial } from 'three';
 import vertexShader from '@/shaders/grid/vertex.glsl?raw';
 import fragmentShader from '@/shaders/grid/fragment.glsl?raw';
 
+// Based on the drei library with modifications to
+// handle arbitrary axis-aligned directions.
+// https://github.com/pmndrs/drei/blob/master/src/core/Grid.tsx
 export default class InfiniteGrid extends Mesh {
     constructor({
         fadeDistance = 10000,

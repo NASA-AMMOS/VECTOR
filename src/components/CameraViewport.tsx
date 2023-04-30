@@ -3,9 +3,9 @@ import { useParams } from 'react-router-dom';
 import {
     ArrowHelper,
     BufferGeometry,
+    Clock,
     Float32BufferAttribute,
     Group,
-    PerspectiveCamera,
     Points,
     PointsMaterial,
     Scene,
@@ -15,12 +15,12 @@ import {
     Vector3,
     WebGLRenderer,
 } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { Camera, ImageFile, Point, ResidualType, Track, useData } from '@/stores/DataContext';
 import { useFilters } from '@/stores/FiltersContext';
 
-import InfiniteGrid from '@/components/InfiniteGrid';
+import VirtualCamera from '@/gl/VirtualCamera';
+import InfiniteGrid from '@/gl/InfiniteGrid';
 
 import { theme } from '@/theme.css';
 import * as styles from '@/components/CameraViewport.css';
@@ -28,6 +28,7 @@ import * as styles from '@/components/CameraViewport.css';
 import discAsset from '@/assets/disc.png';
 
 const tempVec2 = new Vector2();
+const tempVec3 = new Vector3();
 
 export default function CameraViewport() {
     const { trackId } = useParams();
@@ -37,8 +38,8 @@ export default function CameraViewport() {
     const { tracks, cameraMap, cameraImageMap } = useData();
 
     const sceneRef = useRef<Scene>(new Scene());
-    const cameraRef = useRef<PerspectiveCamera | null>(null);
-    const controlsRef = useRef<OrbitControls | null>(null);
+    const cameraRef = useRef<VirtualCamera | null>(null);
+    const clockRef = useRef<Clock>(new Clock());
 
     const rAFRef = useRef<number | null>(null);
     const rendererRef = useRef<WebGLRenderer | null>(null);
@@ -88,8 +89,9 @@ export default function CameraViewport() {
     }, [activeTracks]);
 
     const animate = () => {
-        if (rendererRef.current && controlsRef.current && cameraRef.current) {
-            controlsRef.current.update();
+        if (rendererRef.current && cameraRef.current) {
+            const delta = clockRef.current.getDelta();
+            cameraRef.current.update(delta);
             rendererRef.current.render(sceneRef.current, cameraRef.current);
         }
 
@@ -100,6 +102,9 @@ export default function CameraViewport() {
         disposePoints();
         if (activeTracks.length < 1) return;
 
+        // There are many approaches to calculating the centroid of a point cloud.
+        // This is the naive approach that takes the average of each axis.
+        // https://stackoverflow.com/questions/77936/whats-the-best-way-to-calculate-a-3d-or-n-d-centroid
         let xAverage = 0;
         let yAverage = 0;
         let zAverage = 0;
@@ -111,9 +116,9 @@ export default function CameraViewport() {
             const initialPoint = track.initialXYZ;
             const finalPoint = track.finalXYZ;
 
-            xAverage += initialPoint[0];
-            yAverage += initialPoint[1];
-            zAverage += initialPoint[2];
+            xAverage += finalPoint[0];
+            yAverage += finalPoint[1];
+            zAverage += finalPoint[2];
 
             initialVertices.push(initialPoint[0], initialPoint[1], initialPoint[2]);
             finalVertices.push(finalPoint[0], finalPoint[1], finalPoint[2]);
@@ -126,12 +131,12 @@ export default function CameraViewport() {
         yAverage /= activeTracks.length === 1 ? 0.99 : activeTracks.length;
         zAverage /= activeTracks.length === 1 ? 0.99 : activeTracks.length;
 
-        if (cameraRef.current && controlsRef.current) {
+        if (cameraRef.current) {
             cameraRef.current.position.set(xAverage, yAverage, zAverage);
 
             const firstXYZ = activeTracks[0].initialXYZ;
-            controlsRef.current.target.set(firstXYZ[0], firstXYZ[1], firstXYZ[2]);
-            controlsRef.current.update();
+            tempVec3.set(firstXYZ[0], firstXYZ[1], firstXYZ[2]);
+            cameraRef.current.lookAt(tempVec3);
         }
 
         initialPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(initialVertices, 3));
@@ -227,6 +232,8 @@ export default function CameraViewport() {
             disposePoints();
             disposeCameras();
 
+            if (cameraRef.current) cameraRef.current.dispose();
+
             return;
         }
 
@@ -241,19 +248,12 @@ export default function CameraViewport() {
         canvas.width = width;
         canvas.height = height;
 
-        cameraRef.current = new PerspectiveCamera(45.0, width / height, 0.1, 1000);
-        cameraRef.current.position.set(5, 5, 5);
-        cameraRef.current.lookAt(new Vector3());
-
         rendererRef.current = new WebGLRenderer({ canvas });
         rendererRef.current.setSize(width, height);
         rendererRef.current.setPixelRatio(Math.min(2, window.devicePixelRatio));
         rendererRef.current.setClearColor(theme.color.white);
 
-        controlsRef.current = new OrbitControls(cameraRef.current, rendererRef.current.domElement);
-        controlsRef.current.panSpeed = 0.25;
-        controlsRef.current.zoomSpeed = 0.25;
-        controlsRef.current.rotateSpeed = 0.25;
+        cameraRef.current = new VirtualCamera(width / height, rendererRef.current.domElement);
 
         sceneRef.current.add(infiniteGrid.current);
         sceneRef.current.add(initialCameras.current);

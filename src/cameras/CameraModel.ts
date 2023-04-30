@@ -5,7 +5,7 @@ import { ResidualType } from '@/stores/DataContext';
 export default class CameraModel {
     static ID = '';
 
-    static process(_element: Element, _frame: string): CameraModel {
+    static process(_: Element): CameraModel {
         throw new Error('Method process() is not implemented');
     }
 
@@ -17,15 +17,15 @@ export default class CameraModel {
         throw new Error('Method getCenter() is not implemented');
     }
 
-    getForwardVector(_pixel: Vector2): Ray {
+    getForwardVector(_: Vector2): Ray {
         throw new Error('Method getCenter() is not implemented');
     }
 
-    getFrustumMesh(_image: Vector2, _type: ResidualType): Group {
+    getFrustumMesh(_: Vector2, _type: ResidualType): Group {
         throw new Error('Method getCenter() is not implemented');
     }
 
-    projectRay(_pixel: Vector2): Ray {
+    projectRay(_: Vector2): Ray {
         throw new Error('Method getCenter() is not implemented');
     }
 }

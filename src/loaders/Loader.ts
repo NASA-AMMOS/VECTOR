@@ -1,4 +1,4 @@
-import { Camera, ImageFile, Track } from '@/stores/DataContext';
+import { FormatType } from '@/format/Format';
 
 export enum LoaderType {
     TRACKS = 'track',
@@ -6,15 +6,15 @@ export enum LoaderType {
 }
 
 export default class Loader {
-    loadTracks(_file: File): Promise<Track[]> {
-        throw new Error('Method loadTracks() is not implemented');
+    static async load(_: File): Promise<unknown> {
+        throw new Error('Method load() is not implemented');
     }
 
-    loadCameras(_file: File): Promise<Camera[]> {
-        throw new Error('Method loadCameras() is not implemented');
+    static inferFormat(_: unknown): FormatType {
+        throw new Error('Method inferFormat() is not implemented');
     }
 
-    loadImage(_file: File): Promise<ImageFile> {
-        throw new Error('Method loadImage() is not implemented');
+    static inferType(_: unknown, _format: FormatType): LoaderType {
+        throw new Error('Method inferType() is not implemented');
     }
 }

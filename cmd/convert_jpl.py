@@ -1,33 +1,7 @@
 import argparse
 import pathlib
-import re
 import xml.etree.cElementTree as ET
 import xml.dom.minidom as minidom
-
-
-def parse_coordinate_system(root_tag: ET.Element, reference_frame: str, properties: dict, root_cs: str) -> None:
-    current_tag = root_tag
-    current_cs = root_cs
-
-    while True:
-        cs = next((properties[name] for name in properties if 'COORDINATE_SYSTEM_NAME' in properties[name] and properties[name]['COORDINATE_SYSTEM_NAME'] == current_cs), {})
-        if not cs:
-            raise ValueError(f'Failed to find {current_cs} inside VICAR header')
-
-
-        origin_offset = cs['ORIGIN_OFFSET_VECTOR']
-        origin_offset = origin_offset.lstrip('(').rstrip(')').split(',')
-
-        origin_rotation = cs['ORIGIN_ROTATION_QUATERNION']
-        origin_rotation = origin_rotation.lstrip('(').rstrip(')').split(',')
-
-        current_cs = cs['REFERENCE_COORD_SYSTEM_NAME']
-        current_tag = ET.SubElement(current_tag, 'transform', reference_frame=current_cs)
-        ET.SubElement(current_tag, 'offset', x=origin_offset[0], y=origin_offset[1], z=origin_offset[2])
-        ET.SubElement(current_tag, 'rotation', x=origin_rotation[1], y=origin_rotation[2], z=origin_rotation[3], w=origin_rotation[0])
-
-        if current_cs == reference_frame:
-            break
 
 
 def parse_tiepoints(xml: ET.ElementTree) -> str:
@@ -260,49 +234,18 @@ def parse_tiepoints(xml: ET.ElementTree) -> str:
     return reference_frame
 
 
-def parse_navigation(xml: ET.ElementTree, reference_frame: str, images_dir: pathlib.Path, vicar_dir: pathlib.Path) -> None:
+def parse_navigation(xml: ET.ElementTree, images_dir: pathlib.Path) -> None:
     images = [image for image in images_dir.glob('**/*') if image.is_file() and image.suffix.lower() == '.png']
     if len(images) < 1:
         raise ValueError("Failed to find images in the image directory")
 
-    vicar_files = [vicar for vicar in vicar_dir.glob('**/*') if vicar.is_file() and vicar.suffix.lower() in ['.vic', '.vicb']]
-    if len(vicar_files) < 1:
-        raise ValueError("Failed to find VICAR files in the VICAR directory")
-
-    vicar_map = {}
-    for file in vicar_files:
-        with open(file, mode='rb') as f:
-            data = f.read()
-            match = re.search(b'LBLSIZE\\s*=\\s*(\\d+)', data)
-            if match is None:
-                raise ValueError('Failed to find LBLSIZE in VICAR file')
-
-            label_size = match[1].decode('utf-8')
-            f.seek(0)
-            header = f.read(int(label_size)).decode('utf-8')
-
-            matches = re.findall("\\s*([A-Z][A-Z_0-9]*)\\s*=\\s*((?:'(?:[^']*(?:'')?)*')|\\([^)]+\\)|\\S+)", header)
-            if len(matches) < 1:
-                raise ValueError('Failed to find header labels in VICAR file')
-
-            system_labels = {}
-            property_labels = {}
-            history_labels = {}
-            group = system_labels
-            for match in matches:
-                keyword = match[0].strip('\"').strip('\'')
-                value = match[1].strip('\"').strip('\'')
-
-                if keyword == 'PROPERTY':
-                    group = {}
-                    property_labels[value] = group
-                elif keyword == 'TASK':
-                    group = {}
-                    history_labels[value] = group
-                else:
-                    group[keyword] = value
-
-            vicar_map[file.name] = { 'system': system_labels, 'property': property_labels, 'history': history_labels }
+    # Assume every camera model is in the same reference frame.
+    reference_frame_tag = xml.getroot().find('./solution/image/original_camera_model/reference_frame')
+    if reference_frame_tag is None:
+        raise ValueError('Failed to find <reference_frame> in navigation XML')
+    reference_frame = reference_frame_tag.get('name')
+    if reference_frame is None:
+        raise ValueError('Failed to find name attribute on <reference_frame> in navigation XML')
 
     root = ET.Element('vector', version='1.0', format='camera', reference_frame=reference_frame)
     solutions = xml.getroot().findall('solution')
@@ -317,11 +260,6 @@ def parse_navigation(xml: ET.ElementTree, reference_frame: str, images_dir: path
         if image is None:
             raise ValueError('Failed to find matching image to image_id parameter in navigation XML')
 
-        vicar_file = next((i for i in vicar_files if image_id[6:] in str(i)), None)
-        if vicar_file is None:
-            raise ValueError('Failed to find matching image to image_id parameter in navigation XML')
-        vicar_header = vicar_map[vicar_file.name]
-
         initial_model = solution.find('./image/original_camera_model')
         if initial_model is None:
             raise ValueError('Failed to find <original_camera_model> in navigation XML')
@@ -330,29 +268,9 @@ def parse_navigation(xml: ET.ElementTree, reference_frame: str, images_dir: path
         if final_model is None:
             raise ValueError('Failed to find <camera_model> in navigation XML')
 
-        initial_reference_frame = initial_model.find('./reference_frame')
-        if initial_reference_frame is None:
-            raise ValueError('Failed to find <reference_frame> in navigation XML')
-
-        final_reference_frame = final_model.find('./reference_frame')
-        if final_reference_frame is None:
-            raise ValueError('Failed to find <reference_frame> in navigation XML')
-
-        initial_cs = initial_reference_frame.get('name')
-        if initial_cs is None:
-            raise ValueError('Failed to find name parameter in <reference_frame> in navigation XML')
-
-        final_cs = final_reference_frame.get('name')
-        if final_cs is None:
-            raise ValueError('Failed to find name parameter in <reference_frame> in navigation XML')
-
         camera_tag = ET.SubElement(root, 'camera', id=image_id, image=image.name, model="CAHVORE")
-        initial_tag = ET.SubElement(camera_tag, 'initial', reference_frame=initial_cs)
-        final_tag = ET.SubElement(camera_tag, 'final', reference_frame=final_cs)
-
-        properties = vicar_header['property']
-        parse_coordinate_system(initial_tag, reference_frame, properties, initial_cs)
-        parse_coordinate_system(final_tag, reference_frame, properties, final_cs)
+        initial_tag = ET.SubElement(camera_tag, 'initial')
+        final_tag = ET.SubElement(camera_tag, 'final')
 
         parameters = ['C', 'A', 'H', 'V', 'O', 'R', 'E']
         for param in parameters:
@@ -400,10 +318,9 @@ def main(args: argparse.Namespace) -> None:
     navigation_xml = ET.parse(args.navigation[0])
 
     images_dir = args.images[0]
-    vicar_dir = args.vicar[0]
 
-    reference_frame = parse_tiepoints(tiepoints_xml)
-    parse_navigation(navigation_xml, reference_frame, images_dir, vicar_dir)
+    parse_tiepoints(tiepoints_xml)
+    parse_navigation(navigation_xml, images_dir)
 
 
 if __name__ == '__main__':
@@ -428,14 +345,6 @@ if __name__ == '__main__':
     parser.add_argument(
         '-i',
         '--images',
-        type=pathlib.Path,
-        required=True,
-        nargs=1
-    )
-
-    parser.add_argument(
-        '-v',
-        '--vicar',
         type=pathlib.Path,
         required=True,
         nargs=1
