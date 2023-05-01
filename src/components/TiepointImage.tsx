@@ -12,7 +12,7 @@ import * as styles from '@/components/TiepointImage.css';
 export default function TiepointImage() {
     const { cameraId } = useParams();
 
-    const { cameraImageMap, cameraTrackMap } = useData();
+    const { cameraImageMap, cameraPointMap } = useData();
     const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
 
     if (!cameraId || !(cameraId in cameraImageMap)) {
@@ -61,46 +61,44 @@ export default function TiepointImage() {
         ctx.drawImage(image, 0, 0);
 
         // Draw Residuals
-        const tracks = cameraTrackMap[cameraId];
-        for (const track of tracks) {
-            for (const point of track.points) {
-                if (point.cameraId === cameraId) {
-                    let isResidualDrawn = false;
+        const points = cameraPointMap[cameraId];
+        for (const point of points) {
+            if (point.cameraId === cameraId) {
+                let isResidualDrawn = false;
 
-                    // Draw initial residual.
-                    if (guardInitialPoint(point)) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = theme.color.initialHex;
-                        ctx.lineWidth = 2;
-                        ctx.moveTo(point.pixel[0], point.pixel[1]);
-                        ctx.lineTo(
-                            point.pixel[0] + point.initialResidual[0] * filterState.residualScale,
-                            point.pixel[1] + point.initialResidual[1] * filterState.residualScale,
-                        );
-                        ctx.stroke();
-                        isResidualDrawn = true;
-                    }
+                // Draw initial residual.
+                if (guardInitialPoint(point)) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = theme.color.initialHex;
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(point.pixel[0], point.pixel[1]);
+                    ctx.lineTo(
+                        point.pixel[0] + point.initialResidual[0] * filterState.residualScale,
+                        point.pixel[1] + point.initialResidual[1] * filterState.residualScale,
+                    );
+                    ctx.stroke();
+                    isResidualDrawn = true;
+                }
 
-                    // Draw final residual.
-                    if (guardFinalPoint(point)) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = theme.color.finalHex;
-                        ctx.lineWidth = 2;
-                        ctx.moveTo(point.pixel[0], point.pixel[1]);
-                        ctx.lineTo(
-                            point.pixel[0] + point.finalResidual[0] * filterState.residualScale,
-                            point.pixel[1] + point.finalResidual[1] * filterState.residualScale,
-                        );
-                        ctx.stroke();
-                        isResidualDrawn = true;
-                    }
+                // Draw final residual.
+                if (guardFinalPoint(point)) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = theme.color.finalHex;
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(point.pixel[0], point.pixel[1]);
+                    ctx.lineTo(
+                        point.pixel[0] + point.finalResidual[0] * filterState.residualScale,
+                        point.pixel[1] + point.finalResidual[1] * filterState.residualScale,
+                    );
+                    ctx.stroke();
+                    isResidualDrawn = true;
+                }
 
-                    // Draw pixel as circle.
-                    if (isResidualDrawn) {
-                        ctx.beginPath();
-                        ctx.arc(point.pixel[0], point.pixel[1], 2, 0, Math.PI * 2, true);
-                        ctx.fill();
-                    }
+                // Draw pixel as circle.
+                if (isResidualDrawn) {
+                    ctx.beginPath();
+                    ctx.arc(point.pixel[0], point.pixel[1], 2, 0, Math.PI * 2, true);
+                    ctx.fill();
                 }
             }
         }
