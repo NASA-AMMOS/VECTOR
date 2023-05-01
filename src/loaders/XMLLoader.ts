@@ -5,6 +5,8 @@ import { FormatType } from '@/formats/Format';
 export default class XMLLoader extends Loader {
     private static parser = new DOMParser();
 
+    static EXTENSIONS = ['xml', 'tie', 'tpt', 'nav'];
+
     static async load(file: File): Promise<Document> {
         const contents = await file.text();
         return this.parser.parseFromString(contents, 'application/xml');

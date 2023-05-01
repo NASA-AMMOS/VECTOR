@@ -3,6 +3,8 @@ import Loader from '@/loaders/Loader';
 import { ImageFile } from '@/stores/DataContext';
 
 export default class ImageLoader extends Loader {
+    static EXTENSIONS = ['png', 'jpeg', 'jpg'];
+
     static async load(file: File): Promise<ImageFile> {
         return new Promise((resolve) => {
             const url = URL.createObjectURL(file);

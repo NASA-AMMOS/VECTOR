@@ -28,54 +28,52 @@ export default function Landing() {
     const validateFiles = async (files: File[]) => {
         await Promise.all(
             files.map(async (file) => {
-                switch (file.type) {
-                    case 'text/xml':
-                        const xml = await XMLLoader.load(file);
+                const extension = file.name.split('.').pop();
+                if (!extension) {
+                    throw new Error(`Unable to parse file extension: ${file.name}`);
+                }
 
-                        const format = XMLLoader.inferFormat(xml);
-                        const type = XMLLoader.inferType(xml, format);
+                if (XMLLoader.EXTENSIONS.includes(extension)) {
+                    const xml = await XMLLoader.load(file);
 
-                        let fileFormat;
-                        switch (format) {
-                            case FormatType.JPL:
-                                fileFormat = JPLFormat;
-                                break;
+                    const format = XMLLoader.inferFormat(xml);
+                    const type = XMLLoader.inferType(xml, format);
 
-                            case FormatType.VECTOR:
-                                fileFormat = VECTORFormat;
-                                break;
+                    let fileFormat;
+                    switch (format) {
+                        case FormatType.JPL:
+                            fileFormat = JPLFormat;
+                            break;
 
-                            default:
-                                throw new Error(`Unsupported XML Format: ${format}`);
-                        }
+                        case FormatType.VECTOR:
+                            fileFormat = VECTORFormat;
+                            break;
 
-                        switch (type) {
-                            case LoaderType.TRACKS:
-                                const tracks = await fileFormat.processTracks(xml);
-                                setTracks(tracks);
-                                setTrackFile({ file, format });
-                                break;
+                        default:
+                            throw new Error(`Unsupported XML Format: ${format}`);
+                    }
 
-                            case LoaderType.CAMERAS:
-                                const cameras = await fileFormat.processCameras(xml);
-                                setCameras(cameras);
-                                setCameraFile({ file, format });
-                                break;
+                    switch (type) {
+                        case LoaderType.TRACKS:
+                            const tracks = await fileFormat.processTracks(xml);
+                            setTracks(tracks);
+                            setTrackFile({ file, format });
+                            break;
 
-                            default:
-                                throw new Error(`Unsupported Loader Type: ${type}`);
-                        }
+                        case LoaderType.CAMERAS:
+                            const cameras = await fileFormat.processCameras(xml);
+                            setCameras(cameras);
+                            setCameraFile({ file, format });
+                            break;
 
-                        break;
-
-                    case 'image/png':
-                    case 'image/jpeg':
-                        const image = await ImageLoader.load(file);
-                        setImages((prevState) => ({ ...prevState, [file.name]: image }));
-                        break;
-
-                    default:
-                        throw new Error(`Unsupported File Type: ${file.type}`);
+                        default:
+                            throw new Error(`Unsupported Loader Type: ${type}`);
+                    }
+                } else if (ImageLoader.EXTENSIONS.includes(extension)) {
+                    const image = await ImageLoader.load(file);
+                    setImages((prevState) => ({ ...prevState, [file.name]: image }));
+                } else {
+                    throw new Error(`Unsupported File Extension: ${extension}`);
                 }
             }),
         );

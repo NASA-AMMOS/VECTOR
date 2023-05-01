@@ -6,6 +6,8 @@ export enum LoaderType {
 }
 
 export default class Loader {
+    static EXTENSIONS: string[] = [];
+
     static async load(_: File): Promise<unknown> {
         throw new Error('Method load() is not implemented');
     }
