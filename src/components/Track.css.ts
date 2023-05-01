@@ -12,20 +12,17 @@ export const container = style({
     backgroundColor: vars.color.background,
     borderRadius: vars.border.radius,
     overflow: 'hidden',
-});
 
-export const spacer = style({
-    marginBottom: '1rem',
-    paddingBottom: '1rem',
-});
-
-export const expand = style({
-    minWidth: '100%',
+    selectors: {
+        '&:not(:last-child)': {
+            marginBottom: '1rem',
+        },
+    },
 });
 
 export const subheader = style({
     flexShrink: 0,
-    width: '4rem',
+    width: '6rem',
     textTransform: 'uppercase',
 });
 

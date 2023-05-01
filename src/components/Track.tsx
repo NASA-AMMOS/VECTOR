@@ -91,7 +91,7 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
     };
 
     const stage = useCallback(
-        (canvas: HTMLCanvasElement) => {
+        async (canvas: HTMLCanvasElement) => {
             if (canvas) {
                 const ctx = canvas.getContext('2d');
                 if (!ctx) throw new Error();
@@ -119,7 +119,15 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
                     const image = new Image();
                     image.src = cameraImageMap[point.cameraId].url;
 
-                    ctx.filter = 'contrast(2)';
+                    // Need to await image load before drawing to the canvas.
+                    // Otherwise nothing will get drawn. This should be relatively
+                    // quick because the ImageLoader preloads all the images and
+                    // browsers cache request URLs.
+                    await new Promise((resolve: (value: void) => void) => {
+                        image.onload = () => {
+                            resolve();
+                        };
+                    });
 
                     // Crop image correctly to tiepoint location.
                     ctx.drawImage(
@@ -150,21 +158,12 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
     );
 
     return (
-        <div
-            key={trackId}
-            className={cn(styles.container, {
-                [styles.spacer]: isGrouped,
-                [styles.expand]: !isGrouped,
-            })}
-            onClick={handleClick}
-        >
-            {isGrouped && trackId && (
-                <>
-                    <h3 className={cn(H3, styles.subheader)}>{trackId}</h3>
-                    <div className={styles.slope}>
-                        <SlopeChart data={points} />
-                    </div>
-                </>
+        <div key={trackId} className={styles.container} onClick={handleClick}>
+            {isGrouped && <h3 className={cn(H3, styles.subheader)}>{trackId}</h3>}
+            {isGrouped && (
+                <div className={styles.slope}>
+                    <SlopeChart data={points} />
+                </div>
             )}
             <canvas ref={stage} className={styles.tiepoints} />;
         </div>

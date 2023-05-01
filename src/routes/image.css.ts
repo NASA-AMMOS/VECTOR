@@ -35,7 +35,16 @@ export const item = style({
     },
 });
 
+export const tracks = style({
+    gridColumn: '4 / -1',
+    overflow: 'auto',
+    padding: '1rem',
+    backgroundColor: vars.color.white,
+    borderRadius: vars.border.radius,
+});
+
 export const header = style({
     width: '100%',
+    paddingBottom: '1rem',
     textAlign: 'center',
 });
