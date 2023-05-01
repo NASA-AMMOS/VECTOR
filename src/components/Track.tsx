@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
@@ -16,8 +16,7 @@ interface TrackProps {
     isGrouped?: boolean;
 }
 
-const height = 400;
-const padding = 40;
+const size = 256;
 const offset = 15;
 
 export default function Track({ trackId, isGrouped = false }: TrackProps) {
@@ -32,6 +31,8 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
     }
 
     const [points, setPoints] = useState<SlopeChartPoint[]>([]);
+
+    const offscreenCanvas = useMemo(() => new OffscreenCanvas(size, size), []);
 
     const handleClick = () => {
         navigate(`/tracks/${trackId}`);
@@ -48,9 +49,49 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         );
     }, [track, filterState]);
 
-    const createPoint = (ctx: CanvasRenderingContext2D, point: Point, position: [number, number], count: number) => {
-        if (position[0] < count * height + count * padding || position[0] > count * height + count * padding + height)
-            return;
+    // Since we are using the OffscreenCanvas API... it might be worthwhile
+    // to multithread the drawing using Web Workers because there are a large
+    // number of points.
+    const draw = async (element: HTMLCanvasElement, point: Point) => {
+        const ctx = offscreenCanvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Failed to create Offscreen Canvas 2D context');
+        }
+
+        // Clear canvas.
+        ctx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+        ctx.save();
+
+        const image = new Image();
+        image.src = cameraImageMap[point.cameraId].url;
+
+        // Need to await image load before drawing to the canvas.
+        // Otherwise nothing will get drawn. This should be relatively
+        // quick because the ImageLoader preloads all the images and
+        // browsers cache request URLs.
+        await new Promise((resolve: (value: void) => void) => {
+            image.onload = () => {
+                resolve();
+            };
+        });
+
+        ctx.drawImage(
+            image,
+            // Top-Left Corner
+            point.pixel[0] - offset,
+            point.pixel[1] - offset,
+            // Crop Area
+            offset * 2,
+            offset * 2,
+            // Canvas Location
+            0,
+            0,
+            // Width & Height
+            size,
+            size,
+        );
+
+        const center = size / 2;
 
         let isResidualDrawn = false;
 
@@ -61,10 +102,10 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
             ctx.strokeStyle = theme.color.initialHex;
             ctx.lineWidth = 10;
 
-            ctx.moveTo(position[0], position[1]);
+            ctx.moveTo(center, center);
             ctx.lineTo(
-                position[0] + point.initialResidual[0] * filterState.residualScale,
-                position[1] + point.initialResidual[1] * filterState.residualScale,
+                center + point.initialResidual[0] * filterState.residualScale,
+                center + point.initialResidual[1] * filterState.residualScale,
             );
 
             ctx.stroke();
@@ -78,10 +119,10 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
             ctx.strokeStyle = theme.color.finalHex;
             ctx.lineWidth = 10;
 
-            ctx.moveTo(position[0], position[1]);
+            ctx.moveTo(center, center);
             ctx.lineTo(
-                position[0] + point.finalResidual[0] * filterState.residualScale,
-                position[1] + point.finalResidual[1] * filterState.residualScale,
+                center + point.finalResidual[0] * filterState.residualScale,
+                center + point.finalResidual[1] * filterState.residualScale,
             );
 
             ctx.stroke();
@@ -91,77 +132,16 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         // Draw pixel as circle.
         if (isResidualDrawn) {
             ctx.beginPath();
-            ctx.arc(position[0], position[1], 8, 0, Math.PI * 2, true);
+            ctx.arc(center, center, 8, 0, Math.PI * 2, true);
             ctx.fill();
         }
+
+        const canvasCTX = element.getContext('2d');
+        if (!canvasCTX) {
+            throw new Error('Failed to create Canvas 2D context');
+        }
+        canvasCTX.drawImage(offscreenCanvas, 0, 0);
     };
-
-    const stage = useCallback(
-        async (canvas: HTMLCanvasElement) => {
-            if (canvas) {
-                const ctx = canvas.getContext('2d');
-                if (!ctx) throw new Error('Failed to create 2D canvas context');
-
-                // Clear canvas.
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.save();
-
-                const points = track.points;
-
-                // Calculate total height from scalable value.
-                // Calculate total width from N tiepoints with padding.
-                const width = height * points.length + (points.length - 1) * padding;
-                canvas.height = height;
-                canvas.width = width;
-
-                // Update CSS width based on canvas proportion.
-                const heightRatio = canvas.offsetHeight / height;
-                canvas.style.width = `${canvas.width * heightRatio}px`;
-
-                // Go through each tiepoint and draw both images related to each tiepoint.
-                let count = 0;
-
-                for (const point of points) {
-                    const image = new Image();
-                    image.src = cameraImageMap[point.cameraId].url;
-
-                    // Need to await image load before drawing to the canvas.
-                    // Otherwise nothing will get drawn. This should be relatively
-                    // quick because the ImageLoader preloads all the images and
-                    // browsers cache request URLs.
-                    await new Promise((resolve: (value: void) => void) => {
-                        image.onload = () => {
-                            resolve();
-                        };
-                    });
-
-                    // Crop image correctly to tiepoint location.
-                    ctx.drawImage(
-                        image,
-                        // Top-Left Corner
-                        point.pixel[0] - offset,
-                        point.pixel[1] - offset,
-                        // Crop Area
-                        offset * 2,
-                        offset * 2,
-                        // Canvas Location
-                        count * height + count * padding,
-                        0,
-                        // Width & Height
-                        height,
-                        height,
-                    );
-
-                    // Draw main tiepoint.
-                    const imageCenter: [number, number] = [count * height + count * padding + height / 2, height / 2];
-                    createPoint(ctx, point, imageCenter, count);
-
-                    count++;
-                }
-            }
-        },
-        [track, filterState],
-    );
 
     return (
         <div key={trackId} className={styles.container} onClick={handleClick}>
@@ -171,7 +151,14 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
                     <SlopeChart data={points} />
                 </div>
             )}
-            <canvas ref={stage} className={styles.tiepoints} />;
+            {track.points.map((point) => (
+                <canvas
+                    ref={(element) => (element ? draw(element, point) : null)}
+                    className={styles.canvas}
+                    width={size}
+                    height={size}
+                />
+            ))}
         </div>
     );
 }

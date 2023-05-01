@@ -8,7 +8,6 @@ export const container = style({
     height: '10rem',
     width: 'fit-content',
     cursor: 'pointer',
-    padding: '1rem',
     backgroundColor: vars.color.background,
     borderRadius: vars.border.radius,
     overflow: 'hidden',
@@ -22,7 +21,13 @@ export const container = style({
 
 export const subheader = style({
     flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
     width: '6rem',
+    padding: '1rem',
+    borderRight: vars.border.white,
     textTransform: 'uppercase',
 });
 
@@ -30,11 +35,19 @@ export const slope = style({
     flexShrink: 0,
     height: '10rem',
     width: '10rem',
-    marginRight: '1rem',
+    padding: '1rem',
+    borderRight: vars.border.white,
 });
 
-export const tiepoints = style({
+export const canvas = style({
     display: 'flex',
     alignItems: 'center',
     height: '100%',
+    padding: '1rem',
+
+    selectors: {
+        '&:not(:first-of-type)': {
+            paddingLeft: 0,
+        },
+    },
 });

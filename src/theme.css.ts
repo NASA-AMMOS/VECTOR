@@ -21,6 +21,7 @@ export const theme = {
     },
     border: {
         standard: `0.2rem solid ${background}`,
+        white: `0.2rem solid #FFFFFF`,
         radius: '0.4rem',
         inputRadius: '0.2rem',
     },
