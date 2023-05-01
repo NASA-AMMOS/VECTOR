@@ -144,6 +144,12 @@ export default function SideBar() {
                             <option value={ResidualPrecision.THOUSANDTHS}>0.001</option>
                         </Select>
                     </div>
+                    {(cameraId || trackId) && (
+                        <div className={styles.item}>
+                            <h3 className={label}>Scale</h3>
+                            <NumberInput name={Filter.RESIDUAL_SCALE} value={filterState.residualScale} />
+                        </div>
+                    )}
                     {location.pathname.includes('images') && (
                         <div className={styles.item}>
                             <h3 className={label}>Sort</h3>

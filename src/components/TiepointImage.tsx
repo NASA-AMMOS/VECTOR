@@ -13,7 +13,7 @@ export default function TiepointImage() {
     const { cameraId } = useParams();
 
     const { cameraImageMap, cameraTrackMap } = useData();
-    const { guardInitialPoint, guardFinalPoint } = useFilters();
+    const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
 
     if (!cameraId || !(cameraId in cameraImageMap)) {
         return null;
@@ -74,8 +74,8 @@ export default function TiepointImage() {
                         ctx.lineWidth = 2;
                         ctx.moveTo(point.pixel[0], point.pixel[1]);
                         ctx.lineTo(
-                            point.pixel[0] + point.initialResidual[0],
-                            point.pixel[1] + point.initialResidual[1],
+                            point.pixel[0] + point.initialResidual[0] * filterState.residualScale,
+                            point.pixel[1] + point.initialResidual[1] * filterState.residualScale,
                         );
                         ctx.stroke();
                         isResidualDrawn = true;
@@ -87,7 +87,10 @@ export default function TiepointImage() {
                         ctx.strokeStyle = theme.color.finalHex;
                         ctx.lineWidth = 2;
                         ctx.moveTo(point.pixel[0], point.pixel[1]);
-                        ctx.lineTo(point.pixel[0] + point.finalResidual[0], point.pixel[1] + point.finalResidual[1]);
+                        ctx.lineTo(
+                            point.pixel[0] + point.finalResidual[0] * filterState.residualScale,
+                            point.pixel[1] + point.finalResidual[1] * filterState.residualScale,
+                        );
                         ctx.stroke();
                         isResidualDrawn = true;
                     }
@@ -154,6 +157,10 @@ export default function TiepointImage() {
             }
         };
     }, []);
+
+    useEffect(() => {
+        draw();
+    }, [filterState]);
 
     return (
         <section className={styles.container}>

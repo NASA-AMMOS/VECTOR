@@ -22,6 +22,8 @@ export enum Filter {
 
     RESIDUAL_PRECISION = 'RESIDUAL_PRECISION',
 
+    RESIDUAL_SCALE = 'RESIDUAL_SCALE',
+
     VIEW_CAMERAS = 'VIEW_CAMERAS',
     VIEW_POINTS = 'VIEW_POINTS',
 
@@ -74,6 +76,8 @@ interface FilterState {
 
     residualPrecision: ResidualPrecision;
 
+    residualScale: number;
+
     viewCameras: boolean;
     viewPoints: boolean;
 
@@ -110,6 +114,8 @@ const initialState: FilterState = {
     residualSortDirection: ResidualSortDirection.DECREASING,
 
     residualPrecision: ResidualPrecision.TENTHS,
+
+    residualScale: 1,
 
     viewCameras: true,
     viewPoints: true,
@@ -163,6 +169,11 @@ function reducer(state: FilterState, action: FilterAction): FilterState {
         case Filter.RESIDUAL_PRECISION:
             if (typeof action.data === 'string') {
                 return { ...state, residualPrecision: Number(action.data) as ResidualPrecision };
+            }
+
+        case Filter.RESIDUAL_SCALE:
+            if (typeof action.data === 'number') {
+                return { ...state, residualScale: action.data };
             }
 
         case Filter.VIEW_CAMERAS:

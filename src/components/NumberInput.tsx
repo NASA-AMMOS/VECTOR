@@ -8,7 +8,7 @@ import * as styles from '@/components/NumberInput.css';
 interface NumberInputProps {
     name: string;
     value: number;
-    children: React.ReactNode;
+    children?: React.ReactNode;
 }
 
 export default function NumberInput({ name, value, children }: NumberInputProps) {
@@ -28,9 +28,11 @@ export default function NumberInput({ name, value, children }: NumberInputProps)
                 value={value}
                 onChange={onChange}
             />
-            <label htmlFor={name} className={Body}>
-                {children}
-            </label>
+            {children && (
+                <label htmlFor={name} className={Body}>
+                    {children}
+                </label>
+            )}
         </div>
     );
 }

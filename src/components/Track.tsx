@@ -61,8 +61,11 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
             ctx.strokeStyle = theme.color.initialHex;
             ctx.lineWidth = 10;
 
-            ctx.moveTo(...position);
-            ctx.lineTo(position[0] + point.initialResidual[0] * 5, position[1] + point.initialResidual[1] * 5);
+            ctx.moveTo(position[0], position[1]);
+            ctx.lineTo(
+                position[0] + point.initialResidual[0] * filterState.residualScale,
+                position[1] + point.initialResidual[1] * filterState.residualScale,
+            );
 
             ctx.stroke();
             isResidualDrawn = true;
@@ -75,8 +78,11 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
             ctx.strokeStyle = theme.color.finalHex;
             ctx.lineWidth = 10;
 
-            ctx.moveTo(...position);
-            ctx.lineTo(position[0] + point.finalResidual[0] * 5, position[1] + point.finalResidual[1] * 5);
+            ctx.moveTo(position[0], position[1]);
+            ctx.lineTo(
+                position[0] + point.finalResidual[0] * filterState.residualScale,
+                position[1] + point.finalResidual[1] * filterState.residualScale,
+            );
 
             ctx.stroke();
             isResidualDrawn = true;
@@ -94,7 +100,7 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         async (canvas: HTMLCanvasElement) => {
             if (canvas) {
                 const ctx = canvas.getContext('2d');
-                if (!ctx) throw new Error();
+                if (!ctx) throw new Error('Failed to create 2D canvas context');
 
                 // Clear canvas.
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
