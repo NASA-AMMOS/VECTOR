@@ -2,7 +2,9 @@ import { Vector3 } from 'three';
 
 import Format from '@/formats/Format';
 
-import { Camera, Point, Track } from '@/stores/DataContext';
+import XMLLoader from '@/loaders/XMLLoader';
+
+import { Camera, EditStatus, FileMetadata, Point, Track } from '@/stores/DataContext';
 
 import CAHVOREModel from '@/cameras/CAHVOREModel';
 
@@ -31,6 +33,7 @@ export default class VECTORFormat extends Format {
                     Number(final.getAttribute('z')!),
                 ],
                 points,
+                status: EditStatus.ORIGINAL,
             };
 
             tracks.push(track);
@@ -68,6 +71,25 @@ export default class VECTORFormat extends Format {
         }
 
         return cameras;
+    }
+
+    static async exportTracks(metadata: FileMetadata, tracks: Track[]) {
+        const deletedTrackIds = tracks.filter((track) => track.status === EditStatus.DELETED).map((track) => track.id);
+
+        const xml = await XMLLoader.load(metadata.file);
+        for (const id of deletedTrackIds) {
+            const track = xml.querySelector(`track[id="${id}"]`);
+            if (track) {
+                track.remove();
+            }
+        }
+
+        await XMLLoader.write(xml);
+    }
+
+    static async exportCameras(metadata: FileMetadata, _: Camera[]) {
+        const xml = await XMLLoader.load(metadata.file);
+        await XMLLoader.write(xml);
     }
 
     private static processPoints(elements: NodeListOf<Element>): Point[] {

@@ -2,7 +2,9 @@ import { Vector3 } from 'three';
 
 import Format from '@/formats/Format';
 
-import { Camera, CameraImageMap, Point, Track } from '@/stores/DataContext';
+import XMLLoader from '@/loaders/XMLLoader';
+
+import { Camera, CameraImageMap, EditStatus, FileMetadata, Point, Track } from '@/stores/DataContext';
 
 import CAHVOREModel from '@/cameras/CAHVOREModel';
 
@@ -198,6 +200,7 @@ export default class VISORFormat extends Format {
                         Number(finalXYZ!.getAttribute('z')),
                     ],
                     points: [pointLeft, pointRight],
+                    status: EditStatus.ORIGINAL,
                 };
             }
         }
@@ -224,6 +227,27 @@ export default class VISORFormat extends Format {
         }
 
         return cameras;
+    }
+
+    static async exportTracks(metadata: FileMetadata, tracks: Track[]) {
+        const deletedTrackIds = tracks.filter((track) => track.status === EditStatus.DELETED).map((track) => track.id);
+
+        const xml = await XMLLoader.load(metadata.file);
+        for (const id of deletedTrackIds) {
+            const tracks = xml.querySelectorAll(`track[id="${id}"]`);
+            for (const track of tracks) {
+                if (track && track.parentElement) {
+                    track.parentElement.remove();
+                }
+            }
+        }
+
+        await XMLLoader.write(xml);
+    }
+
+    static async exportCameras(metadata: FileMetadata, _: Camera[]) {
+        const xml = await XMLLoader.load(metadata.file);
+        await XMLLoader.write(xml);
     }
 
     static mapImages(cameras: Camera[], images: CameraImageMap): Camera[] {

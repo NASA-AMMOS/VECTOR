@@ -12,6 +12,10 @@ export default class Loader {
         throw new Error('Method load() is not implemented');
     }
 
+    static async write(_: unknown) {
+        throw new Error('Method write() is not implemented');
+    }
+
     static inferFormat(_: unknown): FormatType {
         throw new Error('Method inferFormat() is not implemented');
     }

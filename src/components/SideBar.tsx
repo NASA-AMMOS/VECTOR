@@ -30,7 +30,7 @@ export default function SideBar() {
     const location = useLocation();
     const { cameraId, trackId } = useParams();
 
-    const { tracks, cameras } = useData();
+    const { tracks, cameras, exportTracks, exportCameras } = useData();
     const { filterState } = useFilters();
 
     return (
@@ -189,6 +189,12 @@ export default function SideBar() {
                         <p className={body}>{cameras.length} Images</p>
                         <p className={body}>{tracks.length} Tracks</p>
                     </div>
+                    <button className={cn(Body, styles.button)} onClick={exportTracks}>
+                        Export Tracks
+                    </button>
+                    <button className={cn(Body, styles.button)} onClick={exportCameras}>
+                        Export Cameras
+                    </button>
                 </div>
             </nav>
         </>

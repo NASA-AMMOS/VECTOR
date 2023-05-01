@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
-import { Point, ResidualType, useData } from '@/stores/DataContext';
+import { EditStatus, Point, ResidualType, useData } from '@/stores/DataContext';
 import { useFilters } from '@/stores/FiltersContext';
 
 import SlopeChart, { SlopeChartPoint } from '@/charts/slope';
@@ -22,7 +22,7 @@ const offset = 15;
 export default function Track({ trackId, isGrouped = false }: TrackProps) {
     const navigate = useNavigate();
 
-    const { tracks, cameraImageMap } = useData();
+    const { tracks, setTracks, cameraImageMap } = useData();
     const { filterState, guardInitialPoint, guardFinalPoint } = useFilters();
 
     const track = useMemo(() => tracks.find((t) => t.id === trackId) ?? null, [trackId, tracks]);
@@ -38,16 +38,20 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         navigate(`/tracks/${trackId}`);
     };
 
-    useEffect(() => {
-        setPoints(
-            track.points
-                .map((point) => [
-                    { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
-                    { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
-                ])
-                .flat(),
-        );
-    }, [track, filterState]);
+    const handleDelete = (event: React.MouseEvent, id: string) => {
+        event.stopPropagation();
+
+        if (window.confirm(`Are you sure you want to delete Track ${id}?`)) {
+            const newTracks = [];
+            for (const track of tracks) {
+                if (track.id === id) {
+                    track.status = EditStatus.DELETED;
+                }
+                newTracks.push(track);
+            }
+            setTracks(newTracks);
+        }
+    };
 
     // Since we are using the OffscreenCanvas API... it might be worthwhile
     // to multithread the drawing using Web Workers because there are a large
@@ -143,8 +147,28 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
         canvasCTX.drawImage(offscreenCanvas, 0, 0);
     };
 
+    useEffect(() => {
+        setPoints(
+            track.points
+                .map((point) => [
+                    { type: ResidualType.INITIAL, index: point.id, value: point.initialResidualLength },
+                    { type: ResidualType.FINAL, index: point.id, value: point.finalResidualLength },
+                ])
+                .flat(),
+        );
+    }, [track, filterState]);
+
     return (
-        <div key={trackId} className={styles.container} onClick={handleClick}>
+        <div
+            key={trackId}
+            className={cn(styles.container, { [styles.edited]: track.status === EditStatus.DELETED })}
+            onClick={handleClick}
+        >
+            {track.status !== EditStatus.DELETED && (
+                <button className={cn(H3, styles.button)} onClick={(e) => handleDelete(e, trackId)}>
+                    Delete
+                </button>
+            )}
             {isGrouped && <h3 className={cn(H3, styles.subheader)}>{trackId}</h3>}
             {isGrouped && (
                 <div className={styles.slope}>
@@ -153,6 +177,7 @@ export default function Track({ trackId, isGrouped = false }: TrackProps) {
             )}
             {track.points.map((point) => (
                 <canvas
+                    key={point.id}
                     ref={(element) => (element ? draw(element, point) : null)}
                     className={styles.canvas}
                     width={size}

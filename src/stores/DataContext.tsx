@@ -1,13 +1,20 @@
-import { createContext, useContext, useState, useMemo } from 'react';
+import { createContext, useContext, useState, useMemo, useCallback } from 'react';
 
-import Format from '@/formats/Format';
+import { FormatType } from '@/formats/Format';
 
 import CameraModel from '@/cameras/CameraModel';
+import VECTORFormat from '@/formats/VECTORFormat';
+import VISORFormat from '@/formats/VISORFormat';
 
 export type CameraMap = Record<string, Camera>;
 export type CameraImageMap = Record<string, ImageFile>;
 export type CameraTrackMap = Record<string, Track[]>;
 export type CameraPointMap = Record<string, Point[]>;
+
+export enum EditStatus {
+    ORIGINAL,
+    DELETED,
+}
 
 export enum ResidualType {
     INITIAL = 'INITIAL',
@@ -16,7 +23,7 @@ export enum ResidualType {
 
 export interface FileMetadata {
     file: File;
-    format: Format;
+    format: FormatType;
 }
 
 export interface ImageFile {
@@ -43,6 +50,7 @@ export interface Track {
     initialXYZ: [number, number, number];
     finalXYZ: [number, number, number];
     points: Point[];
+    status: EditStatus;
 }
 
 export interface Camera {
@@ -79,6 +87,9 @@ interface DataStore {
 
     minResidualAngle: number;
     maxResidualAngle: number;
+
+    exportTracks: () => void;
+    exportCameras: () => void;
 }
 
 interface ProvideDataProps {
@@ -170,6 +181,32 @@ export default function ProvideData({ children }: ProvideDataProps) {
         ];
     }, [tracks]);
 
+    const exportTracks = useCallback(() => {
+        if (!trackFile || tracks.length < 1) return;
+
+        switch (trackFile.format) {
+            case FormatType.VECTOR:
+                VECTORFormat.exportTracks(trackFile, tracks);
+                break;
+            case FormatType.VISOR:
+                VISORFormat.exportTracks(trackFile, tracks);
+                break;
+        }
+    }, [trackFile, tracks]);
+
+    const exportCameras = useCallback(() => {
+        if (!cameraFile || cameras.length < 1) return;
+
+        switch (cameraFile.format) {
+            case FormatType.VECTOR:
+                VECTORFormat.exportCameras(cameraFile, cameras);
+                break;
+            case FormatType.VISOR:
+                VISORFormat.exportCameras(cameraFile, cameras);
+                break;
+        }
+    }, [cameraFile, cameras]);
+
     return (
         <DataContext.Provider
             value={{
@@ -199,6 +236,9 @@ export default function ProvideData({ children }: ProvideDataProps) {
 
                 minResidualAngle,
                 maxResidualAngle,
+
+                exportTracks,
+                exportCameras,
             }}
         >
             {children}

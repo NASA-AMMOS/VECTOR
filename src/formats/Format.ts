@@ -1,4 +1,4 @@
-import { Camera, CameraImageMap, Track } from '@/stores/DataContext';
+import { Camera, CameraImageMap, FileMetadata, Track } from '@/stores/DataContext';
 
 export enum FormatType {
     VISOR,
@@ -12,6 +12,15 @@ export default class Format {
 
     static async processCameras(_: unknown): Promise<Camera[]> {
         throw new Error('Method processCameras() is not implemented');
+    }
+
+    static async exportTracks(_: FileMetadata, _tracks: Track[]) {
+        throw new Error('Method exportTracks() is not implemented');
+    }
+
+    // The camera information is not modified in the current version of VECTOR.
+    static async exportCameras(_: FileMetadata, _cameras: Camera[]) {
+        throw new Error('Method exportCameras() is not implemented');
     }
 
     // A utility method for the VISOR format because the navigation XML

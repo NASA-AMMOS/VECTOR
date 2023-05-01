@@ -19,6 +19,18 @@ export const container = style({
     },
 });
 
+export const edited = style({
+    opacity: 0.5,
+});
+
+export const button = style({
+    height: '100%',
+    padding: '1rem',
+    borderRight: vars.border.white,
+    color: vars.color.final,
+    textTransform: 'uppercase',
+});
+
 export const subheader = style({
     flexShrink: 0,
     display: 'flex',

@@ -64,6 +64,24 @@ export const link = style({
     },
 });
 
+export const button = style({
+    display: 'block',
+    padding: '1rem',
+    backgroundColor: vars.color.background,
+    borderRadius: vars.border.radius,
+    transition: 'opacity 0.3s',
+
+    selectors: {
+        '&:not(:first-of-type)': {
+            marginTop: '1rem',
+        },
+
+        '&:hover': {
+            opacity: 0.8,
+        },
+    },
+});
+
 export const active = style({
     opacity: 1,
 });
