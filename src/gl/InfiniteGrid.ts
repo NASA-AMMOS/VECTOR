@@ -6,7 +6,7 @@ import fragmentShader from '@/shaders/grid/fragment.glsl?raw';
 // Based on the drei library with modifications to
 // handle arbitrary axis-aligned directions.
 // https://github.com/pmndrs/drei/blob/master/src/core/Grid.tsx
-export default class InfiniteGrid extends Mesh {
+export default class InfiniteGrid extends Mesh<PlaneGeometry, ShaderMaterial> {
     constructor({
         fadeDistance = 10000,
 
@@ -29,6 +29,8 @@ export default class InfiniteGrid extends Mesh {
 
                 uCellThickness: { value: cellThickness },
                 uSectionThickness: { value: sectionThickness },
+
+                uAxesType: { value: 0.0 },
             },
             side: DoubleSide,
             transparent: true,

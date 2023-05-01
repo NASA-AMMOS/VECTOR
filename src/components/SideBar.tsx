@@ -9,6 +9,7 @@ import {
     useFilters,
     AxesType,
     ResidualPrecision,
+    SceneGridAxes,
 } from '@/stores/FiltersContext';
 
 import Checkbox from '@/components/Checkbox';
@@ -86,6 +87,14 @@ export default function SideBar() {
                             <Checkbox name={Filter.VIEW_POINTS} checked={filterState.viewPoints}>
                                 Point
                             </Checkbox>
+                        </div>
+                        <div className={styles.item}>
+                            <h3 className={label}>Grid Axes</h3>
+                            <Select name={Filter.SCENE_GRID_AXES} value={filterState.sceneGridAxes}>
+                                <option value={SceneGridAxes.XZ}>XZ</option>
+                                <option value={SceneGridAxes.XY}>XY</option>
+                                <option value={SceneGridAxes.YZ}>YZ</option>
+                            </Select>
                         </div>
                     </div>
                 )}

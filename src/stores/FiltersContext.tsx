@@ -24,6 +24,8 @@ export enum Filter {
 
     VIEW_CAMERAS = 'VIEW_CAMERAS',
     VIEW_POINTS = 'VIEW_POINTS',
+
+    SCENE_GRID_AXES = 'SCENE_GRID_AXES',
 }
 
 export enum AxesType {
@@ -49,6 +51,12 @@ export enum ResidualPrecision {
     THOUSANDTHS = 1000,
 }
 
+export enum SceneGridAxes {
+    XZ = 'XZ',
+    XY = 'XY',
+    YZ = 'YZ',
+}
+
 interface FilterState {
     viewInitialResiduals: boolean;
     viewFinalResiduals: boolean;
@@ -68,6 +76,8 @@ interface FilterState {
 
     viewCameras: boolean;
     viewPoints: boolean;
+
+    sceneGridAxes: SceneGridAxes;
 }
 
 interface FilterAction {
@@ -103,6 +113,8 @@ const initialState: FilterState = {
 
     viewCameras: true,
     viewPoints: true,
+
+    sceneGridAxes: SceneGridAxes.XZ,
 };
 
 function reducer(state: FilterState, action: FilterAction): FilterState {
@@ -157,6 +169,11 @@ function reducer(state: FilterState, action: FilterAction): FilterState {
             return { ...state, viewCameras: !state.viewCameras };
         case Filter.VIEW_POINTS:
             return { ...state, viewPoints: !state.viewPoints };
+
+        case Filter.SCENE_GRID_AXES:
+            if (typeof action.data === 'string') {
+                return { ...state, sceneGridAxes: action.data as SceneGridAxes };
+            }
 
         default:
             return state;

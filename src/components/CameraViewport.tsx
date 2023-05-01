@@ -17,7 +17,7 @@ import {
 } from 'three';
 
 import { Camera, ImageFile, Point, ResidualType, Track, useData } from '@/stores/DataContext';
-import { useFilters } from '@/stores/FiltersContext';
+import { SceneGridAxes, useFilters } from '@/stores/FiltersContext';
 
 import VirtualCamera from '@/gl/VirtualCamera';
 import InfiniteGrid from '@/gl/InfiniteGrid';
@@ -138,6 +138,8 @@ export default function CameraViewport() {
             tempVec3.set(firstXYZ[0], firstXYZ[1], firstXYZ[2]);
             cameraRef.current.lookAt(tempVec3);
         }
+
+        infiniteGrid.current.position.set(xAverage, yAverage, zAverage);
 
         initialPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(initialVertices, 3));
         finalPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(finalVertices, 3));
@@ -265,6 +267,7 @@ export default function CameraViewport() {
         rAFRef.current = requestAnimationFrame(animate);
     }, []);
 
+    // This could probably be optimized into individual useEffect handlers.
     useEffect(() => {
         if (filterState.viewPoints && filterState.viewInitialResiduals && initialPoints.current) {
             initialPoints.current.visible = true;
@@ -288,6 +291,18 @@ export default function CameraViewport() {
             finalCameras.current.visible = true;
         } else if (finalCameras.current) {
             finalCameras.current.visible = false;
+        }
+
+        switch (filterState.sceneGridAxes) {
+            case SceneGridAxes.XZ:
+                infiniteGrid.current.material.uniforms.uAxesType.value = 0.0;
+                break;
+            case SceneGridAxes.XY:
+                infiniteGrid.current.material.uniforms.uAxesType.value = 1.0;
+                break;
+            case SceneGridAxes.YZ:
+                infiniteGrid.current.material.uniforms.uAxesType.value = 2.0;
+                break;
         }
     }, [filterState]);
 
