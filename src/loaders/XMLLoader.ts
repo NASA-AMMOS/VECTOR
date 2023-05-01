@@ -17,12 +17,12 @@ export default class XMLLoader extends Loader {
         if (tag) {
             return FormatType.VECTOR;
         }
-        return FormatType.JPL;
+        return FormatType.VISOR;
     }
 
     static inferType(xml: Document, format: FormatType): LoaderType {
         switch (format) {
-            case FormatType.JPL:
+            case FormatType.VISOR:
                 if (xml.querySelector('tiepoint_file')) {
                     return LoaderType.TRACKS;
                 } else if (xml.querySelector('camera_model')) {

@@ -6,20 +6,20 @@ import { Camera, CameraImageMap, Point, Track } from '@/stores/DataContext';
 
 import CAHVOREModel from '@/cameras/CAHVOREModel';
 
-// The JPL format maintains an additional key parameter to
+// The VISOR format maintains an additional key parameter to
 // accumulate the points into the track format. Since this
 // is an extension of the standard Point interface we can
 // return it from the method as is, but the rest of VECTOR
 // will be unaware of the key parameter.
-interface JPLPoint extends Point {
+interface VISORPoint extends Point {
     key: number;
 }
 
-interface JPLTrack extends Omit<Track, 'points'> {
-    points: JPLPoint[];
+interface VISORTrack extends Omit<Track, 'points'> {
+    points: VISORPoint[];
 }
 
-export default class JPLFormat extends Format {
+export default class VISORFormat extends Format {
     static async processTracks(xml: Document): Promise<Track[]> {
         const tiepoints = xml.querySelectorAll('tie');
 
@@ -28,7 +28,7 @@ export default class JPLFormat extends Format {
         // than traversing the output array. This could probably
         // be further optimized by treating the points array as
         // a map so the key lookup is also efficient.
-        const newTracks: { [key: string]: JPLTrack } = {};
+        const newTracks: { [key: string]: VISORTrack } = {};
 
         let pointId = 0;
         for (const tiepoint of tiepoints.values()) {
@@ -53,7 +53,7 @@ export default class JPLFormat extends Format {
                     const finalResidualX = Number(finalResidual!.getAttribute('samp'));
                     const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
-                    const point: JPLPoint = {
+                    const point: VISORPoint = {
                         cameraId,
                         id: pointId.toString(),
                         key: leftKey,
@@ -90,7 +90,7 @@ export default class JPLFormat extends Format {
                     const finalResidualX = Number(finalResidual!.getAttribute('samp'));
                     const finalResidualY = Number(finalResidual!.getAttribute('line'));
 
-                    const point: JPLPoint = {
+                    const point: VISORPoint = {
                         cameraId,
                         id: pointId.toString(),
                         key: rightKey,
@@ -127,7 +127,7 @@ export default class JPLFormat extends Format {
                 const leftFinalResidualX = Number(leftFinalResidual!.getAttribute('samp'));
                 const leftFinalResidualY = Number(leftFinalResidual!.getAttribute('line'));
 
-                const pointLeft: JPLPoint = {
+                const pointLeft: VISORPoint = {
                     id: pointId.toString(),
                     cameraId: leftCameraId,
                     key: leftKey,
@@ -161,7 +161,7 @@ export default class JPLFormat extends Format {
                 const rightFinalResidualX = Number(rightFinalResidual!.getAttribute('samp'));
                 const rightFinalResidualY = Number(rightFinalResidual!.getAttribute('line'));
 
-                const pointRight: JPLPoint = {
+                const pointRight: VISORPoint = {
                     id: pointId.toString(),
                     cameraId: rightCameraId,
                     key: rightKey,

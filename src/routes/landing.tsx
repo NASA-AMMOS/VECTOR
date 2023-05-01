@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
 import { FormatType } from '@/formats/Format';
-import JPLFormat from '@/formats/JPLFormat';
+import VISORFormat from '@/formats/VISORFormat';
 import VECTORFormat from '@/formats/VECTORFormat';
 
 import { LoaderType } from '@/loaders/Loader';
@@ -41,8 +41,8 @@ export default function Landing() {
 
                     let fileFormat;
                     switch (format) {
-                        case FormatType.JPL:
-                            fileFormat = JPLFormat;
+                        case FormatType.VISOR:
+                            fileFormat = VISORFormat;
                             break;
 
                         case FormatType.VECTOR:
@@ -152,8 +152,8 @@ export default function Landing() {
 
         // Handle partial image names.
         switch (cameraFile.format) {
-            case FormatType.JPL:
-                const newCameras = JPLFormat.mapImages(cameras, images);
+            case FormatType.VISOR:
+                const newCameras = VISORFormat.mapImages(cameras, images);
                 setCameras(newCameras);
                 break;
         }

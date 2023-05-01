@@ -1,7 +1,7 @@
 import { Camera, CameraImageMap, Track } from '@/stores/DataContext';
 
 export enum FormatType {
-    JPL,
+    VISOR,
     VECTOR,
 }
 
@@ -14,7 +14,7 @@ export default class Format {
         throw new Error('Method processCameras() is not implemented');
     }
 
-    // A utility method for the JPL format because the navigation XML
+    // A utility method for the VISOR format because the navigation XML
     // stores unique IDs that are partial strings to the full image name.
     static mapImages(_: Camera[], _images: CameraImageMap): Camera[] {
         throw new Error('Method mapImages() is not implemented');
