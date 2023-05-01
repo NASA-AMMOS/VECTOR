@@ -23,7 +23,7 @@ export default function TiepointImage() {
         const newImage = new Image();
         newImage.src = cameraImageMap[cameraId].url;
         return newImage;
-    }, [cameraImageMap]);
+    }, [cameraId, cameraImageMap]);
 
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -32,7 +32,7 @@ export default function TiepointImage() {
     const dragOffsetRef = useRef<[number, number]>([0, 0]);
     const translationRef = useRef<[number, number]>([0, 0]);
 
-    const draw = () => {
+    const draw = async () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -153,14 +153,18 @@ export default function TiepointImage() {
         return () => {
             if (canvasRef.current) {
                 const canvas = canvasRef.current;
+
                 canvas.removeEventListener('wheel', handleWheel);
+
+                canvas.removeEventListener('mousedown', handleMouseDown);
+                canvas.removeEventListener('mousemove', handleMouseMove);
+
+                canvas.removeEventListener('mouseup', clearActiveDrag);
+                canvas.removeEventListener('mouseover', clearActiveDrag);
+                canvas.removeEventListener('mouseout', clearActiveDrag);
             }
         };
     }, []);
-
-    useEffect(() => {
-        draw();
-    }, [filterState]);
 
     return (
         <section className={styles.container}>
