@@ -5,10 +5,6 @@ import { ResidualType } from '@/stores/DataContext';
 export default class CameraModel {
     static ID = '';
 
-    static process(_: Element): CameraModel {
-        throw new Error('Method process() is not implemented');
-    }
-
     getCenter(): Vector3 {
         throw new Error('Method getCenter() is not implemented');
     }

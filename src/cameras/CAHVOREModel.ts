@@ -81,33 +81,6 @@ export default class CAHVOREModel extends CameraModel {
     // Utilities for vector math.
     private tempVec3 = new Vector3();
 
-    static process(element: Element): CAHVOREModel {
-        const p = [];
-
-        for (const letter of CAHVOREModel.PARAMETERS) {
-            const parameter = element.querySelector(`parameter[id="${letter}"]`)!;
-
-            const x = Number(parameter.getAttribute('x')!);
-            const y = Number(parameter.getAttribute('y')!);
-            const z = Number(parameter.getAttribute('z')!);
-
-            p.push(new Vector3(x, y, z));
-        }
-
-        // Handle linearity term.
-        const T = element.querySelector(`parameter[id="T"]`)!.getAttribute('v')!;
-        let linearity = 0;
-        if (T === '1') {
-            linearity = 1;
-        } else if (T === '2') {
-            linearity = 0;
-        } else if (T === '3') {
-            linearity = Number(element.querySelector(`parameter[id="P"]`)!.getAttribute('v')!);
-        }
-
-        return new CAHVOREModel(p[0], p[1], p[2], p[3], p[4], p[5], p[6], linearity);
-    }
-
     constructor(C: Vector3, A: Vector3, H: Vector3, V: Vector3, O: Vector3, R: Vector3, E: Vector3, linearity: number) {
         super();
 

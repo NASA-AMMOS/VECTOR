@@ -1,6 +1,6 @@
 import Loader, { LoaderType } from '@/loaders/Loader';
 
-import { FormatType } from '@/format/Format';
+import { FormatType } from '@/formats/Format';
 
 export default class XMLLoader extends Loader {
     private static parser = new DOMParser();

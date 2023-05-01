@@ -1,4 +1,4 @@
-import { Camera, Track } from '@/stores/DataContext';
+import { Camera, CameraImageMap, Track } from '@/stores/DataContext';
 
 export enum FormatType {
     JPL,
@@ -12,5 +12,11 @@ export default class Format {
 
     static async processCameras(_: unknown): Promise<Camera[]> {
         throw new Error('Method processCameras() is not implemented');
+    }
+
+    // A utility method for the JPL format because the navigation XML
+    // stores unique IDs that are partial strings to the full image name.
+    static mapImages(_: Camera[], _images: CameraImageMap): Camera[] {
+        throw new Error('Method mapImages() is not implemented');
     }
 }

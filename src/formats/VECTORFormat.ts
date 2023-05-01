@@ -1,4 +1,6 @@
-import Format from '@/format/Format';
+import { Vector3 } from 'three';
+
+import Format from '@/formats/Format';
 
 import { Camera, Point, Track } from '@/stores/DataContext';
 
@@ -54,8 +56,8 @@ export default class VECTORFormat extends Format {
                     const camera: Camera = {
                         id,
                         imageName,
-                        initial: CAHVOREModel.process(initialModel),
-                        final: CAHVOREModel.process(finalModel),
+                        initial: this.processCAHVORE(initialModel),
+                        final: this.processCAHVORE(finalModel),
                     };
 
                     cameras.push(camera);
@@ -98,8 +100,38 @@ export default class VECTORFormat extends Format {
                 finalResidualAngle: Math.atan2(finalResidualY, finalResidualX) * (180 / Math.PI),
             };
 
+            if (point.initialResidualAngle < 0) point.initialResidualAngle += 360.0;
+            if (point.finalResidualAngle < 0) point.finalResidualAngle += 360.0;
+
             points.push(point);
         }
         return points;
+    }
+
+    private static processCAHVORE(element: Element): CAHVOREModel {
+        const p = [];
+
+        for (const letter of CAHVOREModel.PARAMETERS) {
+            const parameter = element.querySelector(`parameter[id="${letter}"]`)!;
+
+            const x = Number(parameter.getAttribute('x')!);
+            const y = Number(parameter.getAttribute('y')!);
+            const z = Number(parameter.getAttribute('z')!);
+
+            p.push(new Vector3(x, y, z));
+        }
+
+        // Handle linearity term.
+        const T = element.querySelector(`parameter[id="T"]`)!.getAttribute('v')!;
+        let linearity = 0;
+        if (T === '1') {
+            linearity = 1;
+        } else if (T === '2') {
+            linearity = 0;
+        } else if (T === '3') {
+            linearity = Number(element.querySelector(`parameter[id="P"]`)!.getAttribute('v')!);
+        }
+
+        return new CAHVOREModel(p[0], p[1], p[2], p[3], p[4], p[5], p[6], linearity);
     }
 }

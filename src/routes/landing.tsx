@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import cn from 'classnames';
 
-import { FormatType } from '@/format/Format';
-import JPLFormat from '@/format/JPLFormat';
-import VECTORFormat from '@/format/VECTORFormat';
+import { FormatType } from '@/formats/Format';
+import JPLFormat from '@/formats/JPLFormat';
+import VECTORFormat from '@/formats/VECTORFormat';
 
 import { LoaderType } from '@/loaders/Loader';
 import XMLLoader from '@/loaders/XMLLoader';
@@ -20,7 +20,8 @@ import { Body, H2 } from '@/styles/headers.css';
 export default function Landing() {
     const navigate = useNavigate();
 
-    const { tracks, setTracks, cameras, setCameras, images, setImages } = useData();
+    const { tracks, setTracks, cameras, setCameras, images, setImages, setTrackFile, cameraFile, setCameraFile } =
+        useData();
 
     const [validImages, setValidImages] = useState(false);
 
@@ -52,11 +53,13 @@ export default function Landing() {
                             case LoaderType.TRACKS:
                                 const tracks = await fileFormat.processTracks(xml);
                                 setTracks(tracks);
+                                setTrackFile({ file, format });
                                 break;
 
                             case LoaderType.CAMERAS:
                                 const cameras = await fileFormat.processCameras(xml);
                                 setCameras(cameras);
+                                setCameraFile({ file, format });
                                 break;
 
                             default:
@@ -144,6 +147,19 @@ export default function Landing() {
             setValidImages(true);
         }
     }, [cameras, images]);
+
+    useEffect(() => {
+        const imageLength = Object.keys(images).length;
+        if (!cameraFile || imageLength !== cameras.length) return;
+
+        // Handle partial image names.
+        switch (cameraFile.format) {
+            case FormatType.JPL:
+                const newCameras = JPLFormat.mapImages(cameras, images);
+                setCameras(newCameras);
+                break;
+        }
+    }, [cameraFile, images]);
 
     return (
         <main className={styles.container}>

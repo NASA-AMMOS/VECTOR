@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useMemo } from 'react';
 
+import Format from '@/formats/Format';
+
 import CameraModel from '@/cameras/CameraModel';
 
 export type CameraMap = Record<string, Camera>;
@@ -7,11 +9,14 @@ export type CameraImageMap = Record<string, ImageFile>;
 export type CameraTrackMap = Record<string, Track[]>;
 export type CameraPointMap = Record<string, Point[]>;
 
-export type VICAR = Record<string, string[]>;
-
 export enum ResidualType {
     INITIAL = 'INITIAL',
     FINAL = 'FINAL',
+}
+
+export interface FileMetadata {
+    file: File;
+    format: Format;
 }
 
 export interface ImageFile {
@@ -57,6 +62,12 @@ interface DataStore {
     images: Record<string, ImageFile>;
     setImages: React.Dispatch<React.SetStateAction<Record<string, ImageFile>>>;
 
+    trackFile: FileMetadata | null;
+    setTrackFile: React.Dispatch<React.SetStateAction<FileMetadata | null>>;
+
+    cameraFile: FileMetadata | null;
+    setCameraFile: React.Dispatch<React.SetStateAction<FileMetadata | null>>;
+
     cameraMap: CameraMap;
     cameraImageMap: CameraImageMap;
     cameraTrackMap: CameraTrackMap;
@@ -84,7 +95,10 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [tracks, setTracks] = useState<Track[]>([]);
     const [cameras, setCameras] = useState<Camera[]>([]);
 
-    const [images, setImages] = useState<Record<string, ImageFile>>({});
+    const [images, setImages] = useState<CameraImageMap>({});
+
+    const [trackFile, setTrackFile] = useState<FileMetadata | null>(null);
+    const [cameraFile, setCameraFile] = useState<FileMetadata | null>(null);
 
     const cameraMap = useMemo(() => {
         return cameras.reduce<CameraMap>((map, camera) => {
@@ -167,6 +181,12 @@ export default function ProvideData({ children }: ProvideDataProps) {
 
                 images,
                 setImages,
+
+                trackFile,
+                setTrackFile,
+
+                cameraFile,
+                setCameraFile,
 
                 cameraMap,
                 cameraImageMap,

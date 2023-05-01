@@ -1,4 +1,4 @@
-import { FormatType } from '@/format/Format';
+import { FormatType } from '@/formats/Format';
 
 export enum LoaderType {
     TRACKS = 'track',

@@ -4,7 +4,7 @@ import xml.etree.cElementTree as ET
 import xml.dom.minidom as minidom
 
 
-def parse_tiepoints(xml: ET.ElementTree) -> str:
+def parse_tiepoints(xml: ET.ElementTree):
     images = xml.getroot().find('./tiepoint_set/images')
     if images is None:
             raise ValueError('Failed to find <images> in tiepoint XML')
@@ -230,8 +230,6 @@ def parse_tiepoints(xml: ET.ElementTree) -> str:
 
     with open('tracks.xml', 'w') as f:
         f.write(minidom.parseString(ET.tostring(root, 'utf-8')).toprettyxml(indent='    '))
-
-    return reference_frame
 
 
 def parse_navigation(xml: ET.ElementTree, images_dir: pathlib.Path) -> None:
