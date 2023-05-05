@@ -52,10 +52,10 @@ export default class VirtualCamera extends PerspectiveCamera {
         this.element.addEventListener('contextmenu', this.boundContextMenu);
 
         this.boundKeyDown = this.keydown.bind(this);
-        window.addEventListener('keydown', this.boundKeyDown);
+        this.element.addEventListener('keydown', this.boundKeyDown);
 
         this.boundKeyUp = this.keyup.bind(this);
-        window.addEventListener('keyup', this.boundKeyUp);
+        this.element.addEventListener('keyup', this.boundKeyUp);
 
         this.updateMovementVector();
         this.updateRotationVector();
@@ -87,8 +87,8 @@ export default class VirtualCamera extends PerspectiveCamera {
             this.element.removeEventListener('contextmenu', this.boundContextMenu);
         }
 
-        if (this.boundKeyDown) window.removeEventListener('keydown', this.boundKeyDown);
-        if (this.boundKeyUp) window.removeEventListener('keyup', this.boundKeyUp);
+        if (this.element && this.boundKeyDown) this.element.removeEventListener('keydown', this.boundKeyDown);
+        if (this.element && this.boundKeyUp) this.element.removeEventListener('keyup', this.boundKeyUp);
     }
 
     private keydown(event: KeyboardEvent) {
