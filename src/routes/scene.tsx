@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import cn from 'classnames';
 
 import { ResidualType, useData } from '@/stores/DataContext';
 import { useFilters } from '@/stores/FiltersContext';
@@ -8,6 +9,7 @@ import HistogramChart, { HistogramChartPoint } from '@/charts/histogram';
 
 import CameraViewport from '@/components/CameraViewport';
 
+import { H2 } from '@/styles/headers.css';
 import * as styles from '@/routes/scene.css';
 
 export default function Scene() {
@@ -56,11 +58,11 @@ export default function Scene() {
             </section>
             <section className={styles.charts}>
                 <div className={styles.chart}>
-                    <h2 className={styles.header}>Residual Length vs. Pixels</h2>
+                    <h2 className={cn(H2, styles.header)}>Residual Length vs. Pixels</h2>
                     <HistogramChart data={residualLengths} />
                 </div>
                 <div className={styles.chart}>
-                    <h2 className={styles.header}>Residual Angle vs. Pixels</h2>
+                    <h2 className={cn(H2, styles.header)}>Residual Angle vs. Pixels</h2>
                     <RadialChart data={residualAngles} maxRadius={null} />
                 </div>
             </section>

@@ -11,6 +11,8 @@ export type CameraImageMap = Record<string, ImageFile>;
 export type CameraTrackMap = Record<string, Track[]>;
 export type CameraPointMap = Record<string, Point[]>;
 
+export type HashTrackMap = Record<string, Track>;
+
 export enum EditStatus {
     ORIGINAL,
     DELETED,
@@ -80,7 +82,10 @@ interface DataStore {
     cameraImageMap: CameraImageMap;
     cameraTrackMap: CameraTrackMap;
     cameraPointMap: CameraPointMap;
+
     points: Point[];
+
+    hashTrackMap: HashTrackMap;
 
     minResidualLength: number;
     maxResidualLength: number;
@@ -90,6 +95,8 @@ interface DataStore {
 
     exportTracks: () => void;
     exportCameras: () => void;
+
+    hasher: (contents: string) => number;
 }
 
 interface ProvideDataProps {
@@ -111,6 +118,22 @@ export default function ProvideData({ children }: ProvideDataProps) {
     const [trackFile, setTrackFile] = useState<FileMetadata | null>(null);
     const [cameraFile, setCameraFile] = useState<FileMetadata | null>(null);
 
+    // A 32-bit hash function to store IDs in numeric format.
+    // This is to handle a LUT for the points geometry that stores
+    // the hash as metadata inside a buffer attribute.
+    // Reference: https://stackoverflow.com/a/52171480
+    const hasher = useCallback((contents: string) => {
+        let h = 9;
+        for (let i = 0; i < contents.length; ) {
+            h = Math.imul(h ^ contents.charCodeAt(i++), 9 ** 9);
+        }
+        return h ^ (h >>> 9);
+    }, []);
+
+    // Provide a few different LUTs for cameras. This improves the rendering
+    // significantly because images can be 100s of entries and we often
+    // need specific cameras while also knowing the ID beforehand.
+
     const cameraMap = useMemo(() => {
         return cameras.reduce<CameraMap>((map, camera) => {
             if (!(camera.id in map)) {
@@ -120,9 +143,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
         }, {});
     }, [cameras]);
 
-    // Provide a LUT for images by camera ID. This improves the rendering
-    // significantly because images can be 100s of entries and we often
-    // need specific cameras while knowing the ID.
     const cameraImageMap = useMemo(() => {
         return cameras.reduce<CameraImageMap>((map, camera) => {
             if (!(camera.id in map) && camera.imageName in images) {
@@ -132,7 +152,6 @@ export default function ProvideData({ children }: ProvideDataProps) {
         }, {});
     }, [cameras, images]);
 
-    // Same reasoning — we can map cameras to tracks to improve performance.
     const cameraTrackMap = useMemo(() => {
         return tracks.reduce<CameraTrackMap>((map, track) => {
             for (const point of track.points) {
@@ -161,6 +180,15 @@ export default function ProvideData({ children }: ProvideDataProps) {
 
     // Another one — useful for processing global residual information.
     const points = useMemo(() => tracks.map((track) => track.points).flat(), [tracks]);
+
+    // Used for the 3D viewport to map against the buffer attributes.
+    const hashTrackMap = useMemo(() => {
+        return tracks.reduce<HashTrackMap>((map, track) => {
+            const hashedId = hasher(track.id);
+            map[hashedId] = track;
+            return map;
+        }, {});
+    }, [tracks]);
 
     // The bounds for residual length and angle can be precomputed as it's
     // often needed for various aspects of the charts.
@@ -229,7 +257,10 @@ export default function ProvideData({ children }: ProvideDataProps) {
                 cameraImageMap,
                 cameraTrackMap,
                 cameraPointMap,
+
                 points,
+
+                hashTrackMap,
 
                 minResidualLength,
                 maxResidualLength,
@@ -239,6 +270,8 @@ export default function ProvideData({ children }: ProvideDataProps) {
 
                 exportTracks,
                 exportCameras,
+
+                hasher,
             }}
         >
             {children}

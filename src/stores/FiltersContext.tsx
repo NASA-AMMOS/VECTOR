@@ -27,6 +27,9 @@ export enum Filter {
     VIEW_CAMERAS = 'VIEW_CAMERAS',
     VIEW_POINTS = 'VIEW_POINTS',
 
+    SELECT_CAMERA = 'SELECT_CAMERA',
+    SELECT_TRACK = 'SELECT_TRACK',
+
     SCENE_GRID_AXES = 'SCENE_GRID_AXES',
 }
 
@@ -81,12 +84,15 @@ interface FilterState {
     viewCameras: boolean;
     viewPoints: boolean;
 
+    selectedCamera: string | null;
+    selectedTrack: string | null;
+
     sceneGridAxes: SceneGridAxes;
 }
 
 interface FilterAction {
     type: string;
-    data?: number | string;
+    data?: number | string | null;
 }
 
 interface Filters {
@@ -119,6 +125,9 @@ const initialState: FilterState = {
 
     viewCameras: true,
     viewPoints: true,
+
+    selectedCamera: null,
+    selectedTrack: null,
 
     sceneGridAxes: SceneGridAxes.XZ,
 };
@@ -174,6 +183,15 @@ function reducer(state: FilterState, action: FilterAction): FilterState {
         case Filter.RESIDUAL_SCALE:
             if (typeof action.data === 'number') {
                 return { ...state, residualScale: action.data };
+            }
+
+        case Filter.SELECT_CAMERA:
+            if (typeof action.data === 'string' || action.data === null) {
+                return { ...state, selectedCamera: action.data, selectedTrack: null };
+            }
+        case Filter.SELECT_TRACK:
+            if (typeof action.data === 'string' || action.data === null) {
+                return { ...state, selectedTrack: action.data, selectedCamera: null };
             }
 
         case Filter.VIEW_CAMERAS:

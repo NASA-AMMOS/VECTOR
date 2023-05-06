@@ -1,7 +1,5 @@
 import { PerspectiveCamera, Quaternion, Vector3 } from 'three';
 
-const _changeEvent = { type: 'change' };
-
 // Based on three.js FlyControls with modifications to event
 // handling and attaching our preferred camera system.
 // https://github.com/mrdoob/three.js/blob/master/examples/jsm/controls/FlyControls.js
@@ -76,7 +74,7 @@ export default class VirtualCamera extends PerspectiveCamera {
             this.pastPos.distanceToSquared(this.position) > this.EPS ||
             8 * (1 - this.pastQuat.dot(this.quaternion)) > this.EPS
         ) {
-            this.dispatchEvent(_changeEvent);
+            this.dispatchEvent({ type: 'change' });
             this.pastQuat.copy(this.quaternion);
             this.pastPos.copy(this.position);
         }

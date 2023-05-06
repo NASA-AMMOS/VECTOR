@@ -4,6 +4,7 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useData } from '@/stores/DataContext';
 
 import SideBar from '@/components/SideBar';
+import ActiveSelection from '@/components/ActiveSelection';
 
 import * as styles from '@/routes/root.css';
 
@@ -22,6 +23,7 @@ export default function Root() {
         <main className={styles.container}>
             <SideBar />
             <Outlet />
+            <ActiveSelection />
         </main>
     );
 }

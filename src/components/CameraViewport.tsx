@@ -1,13 +1,14 @@
 import { useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-    ArrowHelper,
+    BufferAttribute,
     BufferGeometry,
     Clock,
-    Float32BufferAttribute,
     Group,
+    Mesh,
     Points,
     PointsMaterial,
+    Raycaster,
     Scene,
     Texture,
     TextureLoader,
@@ -17,7 +18,7 @@ import {
 } from 'three';
 
 import { Camera, ImageFile, Point, ResidualType, Track, useData } from '@/stores/DataContext';
-import { SceneGridAxes, useFilters } from '@/stores/FiltersContext';
+import { Filter, SceneGridAxes, useFilters } from '@/stores/FiltersContext';
 
 import VirtualCamera from '@/gl/VirtualCamera';
 import InfiniteGrid from '@/gl/InfiniteGrid';
@@ -33,9 +34,9 @@ const tempVec3 = new Vector3();
 export default function CameraViewport() {
     const { trackId } = useParams();
 
-    const { filterState } = useFilters();
+    const { filterState, dispatchFilter } = useFilters();
 
-    const { tracks, cameraMap, cameraImageMap } = useData();
+    const { tracks, cameraMap, cameraImageMap, hashTrackMap, hasher } = useData();
 
     const sceneRef = useRef<Scene>(new Scene());
     const cameraRef = useRef<VirtualCamera | null>(null);
@@ -44,7 +45,11 @@ export default function CameraViewport() {
     const rAFRef = useRef<number | null>(null);
     const rendererRef = useRef<WebGLRenderer | null>(null);
 
+    const raycasterRef = useRef<Raycaster>(new Raycaster());
+    const mouseRef = useRef<Vector2>(new Vector2());
+
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const canvasRectRef = useRef<DOMRect | null>(null);
 
     const infiniteGrid = useRef<InfiniteGrid>(new InfiniteGrid());
 
@@ -89,10 +94,14 @@ export default function CameraViewport() {
     }, [activeTracks]);
 
     const animate = () => {
-        if (rendererRef.current && cameraRef.current) {
+        const renderer = rendererRef.current;
+        const camera = cameraRef.current;
+
+        if (renderer && camera) {
             const delta = clockRef.current.getDelta();
-            cameraRef.current.update(delta);
-            rendererRef.current.render(sceneRef.current, cameraRef.current);
+            camera.update(delta);
+
+            renderer.render(sceneRef.current, camera);
         }
 
         rAFRef.current = requestAnimationFrame(animate);
@@ -109,10 +118,15 @@ export default function CameraViewport() {
         let yAverage = 0;
         let zAverage = 0;
 
-        const initialVertices = [];
-        const finalVertices = [];
+        const initialVertices = new Float32Array(activeTracks.length * 3);
+        const initialIds = new Int32Array(activeTracks.length);
 
-        for (const track of activeTracks) {
+        const finalVertices = new Float32Array(activeTracks.length * 3);
+        const finalIds = new Int32Array(activeTracks.length);
+
+        for (const [i, track] of activeTracks.entries()) {
+            const hashedId = hasher(track.id);
+
             const initialPoint = track.initialXYZ;
             const finalPoint = track.finalXYZ;
 
@@ -120,8 +134,15 @@ export default function CameraViewport() {
             yAverage += finalPoint[1];
             zAverage += finalPoint[2];
 
-            initialVertices.push(initialPoint[0], initialPoint[1], initialPoint[2]);
-            finalVertices.push(finalPoint[0], finalPoint[1], finalPoint[2]);
+            initialVertices[i * 3] = initialPoint[0];
+            initialVertices[i * 3 + 1] = initialPoint[1];
+            initialVertices[i * 3 + 2] = initialPoint[2];
+            initialIds[i] = hashedId;
+
+            finalVertices[i * 3] = finalPoint[0];
+            finalVertices[i * 3 + 1] = finalPoint[1];
+            finalVertices[i * 3 + 2] = finalPoint[2];
+            finalIds[i] = hashedId;
         }
 
         // Add a minor offset to prevent division by one.
@@ -141,8 +162,11 @@ export default function CameraViewport() {
 
         infiniteGrid.current.position.set(xAverage, yAverage, zAverage);
 
-        initialPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(initialVertices, 3));
-        finalPointsGeometry.current.setAttribute('position', new Float32BufferAttribute(finalVertices, 3));
+        initialPointsGeometry.current.setAttribute('position', new BufferAttribute(initialVertices, 3));
+        initialPointsGeometry.current.setAttribute('tracks', new BufferAttribute(initialIds, 1));
+
+        finalPointsGeometry.current.setAttribute('position', new BufferAttribute(finalVertices, 3));
+        finalPointsGeometry.current.setAttribute('tracks', new BufferAttribute(finalIds, 1));
 
         initialPoints.current = new Points(initialPointsGeometry.current, initialPointsMaterial.current);
         sceneRef.current.add(initialPoints.current);
@@ -165,9 +189,11 @@ export default function CameraViewport() {
             tempVec2.set(image.width, image.height);
 
             const initialFrustum = camera.initial.getFrustumMesh(tempVec2, ResidualType.INITIAL);
+            initialFrustum.userData.cameraId = camera.id;
             initialCameras.current.add(initialFrustum);
 
             const finalFrustum = camera.final.getFrustumMesh(tempVec2, ResidualType.FINAL);
+            finalFrustum.userData.cameraId = camera.id;
             finalCameras.current.add(finalFrustum);
         }
     };
@@ -186,17 +212,11 @@ export default function CameraViewport() {
         while (initialCameras.current.children.length > 0) {
             const child = initialCameras.current.children[0];
             initialCameras.current.remove(child);
-            if (child instanceof ArrowHelper) {
-                child.dispose();
-            }
         }
 
         while (finalCameras.current.children.length > 0) {
             const child = finalCameras.current.children[0];
             finalCameras.current.remove(child);
-            if (child instanceof ArrowHelper) {
-                child.dispose();
-            }
         }
     };
 
@@ -212,12 +232,73 @@ export default function CameraViewport() {
 
         canvas.width = width;
         canvas.height = height;
+        canvasRectRef.current = canvas.getBoundingClientRect();
 
         cameraRef.current.aspect = width / height;
         cameraRef.current.updateProjectionMatrix();
 
         rendererRef.current.setSize(width, height);
         rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    };
+
+    const handleClick = (event: MouseEvent) => {
+        const canvas = canvasRef.current;
+        const canvasRect = canvasRectRef.current;
+
+        const renderer = rendererRef.current;
+        const camera = cameraRef.current;
+
+        const raycaster = raycasterRef.current;
+        const mouse = mouseRef.current;
+        const scene = sceneRef.current;
+
+        if (canvas && canvasRect && renderer && camera) {
+            const x = event.clientX - canvasRect.left;
+            const y = event.clientY - canvasRect.top;
+
+            mouse.x = (x / canvas.clientWidth) * 2.0 - 1.0;
+            mouse.y = (y / canvas.clientHeight) * -2.0 + 1.0;
+
+            const delta = clockRef.current.getDelta();
+            camera.update(delta);
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children);
+
+            // Intersections are sorted by distance, so after the first valid
+            // intersection we can exit.
+            for (const intersect of intersects) {
+                // Check for cameras.
+                if (
+                    intersect.object instanceof Mesh &&
+                    intersect.object.parent instanceof Group &&
+                    intersect.object.parent.userData.cameraId !== undefined
+                ) {
+                    const cameraId = intersect.object.parent.userData.cameraId;
+                    dispatchFilter({ type: Filter.SELECT_CAMERA, data: cameraId });
+                    return;
+                }
+
+                // Check for points.
+                if (intersect.object instanceof Points && intersect.index) {
+                    const index = intersect.index;
+
+                    if (intersect.object.geometry instanceof BufferGeometry) {
+                        const tracks = intersect.object.geometry.getAttribute('tracks');
+
+                        if (tracks instanceof BufferAttribute) {
+                            const hashedId = tracks.getX(index);
+
+                            if (hashedId in hashTrackMap) {
+                                const track = hashTrackMap[hashedId];
+                                dispatchFilter({ type: Filter.SELECT_TRACK, data: track.id });
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     };
 
     const initCanvas = useCallback((canvas: HTMLCanvasElement) => {
@@ -265,9 +346,11 @@ export default function CameraViewport() {
         initCameras();
 
         rAFRef.current = requestAnimationFrame(animate);
+
+        canvasRectRef.current = canvas.getBoundingClientRect();
+        canvas.addEventListener('click', handleClick);
     }, []);
 
-    // This could probably be optimized into individual useEffect handlers.
     useEffect(() => {
         if (filterState.viewPoints && filterState.viewInitialResiduals && initialPoints.current) {
             initialPoints.current.visible = true;
@@ -280,7 +363,9 @@ export default function CameraViewport() {
         } else if (finalPoints.current) {
             finalPoints.current.visible = false;
         }
+    }, [filterState.viewPoints, filterState.viewInitialResiduals, filterState.viewFinalResiduals]);
 
+    useEffect(() => {
         if (filterState.viewCameras && filterState.viewInitialResiduals && initialCameras.current) {
             initialCameras.current.visible = true;
         } else if (initialCameras.current) {
@@ -292,7 +377,10 @@ export default function CameraViewport() {
         } else if (finalCameras.current) {
             finalCameras.current.visible = false;
         }
+    }, [filterState.viewCameras, filterState.viewInitialResiduals, filterState.viewFinalResiduals]);
 
+    // This could probably be optimized into individual useEffect handlers.
+    useEffect(() => {
         switch (filterState.sceneGridAxes) {
             case SceneGridAxes.XZ:
                 infiniteGrid.current.material.uniforms.uAxesType.value = 0.0;
@@ -304,12 +392,15 @@ export default function CameraViewport() {
                 infiniteGrid.current.material.uniforms.uAxesType.value = 2.0;
                 break;
         }
-    }, [filterState]);
+    }, [filterState.sceneGridAxes]);
 
     useEffect(() => {
         window.addEventListener('resize', handleResize);
         return () => {
             window.removeEventListener('resize', handleResize);
+            if (canvasRef.current) {
+                canvasRef.current.removeEventListener('click', handleClick);
+            }
         };
     }, []);
 
