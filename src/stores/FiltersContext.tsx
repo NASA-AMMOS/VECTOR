@@ -129,7 +129,7 @@ const initialState: FilterState = {
     selectedCamera: null,
     selectedTrack: null,
 
-    sceneGridAxes: SceneGridAxes.XZ,
+    sceneGridAxes: SceneGridAxes.XY,
 };
 
 function reducer(state: FilterState, action: FilterAction): FilterState {
