@@ -47,7 +47,7 @@ node --version
 1. Clone the repository.
 
 ```bash
-git clone git@github.jpl.nasa.gov:vis-program/vector.git
+git clone git@github.com:NASA-AMMOS/VECTOR.git
 ```
 
 2. Switch to the project directory and install the necessary dependencies.
