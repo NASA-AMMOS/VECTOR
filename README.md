@@ -177,7 +177,7 @@ We have provided a reference implemention in Python that converts the VISOR form
 
 ## Reference video
 
-For further reference, a presentation on VECTOR can be found [here]( https://youtu.be/zjR8CbQ5nPM)”.
+For further reference, a presentation on VECTOR can be found [here]( https://youtu.be/zjR8CbQ5nPM).
 
 ## Contributors
 
