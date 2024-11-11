@@ -175,6 +175,10 @@ This is useful for people inexperienced with JavaScript/TypeScript and are more 
 
 We have provided a reference implemention in Python that converts the VISOR format to the VECTOR format without external dependencies inside the `cmd` folder.
 
+## Reference video
+
+For further reference, a presentation on VECTOR can be found [here]( https://youtu.be/zjR8CbQ5nPM)”.
+
 ## Contributors
 
 Kazi Jawad, Racquel Fygenson, Isabel Li, Mauricio Hess-Flores, François Ayoub, Robert Deen, Scott Davidoff, Santiago Lombeyda, Maggie Hendrie, Hillary Mushkin
